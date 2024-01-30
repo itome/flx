@@ -7,7 +7,7 @@ use serde::{
 use strum::Display;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Display, Deserialize)]
-pub enum Action {
+pub enum TuiAction {
     Tick,
     Render,
     Resize(u16, u16),

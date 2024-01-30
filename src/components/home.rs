@@ -8,13 +8,13 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use super::{Component, Frame};
 use crate::{
-    action::Action,
+    action::TuiAction,
     config::{Config, KeyBindings},
 };
 
 #[derive(Default)]
 pub struct Home {
-    command_tx: Option<UnboundedSender<Action>>,
+    command_tx: Option<UnboundedSender<TuiAction>>,
     config: Config,
 }
 
@@ -25,7 +25,7 @@ impl Home {
 }
 
 impl Component for Home {
-    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+    fn register_action_handler(&mut self, tx: UnboundedSender<TuiAction>) -> Result<()> {
         self.command_tx = Some(tx);
         Ok(())
     }
@@ -35,9 +35,9 @@ impl Component for Home {
         Ok(())
     }
 
-    fn update(&mut self, action: Action) -> Result<Option<Action>> {
+    fn update(&mut self, action: TuiAction) -> Result<Option<TuiAction>> {
         match action {
-            Action::Tick => {}
+            TuiAction::Tick => {}
             _ => {}
         }
         Ok(None)

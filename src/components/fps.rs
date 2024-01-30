@@ -4,7 +4,7 @@ use color_eyre::eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 
 use super::Component;
-use crate::{action::Action, tui::Frame};
+use crate::{action::TuiAction, tui::Frame};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FpsCounter {
@@ -61,11 +61,11 @@ impl FpsCounter {
 }
 
 impl Component for FpsCounter {
-    fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        if let Action::Tick = action {
+    fn update(&mut self, action: TuiAction) -> Result<Option<TuiAction>> {
+        if let TuiAction::Tick = action {
             self.app_tick()?
         };
-        if let Action::Render = action {
+        if let TuiAction::Render = action {
             self.render_tick()?
         };
         Ok(None)

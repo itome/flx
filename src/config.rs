@@ -11,7 +11,7 @@ use serde::{
 };
 use serde_json::Value as JsonValue;
 
-use crate::{action::Action, mode::Mode};
+use crate::{action::TuiAction, mode::Mode};
 
 const CONFIG: &str = include_str!("../.config/config.json5");
 
@@ -88,14 +88,14 @@ impl Config {
 }
 
 #[derive(Clone, Debug, Default, Deref, DerefMut)]
-pub struct KeyBindings(pub HashMap<Mode, HashMap<Vec<KeyEvent>, Action>>);
+pub struct KeyBindings(pub HashMap<Mode, HashMap<Vec<KeyEvent>, TuiAction>>);
 
 impl<'de> Deserialize<'de> for KeyBindings {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let parsed_map = HashMap::<Mode, HashMap<String, Action>>::deserialize(deserializer)?;
+        let parsed_map = HashMap::<Mode, HashMap<String, TuiAction>>::deserialize(deserializer)?;
 
         let keybindings = parsed_map
             .into_iter()
@@ -474,7 +474,7 @@ mod tests {
                 .unwrap()
                 .get(&parse_key_sequence("<q>").unwrap_or_default())
                 .unwrap(),
-            &Action::Quit
+            &TuiAction::Quit
         );
         Ok(())
     }

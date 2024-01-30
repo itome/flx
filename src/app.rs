@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::{self, UnboundedSender};
 
 use crate::{
-    action::Action,
+    action::TuiAction,
     components::{fps::FpsCounter, home::Home, Component},
     config::Config,
     mode::Mode,
@@ -65,10 +65,10 @@ impl App {
         loop {
             if let Some(e) = tui.next().await {
                 match e {
-                    tui::Event::Quit => action_tx.send(Action::Quit)?,
-                    tui::Event::Tick => action_tx.send(Action::Tick)?,
-                    tui::Event::Render => action_tx.send(Action::Render)?,
-                    tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
+                    tui::Event::Quit => action_tx.send(TuiAction::Quit)?,
+                    tui::Event::Tick => action_tx.send(TuiAction::Tick)?,
+                    tui::Event::Render => action_tx.send(TuiAction::Render)?,
+                    tui::Event::Resize(x, y) => action_tx.send(TuiAction::Resize(x, y))?,
                     tui::Event::Key(key) => {
                         if let Some(keymap) = self.config.keybindings.get(&self.mode) {
                             if let Some(action) = keymap.get(&vec![key]) {
@@ -97,21 +97,21 @@ impl App {
             }
 
             while let Ok(action) = action_rx.try_recv() {
-                if action != Action::Tick && action != Action::Render {
+                if action != TuiAction::Tick && action != TuiAction::Render {
                     log::debug!("{action:?}");
                 }
                 match action {
-                    Action::Tick => {
+                    TuiAction::Tick => {
                         self.last_tick_key_events.drain(..);
                     }
-                    Action::Quit => self.should_quit = true,
-                    Action::Suspend => self.should_suspend = true,
-                    Action::Resume => self.should_suspend = false,
-                    Action::Resize(w, h) => {
+                    TuiAction::Quit => self.should_quit = true,
+                    TuiAction::Suspend => self.should_suspend = true,
+                    TuiAction::Resume => self.should_suspend = false,
+                    TuiAction::Resize(w, h) => {
                         tui.resize(Rect::new(0, 0, w, h))?;
                         self.draw(&mut tui, &action_tx)?;
                     }
-                    Action::Render => {
+                    TuiAction::Render => {
                         self.draw(&mut tui, &action_tx)?;
                     }
                     _ => {}
@@ -124,7 +124,7 @@ impl App {
             }
             if self.should_suspend {
                 tui.suspend()?;
-                action_tx.send(Action::Resume)?;
+                action_tx.send(TuiAction::Resume)?;
                 tui = tui::Tui::new()?
                     .tick_rate(self.tick_rate)
                     .frame_rate(self.frame_rate);
@@ -139,13 +139,13 @@ impl App {
         Ok(())
     }
 
-    fn draw(&mut self, tui: &mut Tui, action_tx: &UnboundedSender<Action>) -> Result<()> {
+    fn draw(&mut self, tui: &mut Tui, action_tx: &UnboundedSender<TuiAction>) -> Result<()> {
         tui.draw(|f| {
             for component in self.components.iter_mut() {
                 let r = component.draw(f, f.size());
                 if let Err(e) = r {
                     action_tx
-                        .send(Action::Error(format!("Failed to draw: {:?}", e)))
+                        .send(TuiAction::Error(format!("Failed to draw: {:?}", e)))
                         .unwrap();
                 }
             }
