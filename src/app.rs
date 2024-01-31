@@ -1,14 +1,28 @@
 use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
+use redux_rs::middlewares::thunk::thunk;
+use redux_rs::Store;
+use redux_rs::{
+    middlewares::thunk::{self, ThunkMiddleware},
+    StoreApi,
+};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedSender};
 
+use crate::components::devices::DevicesComponent;
+use crate::daemon::flutter::FlutterDaemon;
+use crate::redux::state::State;
+use crate::redux::thunk::context::Context;
+use crate::redux::thunk::watch_devices::WatchDevicesThunk;
+use crate::redux::thunk::{thunk_impl, ThunkAction};
 use crate::{
     action::TuiAction,
     components::{fps::FpsCounter, home::Home, Component},
     config::Config,
     mode::Mode,
+    redux::{reducer::reducer, ActionOrThunk},
     tui::{self, Tui},
 };
 
@@ -28,11 +42,12 @@ impl App {
         let home = Home::new();
         let fps = FpsCounter::default();
         let config = Config::new()?;
+        let devices = DevicesComponent::new();
         let mode = Mode::Home;
         Ok(Self {
             tick_rate,
             frame_rate,
-            components: vec![Box::new(home), Box::new(fps)],
+            components: vec![Box::new(home), Box::new(fps), Box::new(devices)],
             should_quit: false,
             should_suspend: false,
             config,
@@ -42,7 +57,13 @@ impl App {
     }
 
     pub async fn run(&mut self) -> Result<()> {
-        let (action_tx, mut action_rx) = mpsc::unbounded_channel();
+        let store = Store::new(reducer).wrap(ThunkMiddleware).await;
+        let daemon = Arc::new(FlutterDaemon::new()?);
+        let context = Arc::new(Context::new(daemon.clone()));
+        let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel();
+        let (redux_action_tx, mut redux_action_rx) = mpsc::unbounded_channel::<ActionOrThunk>();
+
+        redux_action_tx.send(ThunkAction::WatchDevices.into())?;
 
         let mut tui = tui::Tui::new()?
             .tick_rate(self.tick_rate)
@@ -51,7 +72,7 @@ impl App {
         tui.enter()?;
 
         for component in self.components.iter_mut() {
-            component.register_action_handler(action_tx.clone())?;
+            component.register_action_handler(tui_action_tx.clone())?;
         }
 
         for component in self.components.iter_mut() {
@@ -65,15 +86,15 @@ impl App {
         loop {
             if let Some(e) = tui.next().await {
                 match e {
-                    tui::Event::Quit => action_tx.send(TuiAction::Quit)?,
-                    tui::Event::Tick => action_tx.send(TuiAction::Tick)?,
-                    tui::Event::Render => action_tx.send(TuiAction::Render)?,
-                    tui::Event::Resize(x, y) => action_tx.send(TuiAction::Resize(x, y))?,
+                    tui::Event::Quit => tui_action_tx.send(TuiAction::Quit)?,
+                    tui::Event::Tick => tui_action_tx.send(TuiAction::Tick)?,
+                    tui::Event::Render => tui_action_tx.send(TuiAction::Render)?,
+                    tui::Event::Resize(x, y) => tui_action_tx.send(TuiAction::Resize(x, y))?,
                     tui::Event::Key(key) => {
                         if let Some(keymap) = self.config.keybindings.get(&self.mode) {
                             if let Some(action) = keymap.get(&vec![key]) {
                                 log::info!("Got action: {action:?}");
-                                action_tx.send(action.clone())?;
+                                tui_action_tx.send(action.clone())?;
                             } else {
                                 // If the key was not handled as a single key action,
                                 // then consider it for multi-key combinations.
@@ -82,7 +103,7 @@ impl App {
                                 // Check for multi-key combinations
                                 if let Some(action) = keymap.get(&self.last_tick_key_events) {
                                     log::info!("Got action: {action:?}");
-                                    action_tx.send(action.clone())?;
+                                    tui_action_tx.send(action.clone())?;
                                 }
                             }
                         };
@@ -91,12 +112,12 @@ impl App {
                 }
                 for component in self.components.iter_mut() {
                     if let Some(action) = component.handle_events(Some(e.clone()))? {
-                        action_tx.send(action)?;
+                        tui_action_tx.send(action)?;
                     }
                 }
             }
 
-            while let Ok(action) = action_rx.try_recv() {
+            while let Ok(action) = tui_action_rx.try_recv() {
                 if action != TuiAction::Tick && action != TuiAction::Render {
                     log::debug!("{action:?}");
                 }
@@ -109,22 +130,40 @@ impl App {
                     TuiAction::Resume => self.should_suspend = false,
                     TuiAction::Resize(w, h) => {
                         tui.resize(Rect::new(0, 0, w, h))?;
-                        self.draw(&mut tui, &action_tx)?;
+                        let state = store.state_cloned().await;
+                        self.draw(&mut tui, &tui_action_tx, &state)?;
                     }
                     TuiAction::Render => {
-                        self.draw(&mut tui, &action_tx)?;
+                        let state = store.state_cloned().await;
+                        self.draw(&mut tui, &tui_action_tx, &state)?;
                     }
                     _ => {}
                 }
                 for component in self.components.iter_mut() {
                     if let Some(action) = component.update(action.clone())? {
-                        action_tx.send(action)?
+                        tui_action_tx.send(action)?
                     };
                 }
             }
+            while let Ok(action) = redux_action_rx.try_recv() {
+                match action {
+                    ActionOrThunk::Action(action) => {
+                        store.dispatch(action).await;
+                    }
+                    ActionOrThunk::Thunk(action) => {
+                        store
+                            .dispatch(thunk::ActionOrThunk::Thunk(Box::new(thunk_impl(
+                                action,
+                                context.clone(),
+                            ))))
+                            .await;
+                    }
+                }
+            }
+
             if self.should_suspend {
                 tui.suspend()?;
-                action_tx.send(TuiAction::Resume)?;
+                tui_action_tx.send(TuiAction::Resume)?;
                 tui = tui::Tui::new()?
                     .tick_rate(self.tick_rate)
                     .frame_rate(self.frame_rate);
@@ -139,10 +178,15 @@ impl App {
         Ok(())
     }
 
-    fn draw(&mut self, tui: &mut Tui, action_tx: &UnboundedSender<TuiAction>) -> Result<()> {
+    fn draw(
+        &mut self,
+        tui: &mut Tui,
+        action_tx: &UnboundedSender<TuiAction>,
+        state: &State,
+    ) -> Result<()> {
         tui.draw(|f| {
             for component in self.components.iter_mut() {
-                let r = component.draw(f, f.size());
+                let r = component.draw(f, f.size(), state);
                 if let Err(e) = r {
                     action_tx
                         .send(TuiAction::Error(format!("Failed to draw: {:?}", e)))

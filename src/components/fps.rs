@@ -4,7 +4,7 @@ use color_eyre::eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 
 use super::Component;
-use crate::{action::TuiAction, tui::Frame};
+use crate::{action::TuiAction, redux::state::State, tui::Frame};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FpsCounter {
@@ -71,7 +71,7 @@ impl Component for FpsCounter {
         Ok(None)
     }
 
-    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect, _: &State) -> Result<()> {
         let rects = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![

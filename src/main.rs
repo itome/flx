@@ -9,6 +9,7 @@ pub mod components;
 pub mod config;
 pub mod daemon;
 pub mod mode;
+pub mod redux;
 pub mod tui;
 pub mod utils;
 

@@ -10,6 +10,7 @@ use super::{Component, Frame};
 use crate::{
     action::TuiAction,
     config::{Config, KeyBindings},
+    redux::state::State,
 };
 
 #[derive(Default)]
@@ -43,7 +44,7 @@ impl Component for Home {
         Ok(None)
     }
 
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) -> Result<()> {
         f.render_widget(Paragraph::new("hello world"), area);
         Ok(())
     }

@@ -6,9 +6,11 @@ use tokio::sync::mpsc::UnboundedSender;
 use crate::{
     action::TuiAction,
     config::Config,
+    redux::state::State,
     tui::{Event, Frame},
 };
 
+pub mod devices;
 pub mod fps;
 pub mod home;
 
@@ -120,5 +122,5 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<()>` - An Ok result or an error.
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()>;
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) -> Result<()>;
 }

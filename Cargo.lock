@@ -605,6 +605,7 @@ dependencies = [
 name = "flx"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "better-panic",
  "clap",
  "color-eyre",
@@ -620,6 +621,7 @@ dependencies = [
  "log",
  "pretty_assertions",
  "ratatui",
+ "redux-rs",
  "serde",
  "serde_json",
  "signal-hook",
@@ -1762,6 +1764,15 @@ dependencies = [
  "getrandom",
  "libredox",
  "thiserror",
+]
+
+[[package]]
+name = "redux-rs"
+version = "0.3.3"
+source = "git+https://github.com/redux-rs/redux-rs#2865896f358bdd364b204c72433de815f55683b4"
+dependencies = [
+ "async-trait",
+ "tokio",
 ]
 
 [[package]]
