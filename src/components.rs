@@ -6,13 +6,14 @@ use tokio::sync::mpsc::UnboundedSender;
 use crate::{
     action::TuiAction,
     config::Config,
-    redux::state::State,
+    redux::{state::State, ActionOrThunk},
     tui::{Event, Frame},
 };
 
 pub mod devices;
-pub mod fps;
-pub mod home;
+pub mod project;
+pub mod runners;
+pub mod select_tab_handler;
 
 /// `Component` is a trait that represents a visual and interactive element of the user interface.
 /// Implementors of this trait can be registered with the main application loop and will be able to receive events,
@@ -28,7 +29,7 @@ pub trait Component {
     ///
     /// * `Result<()>` - An Ok result or an error.
     #[allow(unused_variables)]
-    fn register_action_handler(&mut self, tx: UnboundedSender<TuiAction>) -> Result<()> {
+    fn register_action_handler(&mut self, tx: UnboundedSender<ActionOrThunk>) -> Result<()> {
         Ok(())
     }
     /// Register a configuration handler that provides configuration settings if necessary.
@@ -122,5 +123,5 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<()>` - An Ok result or an error.
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) -> Result<()>;
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State);
 }

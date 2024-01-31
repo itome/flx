@@ -6,7 +6,7 @@ use tokio::sync::Mutex;
 
 use crate::{
     daemon::{flutter::FlutterDaemon, io::device::Device},
-    redux::state::State,
+    redux::state::{State, Tab},
     tui::Frame,
 };
 use color_eyre::eyre::Result;
@@ -22,9 +22,13 @@ impl DevicesComponent {
 }
 
 impl Component for DevicesComponent {
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let devices = state.devices.clone();
-        let default_color = Color::White;
+        let default_color = if state.selected_tab == Tab::Devices {
+            Color::White
+        } else {
+            Color::DarkGray
+        };
 
         let block = Block::default()
             .title("Devices")
@@ -46,6 +50,5 @@ impl Component for DevicesComponent {
             .block(block);
 
         f.render_widget(list, area);
-        Ok(())
     }
 }

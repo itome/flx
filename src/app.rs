@@ -1,6 +1,7 @@
 use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
+use ratatui::prelude::*;
 use redux_rs::middlewares::thunk::thunk;
 use redux_rs::Store;
 use redux_rs::{
@@ -11,7 +12,11 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedSender};
 
+use crate::components;
 use crate::components::devices::DevicesComponent;
+use crate::components::project::ProjectComponent;
+use crate::components::runners::RunnersComponent;
+use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::daemon::flutter::FlutterDaemon;
 use crate::redux::state::State;
 use crate::redux::thunk::context::Context;
@@ -19,7 +24,7 @@ use crate::redux::thunk::watch_devices::WatchDevicesThunk;
 use crate::redux::thunk::{thunk_impl, ThunkAction};
 use crate::{
     action::TuiAction,
-    components::{fps::FpsCounter, home::Home, Component},
+    components::Component,
     config::Config,
     mode::Mode,
     redux::{reducer::reducer, ActionOrThunk},
@@ -39,15 +44,17 @@ pub struct App {
 
 impl App {
     pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
-        let home = Home::new();
-        let fps = FpsCounter::default();
         let config = Config::new()?;
-        let devices = DevicesComponent::new();
         let mode = Mode::Home;
         Ok(Self {
             tick_rate,
             frame_rate,
-            components: vec![Box::new(home), Box::new(fps), Box::new(devices)],
+            components: vec![
+                Box::new(ProjectComponent::new()),
+                Box::new(RunnersComponent::new()),
+                Box::new(DevicesComponent::new()),
+                Box::new(SelectTabControllerComponent::new()),
+            ],
             should_quit: false,
             should_suspend: false,
             config,
@@ -60,7 +67,7 @@ impl App {
         let store = Store::new(reducer).wrap(ThunkMiddleware).await;
         let daemon = Arc::new(FlutterDaemon::new()?);
         let context = Arc::new(Context::new(daemon.clone()));
-        let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel();
+        let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel::<TuiAction>();
         let (redux_action_tx, mut redux_action_rx) = mpsc::unbounded_channel::<ActionOrThunk>();
 
         redux_action_tx.send(ThunkAction::WatchDevices.into())?;
@@ -72,7 +79,7 @@ impl App {
         tui.enter()?;
 
         for component in self.components.iter_mut() {
-            component.register_action_handler(tui_action_tx.clone())?;
+            component.register_action_handler(redux_action_tx.clone())?;
         }
 
         for component in self.components.iter_mut() {
@@ -131,11 +138,11 @@ impl App {
                     TuiAction::Resize(w, h) => {
                         tui.resize(Rect::new(0, 0, w, h))?;
                         let state = store.state_cloned().await;
-                        self.draw(&mut tui, &tui_action_tx, &state)?;
+                        self.draw(&mut tui, &state)?;
                     }
                     TuiAction::Render => {
                         let state = store.state_cloned().await;
-                        self.draw(&mut tui, &tui_action_tx, &state)?;
+                        self.draw(&mut tui, &state)?;
                     }
                     _ => {}
                 }
@@ -178,21 +185,24 @@ impl App {
         Ok(())
     }
 
-    fn draw(
-        &mut self,
-        tui: &mut Tui,
-        action_tx: &UnboundedSender<TuiAction>,
-        state: &State,
-    ) -> Result<()> {
+    fn draw(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
         tui.draw(|f| {
-            for component in self.components.iter_mut() {
-                let r = component.draw(f, f.size(), state);
-                if let Err(e) = r {
-                    action_tx
-                        .send(TuiAction::Error(format!("Failed to draw: {:?}", e)))
-                        .unwrap();
-                }
-            }
+            let layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
+                .split(f.size());
+            let tab_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(3),
+                    Constraint::Percentage(50),
+                    Constraint::Percentage(50),
+                ])
+                .split(layout[0]);
+
+            self.components[0].draw(f, tab_layout[0], state);
+            self.components[1].draw(f, tab_layout[1], state);
+            self.components[2].draw(f, tab_layout[2], state);
         })?;
         Ok(())
     }
