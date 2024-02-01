@@ -32,13 +32,29 @@ where
         };
 
         let session_manager = self.context.session_manager.read().await;
-        session_manager
-            .sessions
-            .get(&session_id)
-            .unwrap()
-            .run
-            .hot_reload()
-            .await
-            .unwrap();
+        let run = &session_manager.sessions.get(&session_id).unwrap().run;
+        run.hot_reload().await.unwrap();
+
+        while let Ok(params) = run.receive_app_progress().await {
+            if params.progress_id == Some("hot.reload".to_string()) && !params.finished {
+                store
+                    .dispatch(Action::StartHotReload {
+                        session_id: session_id.clone(),
+                    })
+                    .await;
+                break;
+            }
+        }
+
+        while let Ok(params) = run.receive_app_progress().await {
+            if params.progress_id == Some("hot.reload".to_string()) && params.finished {
+                store
+                    .dispatch(Action::CompleteHotReload {
+                        session_id: session_id.clone(),
+                    })
+                    .await;
+                break;
+            }
+        }
     }
 }

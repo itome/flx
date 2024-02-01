@@ -5,7 +5,11 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::{mpsc::UnboundedSender, Mutex};
 
 use crate::{
-    daemon::{self, flutter::FlutterDaemon, io::device::Device},
+    daemon::{
+        self,
+        flutter::FlutterDaemon,
+        io::{device::Device, event::AppMode},
+    },
     redux::{
         action::Action,
         state::{State, Tab},
@@ -106,8 +110,30 @@ impl Component for RunnersComponent {
         let mut items = state
             .sessions
             .iter()
-            .map(|session_id| {
-                ListItem::new(session_id.clone()).style(Style::default().fg(enabled_color))
+            .map(|session| {
+                let device = state
+                    .devices
+                    .iter()
+                    .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
+                let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
+                let state = if session.hot_reloading {
+                    "🔥"
+                } else if session.hot_restarting {
+                    "🔁"
+                } else if !session.started {
+                    "🔄"
+                } else {
+                    "▶"
+                };
+                let mode = match session.mode {
+                    Some(AppMode::Debug) => "debug",
+                    Some(AppMode::Profile) => "profile",
+                    Some(AppMode::Release) => "release",
+                    Some(AppMode::JitRelease) => "jit release",
+                    None => "-",
+                };
+                let name = format!(" {} {} ({})", state, device_name, mode);
+                ListItem::new(name).style(Style::default().fg(enabled_color))
             })
             .collect::<Vec<_>>();
         items.push(ListItem::new(" ▶ Run new app ").style(Style::default().fg(default_color)));

@@ -27,22 +27,34 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        log::info!("Hot restarting app");
         let Some(session_id) = store.select(|state: &State| state.session_id.clone()).await else {
             return;
         };
-        log::info!("Session ID: {}", session_id);
 
         let session_manager = self.context.session_manager.read().await;
-        log::info!("Session manager locked");
-        session_manager
-            .sessions
-            .get(&session_id)
-            .unwrap()
-            .run
-            .hot_restart()
-            .await
-            .unwrap();
-        log::info!("Hot restart finished");
+        let run = &session_manager.sessions.get(&session_id).unwrap().run;
+        run.hot_restart().await.unwrap();
+
+        while let Ok(params) = run.receive_app_progress().await {
+            if params.progress_id == Some("hot.restart".to_string()) && !params.finished {
+                store
+                    .dispatch(Action::StartHotRestart {
+                        session_id: session_id.clone(),
+                    })
+                    .await;
+                break;
+            }
+        }
+
+        while let Ok(params) = run.receive_app_progress().await {
+            if params.progress_id == Some("hot.restart".to_string()) && params.finished {
+                store
+                    .dispatch(Action::CompleteHotRestart {
+                        session_id: session_id.clone(),
+                    })
+                    .await;
+                break;
+            }
+        }
     }
 }

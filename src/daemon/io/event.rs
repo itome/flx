@@ -51,7 +51,7 @@ pub enum AppLaunchMode {
     Attach,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum AppMode {
     #[serde(rename = "debug")]
     Debug,

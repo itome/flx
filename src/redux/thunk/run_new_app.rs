@@ -37,17 +37,29 @@ where
             })
             .await;
 
-        self.context
-            .session_manager
-            .read()
-            .await
-            .sessions
-            .get(&id)
-            .unwrap()
-            .run
-            .receive_app_stop()
-            .await
-            .unwrap();
+        let session_manager = self.context.session_manager.read().await;
+        let run = &session_manager.sessions.get(&id).unwrap().run;
+
+        if let Ok(params) = run.receive_app_start().await {
+            store
+                .dispatch(Action::StartApp {
+                    session_id: id.clone(),
+                    device_id: params.device_id,
+                    app_id: params.app_id,
+                    mode: params.mode,
+                })
+                .await;
+        }
+
+        if let Ok(_) = run.receive_app_started().await {
+            store
+                .dispatch(Action::StartHotRestart {
+                    session_id: id.clone(),
+                })
+                .await;
+        }
+
+        run.receive_app_stop().await.unwrap();
 
         store
             .dispatch(Action::UnregisterSession {
