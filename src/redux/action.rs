@@ -6,4 +6,10 @@ pub enum Action {
 
     NextTab,
     PreviousTab,
+
+    RegisterSession { session_id: String },
+    UnregisterSession { session_id: String },
+
+    NextSession,
+    PreviousSession,
 }

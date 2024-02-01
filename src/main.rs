@@ -10,6 +10,7 @@ pub mod config;
 pub mod daemon;
 pub mod mode;
 pub mod redux;
+pub mod session;
 pub mod tui;
 pub mod utils;
 
@@ -28,7 +29,7 @@ async fn tokio_main() -> Result<()> {
     initialize_panic_handler()?;
 
     let args = Cli::parse();
-    let mut app = App::new(args.tick_rate, args.frame_rate)?;
+    let mut app = App::new(args.project_root)?;
     app.run().await?;
 
     Ok(())

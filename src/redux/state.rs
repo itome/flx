@@ -17,4 +17,7 @@ impl Default for Tab {
 pub struct State {
     pub devices: Vec<Device>,
     pub selected_tab: Tab,
+
+    pub sessions: Vec<String>,
+    pub session_id: Option<String>,
 }

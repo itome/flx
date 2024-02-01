@@ -11,6 +11,7 @@ use redux_rs::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedSender};
+use tokio::sync::{Mutex, RwLock};
 
 use crate::components;
 use crate::components::devices::DevicesComponent;
@@ -22,6 +23,7 @@ use crate::redux::state::State;
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
 use crate::redux::thunk::{thunk_impl, ThunkAction};
+use crate::session::session_manager::SessionManager;
 use crate::{
     action::TuiAction,
     components::Component,
@@ -35,6 +37,7 @@ pub struct App {
     pub config: Config,
     pub tick_rate: f64,
     pub frame_rate: f64,
+    pub project_root: Option<String>,
     pub components: Vec<Box<dyn Component>>,
     pub should_quit: bool,
     pub should_suspend: bool,
@@ -43,12 +46,13 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
+    pub fn new(project_root: Option<String>) -> Result<Self> {
         let config = Config::new()?;
         let mode = Mode::Home;
         Ok(Self {
-            tick_rate,
-            frame_rate,
+            tick_rate: 4.0,
+            frame_rate: 60.0,
+            project_root,
             components: vec![
                 Box::new(ProjectComponent::new()),
                 Box::new(RunnersComponent::new()),
@@ -66,7 +70,8 @@ impl App {
     pub async fn run(&mut self) -> Result<()> {
         let store = Store::new(reducer).wrap(ThunkMiddleware).await;
         let daemon = Arc::new(FlutterDaemon::new()?);
-        let context = Arc::new(Context::new(daemon.clone()));
+        let session_manager = Arc::new(RwLock::new(SessionManager::new(self.project_root.clone())));
+        let context = Arc::new(Context::new(daemon.clone(), session_manager.clone()));
         let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel::<TuiAction>();
         let (redux_action_tx, mut redux_action_rx) = mpsc::unbounded_channel::<ActionOrThunk>();
 
@@ -125,9 +130,6 @@ impl App {
             }
 
             while let Ok(action) = tui_action_rx.try_recv() {
-                if action != TuiAction::Tick && action != TuiAction::Render {
-                    log::debug!("{action:?}");
-                }
                 match action {
                     TuiAction::Tick => {
                         self.last_tick_key_events.drain(..);
@@ -159,10 +161,10 @@ impl App {
                     }
                     ActionOrThunk::Thunk(action) => {
                         store
-                            .dispatch(thunk::ActionOrThunk::Thunk(Box::new(thunk_impl(
+                            .dispatch(thunk::ActionOrThunk::Thunk(thunk_impl(
                                 action,
                                 context.clone(),
-                            ))))
+                            )))
                             .await;
                     }
                 }

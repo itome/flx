@@ -29,5 +29,49 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
+        Action::RegisterSession { session_id } => State {
+            session_id: Some(session_id.clone()),
+            sessions: [state.sessions, vec![session_id]].concat(),
+            ..state
+        },
+        Action::UnregisterSession { session_id } => State {
+            session_id: None,
+            sessions: state
+                .sessions
+                .into_iter()
+                .filter(|s| s != &session_id)
+                .collect(),
+            ..state
+        },
+        Action::NextSession => State {
+            session_id: match state.session_id {
+                Some(session_id) => {
+                    let index = state
+                        .sessions
+                        .iter()
+                        .position(|s| s == &session_id)
+                        .unwrap();
+                    let next_index = (index + 1) % state.sessions.len();
+                    Some(state.sessions[next_index].clone())
+                }
+                None => None,
+            },
+            ..state
+        },
+        Action::PreviousSession => State {
+            session_id: match state.session_id {
+                Some(session_id) => {
+                    let index = state
+                        .sessions
+                        .iter()
+                        .position(|s| s == &session_id)
+                        .unwrap();
+                    let next_index = (index + state.sessions.len() - 1) % state.sessions.len();
+                    Some(state.sessions[next_index].clone())
+                }
+                None => None,
+            },
+            ..state
+        },
     }
 }

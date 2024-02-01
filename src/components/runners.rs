@@ -2,72 +2,90 @@ use std::sync::Arc;
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{prelude::*, widgets::*};
-use redux_rs::{middlewares::thunk::ActionOrThunk, StoreApi};
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc::UnboundedSender, Mutex};
 
 use crate::{
     daemon::{self, flutter::FlutterDaemon, io::device::Device},
-    redux::state::{State, Tab},
+    redux::{
+        action::Action,
+        state::{State, Tab},
+        thunk::ThunkAction,
+        ActionOrThunk,
+    },
     tui::Frame,
 };
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{self, eyre, Result};
 
 use super::Component;
 
 pub struct RunnersComponent {
-    list_state: ListState,
+    action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
 impl RunnersComponent {
     pub fn new() -> Self {
-        Self {
-            list_state: ListState::default().with_selected(Some(0)),
-        }
+        Self { action_tx: None }
     }
 
-    fn next(&mut self) {
-        // let i = match self.list_state.selected() {
-        //     Some(i) => {
-        //         let sessions = &self.session_manager.lock().unwrap().sessions;
-        //         if i >= sessions.len() {
-        //             0
-        //         } else {
-        //             i + 1
-        //         }
-        //     }
-        //     None => 0,
-        // };
-        // self.list_state.select(Some(i));
+    fn next(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::NextSession.into())?;
+        Ok(())
     }
 
-    fn previous(&mut self) {
-        // let i = match self.list_state.selected() {
-        //     Some(i) => {
-        //         if i == 0 {
-        //             let sessions = &self.session_manager.lock().unwrap().sessions;
-        //             sessions.len()
-        //         } else {
-        //             i - 1
-        //         }
-        //     }
-        //     None => 0,
-        // };
-        // self.list_state.select(Some(i));
+    fn previous(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::PreviousSession.into())?;
+        Ok(())
     }
 
-    fn unselect(&mut self) {
-        self.list_state.select(None);
+    fn run_new_app(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::RunNewApp.into())?;
+        Ok(())
     }
 
-    fn run_new_app(&mut self) -> Result<()> {
-        // if let Ok(mut session_manager) = self.session_manager.lock() {
-        //     session_manager.run_new_app()?;
-        // }
+    fn hot_reload(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::HotReload.into())?;
+        Ok(())
+    }
+
+    fn hot_restart(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::HotRestart.into())?;
         Ok(())
     }
 }
 
 impl Component for RunnersComponent {
+    fn register_action_handler(&mut self, tx: UnboundedSender<ActionOrThunk>) -> Result<()> {
+        self.action_tx = Some(tx);
+        Ok(())
+    }
+
+    fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<crate::action::TuiAction>> {
+        match key.code {
+            KeyCode::Char('r') => self.hot_reload()?,
+            KeyCode::Char('R') => self.hot_restart()?,
+            KeyCode::Char('n') => self.run_new_app()?,
+            KeyCode::Up => self.previous()?,
+            KeyCode::Down => self.next()?,
+            _ => {}
+        }
+        Ok(None)
+    }
+
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let default_color = if state.selected_tab == Tab::Runners {
             Color::White
@@ -85,13 +103,11 @@ impl Component for RunnersComponent {
             .borders(Borders::ALL)
             .border_style(Style::default().fg(default_color));
 
-        let sessions: Vec<String> = vec![];
-        let mut items = sessions
+        let mut items = state
+            .sessions
             .iter()
-            .enumerate()
-            .map(|(index, _)| {
-                ListItem::new(format!(" App {} ", index + 1))
-                    .style(Style::default().fg(enabled_color))
+            .map(|session_id| {
+                ListItem::new(session_id.clone()).style(Style::default().fg(enabled_color))
             })
             .collect::<Vec<_>>();
         items.push(ListItem::new(" ▶ Run new app ").style(Style::default().fg(default_color)));
@@ -101,6 +117,6 @@ impl Component for RunnersComponent {
             .fg(Color::White)
             .highlight_style(Style::new().add_modifier(Modifier::REVERSED));
 
-        f.render_stateful_widget(list, area, &mut self.list_state);
+        f.render_widget(list, area);
     }
 }

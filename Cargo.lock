@@ -632,6 +632,7 @@ dependencies = [
  "tracing",
  "tracing-error",
  "tracing-subscriber",
+ "uuid",
  "vergen",
 ]
 
