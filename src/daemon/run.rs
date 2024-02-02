@@ -27,6 +27,7 @@ pub struct FlutterRun {
     tx: broadcast::Sender<String>,
     stdin: Arc<Mutex<ChildStdin>>,
     request_count: Arc<Mutex<u32>>,
+    _process: tokio::process::Child,
 }
 
 impl FlutterRun {
@@ -38,6 +39,7 @@ impl FlutterRun {
         }
         let mut process = Command::new("flutter")
             .args(args)
+            .kill_on_drop(true)
             .current_dir(project_root.unwrap_or("."))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -76,6 +78,7 @@ impl FlutterRun {
             stdin: Arc::new(Mutex::new(process.stdin.take().unwrap())),
             tx,
             request_count: Arc::new(Mutex::new(0)),
+            _process: process,
         })
     }
 

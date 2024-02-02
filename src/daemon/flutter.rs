@@ -34,12 +34,14 @@ pub struct FlutterDaemon {
     tx: broadcast::Sender<String>,
     stdin: Arc<Mutex<ChildStdin>>,
     request_count: Arc<Mutex<u32>>,
+    _process: tokio::process::Child,
 }
 
 impl FlutterDaemon {
     pub fn new() -> Result<Self> {
         let mut process = Command::new("flutter")
             .arg("daemon")
+            .kill_on_drop(true)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()?;
@@ -62,6 +64,7 @@ impl FlutterDaemon {
         Ok(Self {
             stdin: Arc::new(Mutex::new(process.stdin.take().unwrap())),
             tx,
+            _process: process,
             request_count: Arc::new(Mutex::new(0)),
         })
     }
