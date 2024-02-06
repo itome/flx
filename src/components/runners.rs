@@ -78,7 +78,11 @@ impl Component for RunnersComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<crate::action::TuiAction>> {
+    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        if state.selected_tab != Tab::Runners {
+            return Ok(());
+        }
+
         match key.code {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
@@ -87,7 +91,7 @@ impl Component for RunnersComponent {
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             _ => {}
         }
-        Ok(None)
+        Ok(())
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {

@@ -67,13 +67,13 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
-    fn handle_events(&mut self, event: Option<Event>) -> Result<Option<TuiAction>> {
-        let r = match event {
-            Some(Event::Key(key_event)) => self.handle_key_events(key_event)?,
-            Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event)?,
-            _ => None,
+    fn handle_events(&mut self, event: Option<Event>, state: &State) -> Result<()> {
+        match event {
+            Some(Event::Key(key_event)) => self.handle_key_events(key_event, state)?,
+            Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event, state)?,
+            _ => {}
         };
-        Ok(r)
+        Ok(())
     }
     /// Handle key events and produce actions if necessary.
     ///
@@ -85,8 +85,8 @@ pub trait Component {
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
     #[allow(unused_variables)]
-    fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<TuiAction>> {
-        Ok(None)
+    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        Ok(())
     }
     /// Handle mouse events and produce actions if necessary.
     ///
@@ -98,8 +98,8 @@ pub trait Component {
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
     #[allow(unused_variables)]
-    fn handle_mouse_events(&mut self, mouse: MouseEvent) -> Result<Option<TuiAction>> {
-        Ok(None)
+    fn handle_mouse_events(&mut self, mouse: MouseEvent, state: &State) -> Result<()> {
+        Ok(())
     }
     /// Update the state of the component based on a received action. (REQUIRED)
     ///

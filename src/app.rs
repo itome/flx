@@ -108,6 +108,7 @@ impl App {
         }
 
         loop {
+            let state = store.state_cloned().await;
             if let Some(e) = tui.next().await {
                 match e {
                     tui::Event::Quit => tui_action_tx.send(TuiAction::Quit)?,
@@ -135,9 +136,7 @@ impl App {
                     _ => {}
                 }
                 for component in self.components.iter_mut() {
-                    if let Some(action) = component.handle_events(Some(e.clone()))? {
-                        tui_action_tx.send(action)?;
-                    }
+                    component.handle_events(Some(e.clone()), &state)?;
                 }
             }
 
@@ -151,11 +150,9 @@ impl App {
                     TuiAction::Resume => self.should_suspend = false,
                     TuiAction::Resize(w, h) => {
                         tui.resize(Rect::new(0, 0, w, h))?;
-                        let state = store.state_cloned().await;
                         self.draw(&mut tui, &state)?;
                     }
                     TuiAction::Render => {
-                        let state = store.state_cloned().await;
                         self.draw(&mut tui, &state)?;
                     }
                     _ => {}

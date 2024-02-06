@@ -46,13 +46,13 @@ impl Component for SelectTabControllerComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<TuiAction>> {
+    fn handle_key_events(&mut self, key: KeyEvent, _: &State) -> Result<()> {
         match key.code {
             KeyCode::Left | KeyCode::Char('h') => self.previous()?,
             KeyCode::Right | KeyCode::Char('l') => self.next()?,
             _ => {}
         }
-        Ok(None)
+        Ok(())
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {}

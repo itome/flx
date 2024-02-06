@@ -65,7 +65,11 @@ impl Component for SelectDevicePopupComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<TuiAction>> {
+    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        if !state.select_device_popup.visible {
+            return Ok(());
+        }
+
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
@@ -73,7 +77,7 @@ impl Component for SelectDevicePopupComponent {
             KeyCode::Esc => self.hide_popup()?,
             _ => {}
         }
-        Ok(None)
+        Ok(())
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
