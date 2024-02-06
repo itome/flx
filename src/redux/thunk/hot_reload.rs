@@ -31,8 +31,17 @@ where
             return;
         };
 
-        let session_manager = self.context.session_manager.read().await;
-        let run = &session_manager.sessions.get(&session_id).unwrap().run;
+        let Ok(session) = self
+            .context
+            .session_manager
+            .session(session_id.clone())
+            .await
+        else {
+            return;
+        };
+        let session = session.read().await;
+        let run = &session.as_ref().unwrap().run;
+
         run.hot_reload().await.unwrap();
 
         while let Ok(params) = run.receive_app_progress().await {

@@ -70,7 +70,7 @@ impl App {
     pub async fn run(&mut self) -> Result<()> {
         let store = Store::new(reducer).wrap(ThunkMiddleware).await;
         let daemon = Arc::new(FlutterDaemon::new()?);
-        let session_manager = Arc::new(RwLock::new(SessionManager::new(self.project_root.clone())));
+        let session_manager = Arc::new(SessionManager::new(self.project_root.clone()));
         let context = Arc::new(Context::new(daemon.clone(), session_manager.clone()));
         let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel::<TuiAction>();
         let (redux_action_tx, mut redux_action_rx) = mpsc::unbounded_channel::<ActionOrThunk>();

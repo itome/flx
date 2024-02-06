@@ -27,7 +27,7 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        let Ok(id) = self.context.session_manager.write().await.run_new_app() else {
+        let Ok(id) = self.context.session_manager.run_new_app().await else {
             return;
         };
 
@@ -37,8 +37,11 @@ where
             })
             .await;
 
-        let session_manager = self.context.session_manager.read().await;
-        let run = &session_manager.sessions.get(&id).unwrap().run;
+        let Ok(session) = self.context.session_manager.session(id.clone()).await else {
+            return;
+        };
+        let session = session.read().await;
+        let run = &session.as_ref().unwrap().run;
 
         if let Ok(params) = run.receive_app_start().await {
             store

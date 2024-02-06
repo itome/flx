@@ -9,11 +9,11 @@ use crate::{
 
 pub struct Context {
     pub daemon: Arc<FlutterDaemon>,
-    pub session_manager: Arc<RwLock<SessionManager>>,
+    pub session_manager: Arc<SessionManager>,
 }
 
 impl Context {
-    pub fn new(daemon: Arc<FlutterDaemon>, session_manager: Arc<RwLock<SessionManager>>) -> Self {
+    pub fn new(daemon: Arc<FlutterDaemon>, session_manager: Arc<SessionManager>) -> Self {
         Self {
             daemon,
             session_manager,
