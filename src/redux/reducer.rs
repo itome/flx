@@ -32,9 +32,20 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
-        Action::RegisterSession { session_id } => State {
+        Action::RegisterSession {
+            session_id,
+            device_id,
+        } => State {
             session_id: Some(session_id.clone()),
-            sessions: [state.sessions, vec![SessionState::new(session_id)]].concat(),
+            sessions: [
+                state.sessions,
+                vec![SessionState {
+                    id: session_id,
+                    device_id,
+                    ..SessionState::default()
+                }],
+            ]
+            .concat(),
             ..state
         },
         Action::UnregisterSession { session_id } => State {
@@ -76,6 +87,64 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
+        Action::NextDeviceForRunning => State {
+            select_device_popup: SelectDevicePopupState {
+                selected_device_id: {
+                    let devices = state.devices.iter().filter(|d| {
+                        state.supported_platforms.contains(&d.platform_type)
+                            && state
+                                .sessions
+                                .iter()
+                                .all(|s| s.device_id != Some(d.id.clone()))
+                    });
+                    match state.select_device_popup.selected_device_id {
+                        Some(selected_device_id) => {
+                            let devices = devices.collect::<Vec<_>>();
+                            if let Some(index) =
+                                devices.iter().position(|d| d.id == selected_device_id)
+                            {
+                                let next_index = (index + 1) % devices.len();
+                                devices.get(next_index).map(|d| d.id.clone())
+                            } else {
+                                None
+                            }
+                        }
+                        None => state.devices.first().map(|d| d.id.clone()),
+                    }
+                },
+                ..state.select_device_popup
+            },
+            ..state
+        },
+        Action::PreviousDeviceForRunning => State {
+            select_device_popup: SelectDevicePopupState {
+                selected_device_id: {
+                    let devices = state.devices.iter().filter(|d| {
+                        state.supported_platforms.contains(&d.platform_type)
+                            && state
+                                .sessions
+                                .iter()
+                                .all(|s| s.device_id != Some(d.id.clone()))
+                    });
+                    match state.select_device_popup.selected_device_id {
+                        Some(selected_device_id) => {
+                            let devices = devices.collect::<Vec<_>>();
+                            if let Some(index) =
+                                devices.iter().position(|d| d.id == selected_device_id)
+                            {
+                                let next_index = (index + devices.len() - 1) % devices.len();
+                                devices.get(next_index).map(|d| d.id.clone())
+                            } else {
+                                None
+                            }
+                        }
+                        None => state.devices.first().map(|d| d.id.clone()),
+                    }
+                },
+                ..state.select_device_popup
+            },
+            ..state
+        },
         Action::ShowSelectDevicePopUp => State {
             select_device_popup: SelectDevicePopupState {
                 visible: true,
@@ -97,7 +166,7 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::HideSelectDevicePopUp => State {
             select_device_popup: SelectDevicePopupState {
                 visible: false,
-                selected_device_id: None,
+                ..state.select_device_popup
             },
             ..state
         },

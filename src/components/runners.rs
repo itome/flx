@@ -83,8 +83,8 @@ impl Component for RunnersComponent {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
             KeyCode::Char('n') => self.show_select_device_popup()?,
-            KeyCode::Up => self.previous()?,
-            KeyCode::Down => self.next()?,
+            KeyCode::Up | KeyCode::Char('k') => self.previous()?,
+            KeyCode::Down | KeyCode::Char('j') => self.next()?,
             _ => {}
         }
         Ok(None)
@@ -93,11 +93,6 @@ impl Component for RunnersComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let default_color = if state.selected_tab == Tab::Runners {
             Color::White
-        } else {
-            Color::DarkGray
-        };
-        let enabled_color = if state.selected_tab == Tab::Runners {
-            Color::Green
         } else {
             Color::DarkGray
         };
@@ -116,7 +111,7 @@ impl Component for RunnersComponent {
                     .iter()
                     .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
                 let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
-                let state = if session.hot_reloading {
+                let status = if session.hot_reloading {
                     "⚡️"
                 } else if session.hot_restarting {
                     "🔥"
@@ -132,15 +127,17 @@ impl Component for RunnersComponent {
                     Some(AppMode::JitRelease) => "jit release",
                     None => "-",
                 };
-                let name = format!(" {} {} ({})", state, device_name, mode);
-                ListItem::new(name).style(Style::default().fg(enabled_color))
+                let name = format!(" {} {} ({})", status, device_name, mode);
+                let item = ListItem::new(name).style(Style::default().fg(default_color));
+                if state.session_id == Some(session.id.clone()) {
+                    item.add_modifier(Modifier::REVERSED)
+                } else {
+                    item
+                }
             })
             .collect::<Vec<_>>();
 
-        let list = List::new(items)
-            .block(block)
-            .fg(Color::White)
-            .highlight_style(Style::new().add_modifier(Modifier::REVERSED));
+        let list = List::new(items).block(block).fg(Color::White);
 
         f.render_widget(list, area);
     }

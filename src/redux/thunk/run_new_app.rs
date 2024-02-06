@@ -31,9 +31,21 @@ where
             .select(|state: &State| state.select_device_popup.selected_device_id.clone())
             .await;
 
-        let Ok(id) = self.context.session_manager.run_new_app(device_id).await else {
+        let Ok(id) = self
+            .context
+            .session_manager
+            .run_new_app(device_id.clone())
+            .await
+        else {
             return;
         };
+
+        store
+            .dispatch(Action::RegisterSession {
+                session_id: id.clone(),
+                device_id,
+            })
+            .await;
 
         let Ok(session) = self.context.session_manager.session(id.clone()).await else {
             return;
@@ -42,11 +54,6 @@ where
         let run = &session.as_ref().unwrap().run;
 
         if let Ok(params) = run.receive_app_start().await {
-            store
-                .dispatch(Action::RegisterSession {
-                    session_id: id.clone(),
-                })
-                .await;
             store
                 .dispatch(Action::StartApp {
                     session_id: id.clone(),

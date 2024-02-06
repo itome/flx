@@ -24,20 +24,6 @@ pub struct SessionState {
     pub hot_restarting: bool,
 }
 
-impl SessionState {
-    pub fn new(id: String) -> Self {
-        Self {
-            id,
-            device_id: None,
-            app_id: None,
-            mode: None,
-            started: false,
-            hot_reloading: false,
-            hot_restarting: false,
-        }
-    }
-}
-
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SelectDevicePopupState {
     pub visible: bool,

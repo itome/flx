@@ -14,6 +14,7 @@ pub enum Action {
 
     RegisterSession {
         session_id: String,
+        device_id: Option<String>,
     },
     UnregisterSession {
         session_id: String,
@@ -29,6 +30,9 @@ pub enum Action {
 
     NextSession,
     PreviousSession,
+
+    NextDeviceForRunning,
+    PreviousDeviceForRunning,
 
     ShowSelectDevicePopUp,
     HideSelectDevicePopUp,

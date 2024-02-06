@@ -25,11 +25,28 @@ impl SelectDevicePopupComponent {
         Self::default()
     }
 
+    fn next(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::NextDeviceForRunning.into())?;
+        Ok(())
+    }
+
+    fn previous(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::PreviousDeviceForRunning.into())?;
+        Ok(())
+    }
+
     fn run_new_app(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
             .send(ThunkAction::RunNewApp.into())?;
+        self.hide_popup()?;
         Ok(())
     }
 
@@ -49,19 +66,17 @@ impl Component for SelectDevicePopupComponent {
     }
 
     fn handle_key_events(&mut self, key: KeyEvent) -> Result<Option<TuiAction>> {
-        if key.code == KeyCode::Esc {
-            self.hide_popup()?;
-        } else if key.code == KeyCode::Enter {
-            self.run_new_app()?;
+        match key.code {
+            KeyCode::Up | KeyCode::Char('k') => self.previous()?,
+            KeyCode::Down | KeyCode::Char('j') => self.next()?,
+            KeyCode::Enter => self.run_new_app()?,
+            KeyCode::Esc => self.hide_popup()?,
+            _ => {}
         }
         Ok(None)
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        log::info!(
-            "Drawing SelectDevicePopupComponent with devices: {:?}",
-            state.devices
-        );
         let devices = state.devices.iter().filter(|d| {
             state.supported_platforms.contains(&d.platform_type)
                 && state
@@ -71,7 +86,14 @@ impl Component for SelectDevicePopupComponent {
         });
 
         let items = devices
-            .map(|device| ListItem::new(device.name.clone()).style(Style::default()))
+            .map(|device| {
+                let item = ListItem::new(device.name.clone()).style(Style::default());
+                if state.select_device_popup.selected_device_id == Some(device.id.clone()) {
+                    item.add_modifier(Modifier::REVERSED)
+                } else {
+                    item
+                }
+            })
             .collect::<Vec<_>>();
 
         let block = Block::default()
