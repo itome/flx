@@ -40,9 +40,14 @@ impl SessionState {
 
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct State {
+    pub project_root: Option<String>,
     pub devices: Vec<Device>,
-    pub selected_tab: Tab,
 
     pub sessions: Vec<SessionState>,
     pub session_id: Option<String>,
+
+    pub supported_platforms: Vec<String>,
+
+    pub selected_tab: Tab,
+
 }

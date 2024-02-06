@@ -19,6 +19,7 @@ use crate::components::project::ProjectComponent;
 use crate::components::runners::RunnersComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::daemon::flutter::FlutterDaemon;
+use crate::redux::action::Action;
 use crate::redux::state::State;
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
@@ -75,7 +76,14 @@ impl App {
         let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel::<TuiAction>();
         let (redux_action_tx, mut redux_action_rx) = mpsc::unbounded_channel::<ActionOrThunk>();
 
+        redux_action_tx.send(
+            Action::SetProjectRoot {
+                project_root: self.project_root.clone(),
+            }
+            .into(),
+        )?;
         redux_action_tx.send(ThunkAction::WatchDevices.into())?;
+        redux_action_tx.send(ThunkAction::LoadSupportedPlatforms.into())?;
 
         let mut tui = tui::Tui::new()?
             .tick_rate(self.tick_rate)

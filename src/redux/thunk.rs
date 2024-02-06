@@ -9,11 +9,13 @@ use super::{action::Action, state::State};
 pub mod context;
 pub mod hot_reload;
 pub mod hot_restart;
+pub mod load_supported_platforms;
 pub mod run_new_app;
 pub mod watch_devices;
 
 pub enum ThunkAction {
     WatchDevices,
+    LoadSupportedPlatforms,
     RunNewApp,
     HotReload,
     HotRestart,
@@ -31,5 +33,8 @@ where
         ThunkAction::RunNewApp => Box::new(run_new_app::RunNewAppThunk::new(context)),
         ThunkAction::HotReload => Box::new(hot_reload::HotReloadThunk::new(context)),
         ThunkAction::HotRestart => Box::new(hot_restart::HotRestartThunk::new(context)),
+        ThunkAction::LoadSupportedPlatforms => Box::new(
+            load_supported_platforms::LoadSupportedPlatformsThunk::new(context),
+        ),
     }
 }

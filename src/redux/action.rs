@@ -1,5 +1,6 @@
 use crate::daemon::io::{device::Device, event::AppMode};
 
+#[derive(Debug)]
 pub enum Action {
     AddDevice {
         device: Device,
@@ -16,6 +17,14 @@ pub enum Action {
     },
     UnregisterSession {
         session_id: String,
+    },
+
+    SetProjectRoot {
+        project_root: Option<String>,
+    },
+
+    SetSupportedPlatforms {
+        platforms: Vec<String>,
     },
 
     NextSession,
