@@ -117,9 +117,9 @@ impl Component for RunnersComponent {
                     .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
                 let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
                 let state = if session.hot_reloading {
-                    "🔥"
+                    ""
                 } else if session.hot_restarting {
-                    "🔁"
+                    "🔥"
                 } else if !session.started {
                     "🔄"
                 } else {

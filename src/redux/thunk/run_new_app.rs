@@ -56,7 +56,7 @@ where
 
         if let Ok(_) = run.receive_app_started().await {
             store
-                .dispatch(Action::StartHotRestart {
+                .dispatch(Action::SetAppStarted {
                     session_id: id.clone(),
                 })
                 .await;
