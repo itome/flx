@@ -8,8 +8,12 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(project_root: Option<&str>, flavor: Option<&str>) -> Self {
-        let run = FlutterRun::new(project_root, flavor).unwrap();
+    pub fn new(
+        project_root: Option<String>,
+        device_id: Option<String>,
+        flavor: Option<String>,
+    ) -> Self {
+        let run = FlutterRun::new(project_root, device_id, flavor).unwrap();
         Self {
             id: Uuid::new_v4().to_string(),
             run,

@@ -1,9 +1,12 @@
+use crate::redux::state::SelectDevicePopupState;
+
 use super::{
     action::Action,
     state::{SessionState, State, Tab},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
+    log::info!("Action: {:?}", action);
     match action {
         Action::AddDevice { device } => State {
             devices: [state.devices, vec![device]].concat(),
@@ -70,6 +73,31 @@ pub fn reducer(state: State, action: Action) -> State {
                     Some(state.sessions[next_index].id.clone())
                 }
                 None => None,
+            },
+            ..state
+        },
+        Action::ShowSelectDevicePopUp => State {
+            select_device_popup: SelectDevicePopupState {
+                visible: true,
+                selected_device_id: state
+                    .devices
+                    .iter()
+                    .filter(|d| {
+                        state.supported_platforms.contains(&d.platform_type)
+                            && state
+                                .sessions
+                                .iter()
+                                .all(|s| s.device_id != Some(d.id.clone()))
+                    })
+                    .nth(0)
+                    .map(|d| d.id.clone()),
+            },
+            ..state
+        },
+        Action::HideSelectDevicePopUp => State {
+            select_device_popup: SelectDevicePopupState {
+                visible: false,
+                selected_device_id: None,
             },
             ..state
         },

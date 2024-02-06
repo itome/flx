@@ -2,6 +2,7 @@ use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::prelude::Rect;
 use ratatui::prelude::*;
+use ratatui::widgets::Clear;
 use redux_rs::middlewares::thunk::thunk;
 use redux_rs::Store;
 use redux_rs::{
@@ -17,14 +18,16 @@ use crate::components;
 use crate::components::devices::DevicesComponent;
 use crate::components::project::ProjectComponent;
 use crate::components::runners::RunnersComponent;
+use crate::components::select_device_popup::SelectDevicePopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::daemon::flutter::FlutterDaemon;
 use crate::redux::action::Action;
-use crate::redux::state::State;
+use crate::redux::state::{SelectDevicePopupState, State};
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
 use crate::redux::thunk::{thunk_impl, ThunkAction};
 use crate::session::session_manager::SessionManager;
+use crate::utils::centered_rect;
 use crate::{
     action::TuiAction,
     components::Component,
@@ -58,6 +61,7 @@ impl App {
                 Box::new(ProjectComponent::new()),
                 Box::new(RunnersComponent::new()),
                 Box::new(DevicesComponent::new()),
+                Box::new(SelectDevicePopupComponent::new()),
                 Box::new(SelectTabControllerComponent::new()),
             ],
             should_quit: false,
@@ -213,6 +217,12 @@ impl App {
             self.components[0].draw(f, tab_layout[0], state);
             self.components[1].draw(f, tab_layout[1], state);
             self.components[2].draw(f, tab_layout[2], state);
+
+            if state.select_device_popup.visible {
+                let popup_area = centered_rect(60, 20, f.size());
+                f.render_widget(Clear, popup_area);
+                self.components[3].draw(f, popup_area, state);
+            }
         })?;
         Ok(())
     }

@@ -27,15 +27,13 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        let Ok(id) = self.context.session_manager.run_new_app().await else {
+        let device_id = store
+            .select(|state: &State| state.select_device_popup.selected_device_id.clone())
+            .await;
+
+        let Ok(id) = self.context.session_manager.run_new_app(device_id).await else {
             return;
         };
-
-        store
-            .dispatch(Action::RegisterSession {
-                session_id: id.clone(),
-            })
-            .await;
 
         let Ok(session) = self.context.session_manager.session(id.clone()).await else {
             return;
@@ -44,6 +42,11 @@ where
         let run = &session.as_ref().unwrap().run;
 
         if let Ok(params) = run.receive_app_start().await {
+            store
+                .dispatch(Action::RegisterSession {
+                    session_id: id.clone(),
+                })
+                .await;
             store
                 .dispatch(Action::StartApp {
                     session_id: id.clone(),

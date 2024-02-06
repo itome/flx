@@ -39,6 +39,12 @@ impl SessionState {
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
+pub struct SelectDevicePopupState {
+    pub visible: bool,
+    pub selected_device_id: Option<String>,
+}
+
+#[derive(Default, Clone, PartialEq, Eq)]
 pub struct State {
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
@@ -50,4 +56,5 @@ pub struct State {
 
     pub selected_tab: Tab,
 
+    pub select_device_popup: SelectDevicePopupState,
 }

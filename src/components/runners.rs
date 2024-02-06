@@ -47,11 +47,11 @@ impl RunnersComponent {
         Ok(())
     }
 
-    fn run_new_app(&self) -> Result<()> {
+    fn show_select_device_popup(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(ThunkAction::RunNewApp.into())?;
+            .send(Action::ShowSelectDevicePopUp.into())?;
         Ok(())
     }
 
@@ -82,7 +82,7 @@ impl Component for RunnersComponent {
         match key.code {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
-            KeyCode::Char('n') => self.run_new_app()?,
+            KeyCode::Char('n') => self.show_select_device_popup()?,
             KeyCode::Up => self.previous()?,
             KeyCode::Down => self.next()?,
             _ => {}
@@ -107,7 +107,7 @@ impl Component for RunnersComponent {
             .borders(Borders::ALL)
             .border_style(Style::default().fg(default_color));
 
-        let mut items = state
+        let items = state
             .sessions
             .iter()
             .map(|session| {
@@ -117,7 +117,7 @@ impl Component for RunnersComponent {
                     .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
                 let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
                 let state = if session.hot_reloading {
-                    ""
+                    "⚡️"
                 } else if session.hot_restarting {
                     "🔥"
                 } else if !session.started {
@@ -136,7 +136,6 @@ impl Component for RunnersComponent {
                 ListItem::new(name).style(Style::default().fg(enabled_color))
             })
             .collect::<Vec<_>>();
-        items.push(ListItem::new(" ▶ Run new app ").style(Style::default().fg(default_color)));
 
         let list = List::new(items)
             .block(block)

@@ -30,6 +30,9 @@ pub enum Action {
     NextSession,
     PreviousSession,
 
+    ShowSelectDevicePopUp,
+    HideSelectDevicePopUp,
+
     StartApp {
         session_id: String,
         device_id: String,

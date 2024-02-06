@@ -31,16 +31,24 @@ pub struct FlutterRun {
 }
 
 impl FlutterRun {
-    pub fn new(project_root: Option<&str>, flavor: Option<&str>) -> Result<Self> {
-        let mut args = vec!["run", "--machine"];
+    pub fn new(
+        project_root: Option<String>,
+        device_id: Option<String>,
+        flavor: Option<String>,
+    ) -> Result<Self> {
+        let mut args = vec!["run".to_string(), "--machine".to_string()];
         if let Some(flavor) = flavor {
-            args.push("--flavor");
+            args.push("--flavor".to_string());
             args.push(flavor);
+        }
+        if let Some(device_id) = device_id {
+            args.push("-d".to_string());
+            args.push(device_id);
         }
         let mut process = Command::new("flutter")
             .args(args)
             .kill_on_drop(true)
-            .current_dir(project_root.unwrap_or("."))
+            .current_dir(project_root.unwrap_or(".".to_string()))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()?;

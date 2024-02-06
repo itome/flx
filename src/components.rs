@@ -13,6 +13,7 @@ use crate::{
 pub mod devices;
 pub mod project;
 pub mod runners;
+pub mod select_device_popup;
 pub mod select_tab_handler;
 
 /// `Component` is a trait that represents a visual and interactive element of the user interface.
