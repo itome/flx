@@ -13,6 +13,29 @@ impl Default for Tab {
     }
 }
 
+#[derive(Clone, PartialEq, Eq)]
+pub enum PopUp {
+    SelectDevice,
+}
+
+impl Default for PopUp {
+    fn default() -> Self {
+        PopUp::SelectDevice
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum Focus {
+    Tab(Tab),
+    PopUp(PopUp),
+}
+
+impl Default for Focus {
+    fn default() -> Self {
+        Focus::Tab(Tab::Runners)
+    }
+}
+
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SessionState {
     pub id: String,
@@ -32,6 +55,8 @@ pub struct SelectDevicePopupState {
 
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct State {
+    pub current_focus: Focus,
+
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
 
@@ -39,8 +64,6 @@ pub struct State {
     pub session_id: Option<String>,
 
     pub supported_platforms: Vec<String>,
-
-    pub selected_tab: Tab,
 
     pub select_device_popup: SelectDevicePopupState,
 }

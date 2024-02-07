@@ -3,7 +3,7 @@ use std::sync::Arc;
 use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 
-use crate::redux::state::{State, Tab};
+use crate::redux::state::{Focus, State, Tab};
 use crate::{daemon::flutter::FlutterDaemon, tui::Frame};
 use color_eyre::eyre::Result;
 
@@ -20,7 +20,7 @@ impl ProjectComponent {
 
 impl Component for ProjectComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let default_color = if state.selected_tab == Tab::Project {
+        let default_color = if state.current_focus == Focus::Tab(Tab::Project) {
             Color::White
         } else {
             Color::DarkGray

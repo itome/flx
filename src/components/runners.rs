@@ -12,7 +12,7 @@ use crate::{
     },
     redux::{
         action::Action,
-        state::{State, Tab},
+        state::{Focus, State, Tab},
         thunk::ThunkAction,
         ActionOrThunk,
     },
@@ -79,7 +79,7 @@ impl Component for RunnersComponent {
     }
 
     fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
-        if state.selected_tab != Tab::Runners {
+        if state.current_focus != Focus::Tab(Tab::Runners) {
             return Ok(());
         }
 
@@ -95,7 +95,7 @@ impl Component for RunnersComponent {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let default_color = if state.selected_tab == Tab::Runners {
+        let default_color = if state.current_focus == Focus::Tab(Tab::Runners) {
             Color::White
         } else {
             Color::DarkGray

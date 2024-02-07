@@ -1,4 +1,4 @@
-use crate::redux::state::SelectDevicePopupState;
+use crate::redux::state::{Focus, PopUp, SelectDevicePopupState};
 
 use super::{
     action::Action,
@@ -17,18 +17,20 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::NextTab => State {
-            selected_tab: match state.selected_tab {
-                Tab::Project => Tab::Runners,
-                Tab::Runners => Tab::Devices,
-                Tab::Devices => Tab::Project,
+            current_focus: match state.current_focus {
+                Focus::Tab(Tab::Project) => Focus::Tab(Tab::Runners),
+                Focus::Tab(Tab::Runners) => Focus::Tab(Tab::Devices),
+                Focus::Tab(Tab::Devices) => Focus::Tab(Tab::Project),
+                _ => state.current_focus,
             },
             ..state
         },
         Action::PreviousTab => State {
-            selected_tab: match state.selected_tab {
-                Tab::Project => Tab::Devices,
-                Tab::Runners => Tab::Project,
-                Tab::Devices => Tab::Runners,
+            current_focus: match state.current_focus {
+                Focus::Tab(Tab::Project) => Focus::Tab(Tab::Devices),
+                Focus::Tab(Tab::Runners) => Focus::Tab(Tab::Project),
+                Focus::Tab(Tab::Devices) => Focus::Tab(Tab::Runners),
+                _ => state.current_focus,
             },
             ..state
         },
@@ -146,6 +148,7 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::ShowSelectDevicePopUp => State {
+            current_focus: Focus::PopUp(PopUp::SelectDevice),
             select_device_popup: SelectDevicePopupState {
                 visible: true,
                 selected_device_id: state
@@ -164,6 +167,7 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::HideSelectDevicePopUp => State {
+            current_focus: Focus::Tab(Tab::Runners),
             select_device_popup: SelectDevicePopupState {
                 visible: false,
                 ..state.select_device_popup
