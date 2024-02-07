@@ -88,9 +88,10 @@ impl Component for SelectDevicePopupComponent {
         let items = devices
             .iter()
             .map(|device| {
-                let item = ListItem::new(device.name.clone()).style(Style::default());
+                let item = ListItem::new(format!(" {} ", device.name.clone()));
                 if state.select_device_popup.selected_device_id == Some(device.id.clone()) {
                     item.add_modifier(Modifier::REVERSED)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     item
                 }
@@ -99,14 +100,10 @@ impl Component for SelectDevicePopupComponent {
 
         let block = Block::default()
             .title("Which device do you want to use?")
-            .padding(Padding::horizontal(1))
             .borders(Borders::ALL)
             .border_style(Style::default());
 
-        let list = List::new(items)
-            .block(block)
-            .fg(Color::White)
-            .highlight_style(Style::new().add_modifier(Modifier::REVERSED));
+        let list = List::new(items).block(block);
 
         f.render_widget(list, area);
     }

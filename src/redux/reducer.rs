@@ -1,8 +1,10 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use redux_rs::Selector;
 
 use crate::redux::{
     selector::availale_devices::AvailableDevicesSelector,
-    state::{Focus, PopUp, SelectDevicePopupState},
+    state::{Focus, PopUp, SelectDevicePopupState, SessionLog},
 };
 
 use super::{
@@ -11,7 +13,6 @@ use super::{
 };
 
 pub fn reducer(state: State, action: Action) -> State {
-    log::info!("Action: {:?}", action);
     match action {
         Action::AddDevice { device } => State {
             devices: [state.devices, vec![device]].concat(),
@@ -289,6 +290,107 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::SetSupportedPlatforms { platforms } => State {
             supported_platforms: platforms,
+            ..state
+        },
+        Action::AppendProgressLog {
+            session_id,
+            id,
+            finished,
+            message,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            logs: {
+                                if s.logs.iter().any(|log| {
+                                    if let SessionLog::Progress { id: log_id, .. } = log {
+                                        id == *log_id
+                                    } else {
+                                        false
+                                    }
+                                }) {
+                                    s.logs
+                                        .into_iter()
+                                        .map(|log| {
+                                            if let SessionLog::Progress {
+                                                id: log_id,
+                                                start_at,
+                                                end_at,
+                                                message,
+                                            } = log
+                                            {
+                                                if id == log_id {
+                                                    SessionLog::Progress {
+                                                        id: log_id,
+                                                        start_at,
+                                                        message,
+                                                        end_at: if finished {
+                                                            Some(
+                                                                SystemTime::now()
+                                                                    .duration_since(UNIX_EPOCH)
+                                                                    .unwrap()
+                                                                    .as_millis(),
+                                                            )
+                                                        } else {
+                                                            end_at
+                                                        },
+                                                    }
+                                                } else {
+                                                    SessionLog::Progress {
+                                                        id: log_id,
+                                                        start_at,
+                                                        message: message.clone(),
+                                                        end_at,
+                                                    }
+                                                }
+                                            } else {
+                                                log
+                                            }
+                                        })
+                                        .collect()
+                                } else {
+                                    [
+                                        s.logs,
+                                        vec![SessionLog::Progress {
+                                            id: id.clone(),
+                                            message: message.clone(),
+                                            start_at: SystemTime::now()
+                                                .duration_since(UNIX_EPOCH)
+                                                .unwrap()
+                                                .as_millis(),
+                                            end_at: None,
+                                        }],
+                                    ]
+                                    .concat()
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::AppendStdoutLog { session_id, line } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            logs: { [s.logs, vec![SessionLog::Stdout(line.clone())]].concat() },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
             ..state
         },
     }

@@ -11,6 +11,7 @@ use crate::{
 };
 
 pub mod devices;
+pub mod logs;
 pub mod project;
 pub mod runners;
 pub mod select_device_popup;

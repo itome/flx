@@ -64,20 +64,42 @@ where
                 .await;
         }
 
-        if let Ok(_) = run.receive_app_started().await {
-            store
-                .dispatch(Action::SetAppStarted {
-                    session_id: id.clone(),
-                })
-                .await;
+        loop {
+            tokio::select! {
+                Ok(_) = run.receive_app_started() => {
+                    store
+                        .dispatch(Action::SetAppStarted {
+                            session_id: id.clone(),
+                        })
+                        .await;
+                },
+                Ok(progress) = run.receive_app_progress() => {
+                    store
+                        .dispatch(Action::AppendProgressLog {
+                            session_id: id.clone(),
+                            id: progress.id,
+                            finished: progress.finished,
+                            message: progress.message,
+                        })
+                        .await;
+                },
+                Ok(line) = run.receive_stdout() => {
+                    store
+                        .dispatch(Action::AppendStdoutLog {
+                            session_id: id.clone(),
+                            line,
+                        })
+                        .await;
+                },
+                _ = run.receive_app_stop() => {
+                    store
+                        .dispatch(Action::UnregisterSession {
+                            session_id: id.clone(),
+                        })
+                        .await;
+                    break;
+                }
+            }
         }
-
-        run.receive_app_stop().await.unwrap();
-
-        store
-            .dispatch(Action::UnregisterSession {
-                session_id: id.clone(),
-            })
-            .await;
     }
 }

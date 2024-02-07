@@ -124,33 +124,29 @@ impl Component for RunnersComponent {
                     .iter()
                     .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
                 let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
-                let status = if session.hot_reloading {
-                    "⚡️"
+                let status_color = if state.current_focus != Focus::Tab(Tab::Runners) {
+                    Color::DarkGray
+                } else if session.hot_reloading {
+                    Color::Yellow
                 } else if session.hot_restarting {
-                    "🔥"
+                    Color::LightMagenta
                 } else if !session.started {
-                    "🔄"
+                    Color::DarkGray
                 } else {
-                    "▶"
+                    Color::Green
                 };
-                let mode = match session.mode {
-                    Some(AppMode::Debug) => "debug",
-                    Some(AppMode::Profile) => "profile",
-                    Some(AppMode::Release) => "release",
-                    Some(AppMode::JitRelease) => "jit release",
-                    None => "-",
-                };
-                let name = format!(" {} {} ({})", status, device_name, mode);
-                let item = ListItem::new(name).style(Style::default().fg(default_color));
+                let name = format!(" {} ", device_name);
+                let item = ListItem::new(name).style(Style::default().fg(status_color));
                 if state.session_id == Some(session.id.clone()) {
                     item.add_modifier(Modifier::REVERSED)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     item
                 }
             })
             .collect::<Vec<_>>();
 
-        let list = List::new(items).block(block).fg(Color::White);
+        let list = List::new(items).block(block);
 
         f.render_widget(list, area);
     }

@@ -58,7 +58,20 @@ pub enum Action {
     StartHotRestart {
         session_id: String,
     },
+
     CompleteHotRestart {
         session_id: String,
+    },
+
+    AppendProgressLog {
+        session_id: String,
+        id: String,
+        finished: bool,
+        message: Option<String>,
+    },
+
+    AppendStdoutLog {
+        session_id: String,
+        line: String,
     },
 }
