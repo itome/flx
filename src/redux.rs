@@ -1,5 +1,6 @@
 pub mod action;
 pub mod reducer;
+pub mod selector;
 pub mod state;
 pub mod thunk;
 

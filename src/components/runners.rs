@@ -70,6 +70,14 @@ impl RunnersComponent {
             .send(ThunkAction::HotRestart.into())?;
         Ok(())
     }
+
+    fn stop_app(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::StopApp.into())?;
+        Ok(())
+    }
 }
 
 impl Component for RunnersComponent {
@@ -87,6 +95,7 @@ impl Component for RunnersComponent {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
             KeyCode::Char('n') => self.show_select_device_popup()?,
+            KeyCode::Char('d') => self.stop_app()?,
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             _ => {}

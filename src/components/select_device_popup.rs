@@ -3,10 +3,12 @@ use std::sync::Arc;
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
+use redux_rs::Selector;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::action::TuiAction;
 use crate::redux::action::Action;
+use crate::redux::selector::availale_devices::AvailableDevicesSelector;
 use crate::redux::state::{State, Tab};
 use crate::redux::thunk::ThunkAction;
 use crate::redux::ActionOrThunk;
@@ -81,15 +83,10 @@ impl Component for SelectDevicePopupComponent {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let devices = state.devices.iter().filter(|d| {
-            state.supported_platforms.contains(&d.platform_type)
-                && state
-                    .sessions
-                    .iter()
-                    .all(|s| s.device_id != Some(d.id.clone()))
-        });
+        let devices = AvailableDevicesSelector.select(state);
 
         let items = devices
+            .iter()
             .map(|device| {
                 let item = ListItem::new(device.name.clone()).style(Style::default());
                 if state.select_device_popup.selected_device_id == Some(device.id.clone()) {

@@ -1,4 +1,9 @@
-use crate::redux::state::{Focus, PopUp, SelectDevicePopupState};
+use redux_rs::Selector;
+
+use crate::redux::{
+    selector::availale_devices::AvailableDevicesSelector,
+    state::{Focus, PopUp, SelectDevicePopupState},
+};
 
 use super::{
     action::Action,
@@ -70,7 +75,7 @@ pub fn reducer(state: State, action: Action) -> State {
                     let next_index = (index + 1) % state.sessions.len();
                     Some(state.sessions[next_index].id.clone())
                 }
-                None => None,
+                None => state.sessions.first().map(|s| s.id.clone()),
             },
             ..state
         },
@@ -85,33 +90,36 @@ pub fn reducer(state: State, action: Action) -> State {
                     let next_index = (index + state.sessions.len() - 1) % state.sessions.len();
                     Some(state.sessions[next_index].id.clone())
                 }
-                None => None,
+                None => state.sessions.first().map(|s| s.id.clone()),
             },
             ..state
         },
         Action::NextDeviceForRunning => State {
             select_device_popup: SelectDevicePopupState {
                 selected_device_id: {
-                    let devices = state.devices.iter().filter(|d| {
-                        state.supported_platforms.contains(&d.platform_type)
-                            && state
-                                .sessions
-                                .iter()
-                                .all(|s| s.device_id != Some(d.id.clone()))
-                    });
+                    let devices = AvailableDevicesSelector.select(&state);
                     match state.select_device_popup.selected_device_id {
                         Some(selected_device_id) => {
-                            let devices = devices.collect::<Vec<_>>();
                             if let Some(index) =
                                 devices.iter().position(|d| d.id == selected_device_id)
                             {
                                 let next_index = (index + 1) % devices.len();
                                 devices.get(next_index).map(|d| d.id.clone())
                             } else {
-                                None
+                                if devices.is_empty() {
+                                    None
+                                } else {
+                                    devices.get(0).map(|d| d.id.clone())
+                                }
                             }
                         }
-                        None => state.devices.first().map(|d| d.id.clone()),
+                        None => {
+                            if devices.is_empty() {
+                                None
+                            } else {
+                                devices.get(0).map(|d| d.id.clone())
+                            }
+                        }
                     }
                 },
                 ..state.select_device_popup
@@ -121,26 +129,29 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::PreviousDeviceForRunning => State {
             select_device_popup: SelectDevicePopupState {
                 selected_device_id: {
-                    let devices = state.devices.iter().filter(|d| {
-                        state.supported_platforms.contains(&d.platform_type)
-                            && state
-                                .sessions
-                                .iter()
-                                .all(|s| s.device_id != Some(d.id.clone()))
-                    });
+                    let devices = AvailableDevicesSelector.select(&state);
                     match state.select_device_popup.selected_device_id {
                         Some(selected_device_id) => {
-                            let devices = devices.collect::<Vec<_>>();
                             if let Some(index) =
                                 devices.iter().position(|d| d.id == selected_device_id)
                             {
                                 let next_index = (index + devices.len() - 1) % devices.len();
                                 devices.get(next_index).map(|d| d.id.clone())
                             } else {
-                                None
+                                if devices.is_empty() {
+                                    None
+                                } else {
+                                    devices.get(devices.len() - 1).map(|d| d.id.clone())
+                                }
                             }
                         }
-                        None => state.devices.first().map(|d| d.id.clone()),
+                        None => {
+                            if devices.is_empty() {
+                                None
+                            } else {
+                                devices.get(devices.len() - 1).map(|d| d.id.clone())
+                            }
+                        }
                     }
                 },
                 ..state.select_device_popup
@@ -151,17 +162,9 @@ pub fn reducer(state: State, action: Action) -> State {
             current_focus: Focus::PopUp(PopUp::SelectDevice),
             select_device_popup: SelectDevicePopupState {
                 visible: true,
-                selected_device_id: state
-                    .devices
-                    .iter()
-                    .filter(|d| {
-                        state.supported_platforms.contains(&d.platform_type)
-                            && state
-                                .sessions
-                                .iter()
-                                .all(|s| s.device_id != Some(d.id.clone()))
-                    })
-                    .nth(0)
+                selected_device_id: AvailableDevicesSelector
+                    .select(&state)
+                    .get(0)
                     .map(|d| d.id.clone()),
             },
             ..state
