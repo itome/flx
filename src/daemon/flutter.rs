@@ -258,6 +258,16 @@ impl FlutterDaemon {
         Err(eyre!("Could not receive daemon event"))
     }
 
+    pub async fn receive_stdout(&self) -> Result<String> {
+        let mut rx = self.tx.subscribe();
+        while let Ok(line) = rx.recv().await {
+            if !(line.starts_with("[{") && line.ends_with("}]")) {
+                return Ok(line);
+            }
+        }
+        Err(eyre!("Could not receive daemon response"))
+    }
+
     async fn request_id(&self) -> u32 {
         let mut request_count = self.request_count.lock().await;
         *request_count += 1;

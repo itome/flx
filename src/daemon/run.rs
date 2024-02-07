@@ -235,6 +235,16 @@ impl FlutterRun {
         Err(eyre!("Could not receive daemon event"))
     }
 
+    pub async fn receive_stdout(&self) -> Result<String> {
+        let mut rx = self.tx.subscribe();
+        while let Ok(line) = rx.recv().await {
+            if !(line.starts_with("[{") && line.ends_with("}]")) {
+                return Ok(line);
+            }
+        }
+        Err(eyre!("Could not receive daemon response"))
+    }
+
     async fn restart(&self, full_restart: bool) -> Result<RestartAppResult> {
         let request_id = self.request_id().await;
         let app_id = self
