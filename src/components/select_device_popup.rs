@@ -93,7 +93,7 @@ impl Component for SelectDevicePopupComponent {
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             KeyCode::Enter => self.run_new_app()?,
             KeyCode::Esc => self.hide_popup()?,
-            KeyCode::Char('s') => {
+            KeyCode::Char('f') => {
                 self.load_flavors()?;
                 self.show_select_flavor()?;
             }

@@ -87,7 +87,10 @@ impl Component for SelectFlavorPopupComponent {
                 self.run_new_app()?;
                 self.hide_device_popup()?;
             }
-            KeyCode::Esc => self.hide_popup()?,
+            KeyCode::Esc => {
+                self.hide_device_popup()?;
+                self.hide_popup()?;
+            }
             _ => {}
         }
         Ok(())
