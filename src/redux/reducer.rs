@@ -173,19 +173,17 @@ pub fn reducer(state: State, action: Action) -> State {
                             {
                                 let next_index = (index + 1) % flavors.len();
                                 flavors.get(next_index).map(|d| d.to_owned())
+                            } else if flavors.is_empty() {
+                                None
                             } else {
-                                if flavors.is_empty() {
-                                    None
-                                } else {
-                                    flavors.get(0).map(|d| d.to_owned())
-                                }
+                                flavors.first().map(|d| d.to_owned())
                             }
                         }
                         None => {
                             if flavors.is_empty() {
                                 None
                             } else {
-                                flavors.get(0).map(|f| f.to_owned())
+                                flavors.first().map(|f| f.to_owned())
                             }
                         }
                     }
@@ -204,19 +202,17 @@ pub fn reducer(state: State, action: Action) -> State {
                             {
                                 let next_index = (index + flavors.len() - 1) % flavors.len();
                                 flavors.get(next_index).map(|d| d.to_owned())
+                            } else if flavors.is_empty() {
+                                None
                             } else {
-                                if flavors.is_empty() {
-                                    None
-                                } else {
-                                    flavors.get(flavors.len() - 1).map(|d| d.to_owned())
-                                }
+                                flavors.last().map(|d| d.to_owned())
                             }
                         }
                         None => {
                             if flavors.is_empty() {
                                 None
                             } else {
-                                flavors.get(flavors.len() - 1).map(|d| d.to_owned())
+                                flavors.last().map(|d| d.to_owned())
                             }
                         }
                     }

@@ -29,9 +29,7 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        store
-            .dispatch(Action::SetFlavors { flavors: vec![] })
-            .await;
+        store.dispatch(Action::SetFlavors { flavors: vec![] }).await;
 
         let project_root = store
             .select(|state: &State| state.project_root.clone())
@@ -46,7 +44,7 @@ where
         };
 
         // TODO: (takassh): use enum
-        let mut flavors = vec![];
+        let flavors;
         if selected_device.platform_type == *"ios" || selected_device.platform_type == *"macos" {
             match ios::get_schemes(project_root.unwrap_or(".".to_string())) {
                 Some(shemes) => flavors = shemes,
@@ -61,8 +59,6 @@ where
             flavors = vec!["Undefined".to_string()];
         }
 
-        store
-            .dispatch(Action::SetFlavors { flavors: flavors })
-            .await;
+        store.dispatch(Action::SetFlavors { flavors }).await;
     }
 }

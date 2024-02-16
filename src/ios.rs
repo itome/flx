@@ -14,7 +14,7 @@ pub fn get_schemes(project_root: String) -> Option<Vec<String>> {
 
     let info = XcodeProjectInfo::new_from_xcode_build_output(&output);
 
-    if info.schemes.is_empty() || info.schemes.contains(&"Runner")  {
+    if info.schemes.is_empty() || info.schemes.contains(&"Runner") {
         return None;
     }
 
