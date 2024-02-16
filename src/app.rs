@@ -4,11 +4,11 @@ use ratatui::prelude::Rect;
 use ratatui::prelude::*;
 use ratatui::widgets::Clear;
 use redux_rs::middlewares::thunk::thunk;
-use redux_rs::Store;
 use redux_rs::{
     middlewares::thunk::{self, ThunkMiddleware},
     StoreApi,
 };
+use redux_rs::{Selector, Store};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedSender};
@@ -16,7 +16,9 @@ use tokio::sync::{Mutex, RwLock};
 
 use crate::components;
 use crate::components::devices::DevicesComponent;
+use crate::components::frames::FramesComponent;
 use crate::components::logs::LogsComponent;
+use crate::components::network::NetworkComponent;
 use crate::components::project::ProjectComponent;
 use crate::components::runners::RunnersComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
@@ -24,6 +26,7 @@ use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::daemon::flutter::FlutterDaemon;
 use crate::redux::action::Action;
+use crate::redux::selector::current_session::CurrentSessionSelector;
 use crate::redux::state::{Focus, SelectDevicePopupState, SelectFlavorPopupState, State, Tab};
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
@@ -64,7 +67,9 @@ impl App {
                 Box::new(RunnersComponent::new()),
                 Box::new(DevicesComponent::new()),
                 Box::new(SelectDevicePopupComponent::new()),
+                Box::new(FramesComponent::new()),
                 Box::new(LogsComponent::new()),
+                Box::new(NetworkComponent::new()),
                 Box::new(SelectTabControllerComponent::new()),
                 Box::new(SelectFlavorPopupComponent::new()),
             ],
@@ -228,11 +233,29 @@ impl App {
             if state.select_flavor_popup.visible {
                 let popup_area = centered_rect(60, 40, f.size());
                 f.render_widget(Clear, popup_area);
-                self.components[6].draw(f, popup_area, state);
+                self.components[8].draw(f, popup_area, state);
             }
 
-            if state.current_focus == Focus::Tab(Tab::Runners) {
-                self.components[4].draw(f, layout[1], state);
+            if state.current_focus == Focus::Tab(Tab::Runners)
+                || matches!(state.current_focus, Focus::DevTools(_))
+            {
+                if let Some(session) = CurrentSessionSelector.select(state) {
+                    if !session.started {
+                        self.components[5].draw(f, layout[1], state);
+                    } else {
+                        let vertical_layout = Layout::default()
+                            .direction(Direction::Vertical)
+                            .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                            .split(layout[1]);
+                        let horizontal_layout = Layout::default()
+                            .direction(Direction::Horizontal)
+                            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                            .split(vertical_layout[1]);
+                        self.components[4].draw(f, vertical_layout[0], state);
+                        self.components[5].draw(f, horizontal_layout[0], state);
+                        self.components[6].draw(f, horizontal_layout[1], state);
+                    }
+                }
             }
         })?;
         Ok(())
