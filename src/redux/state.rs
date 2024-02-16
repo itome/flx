@@ -16,6 +16,7 @@ impl Default for Tab {
 #[derive(Clone, PartialEq, Eq)]
 pub enum PopUp {
     SelectDevice,
+    SelectFlavor,
 }
 
 impl Default for PopUp {
@@ -64,6 +65,7 @@ pub struct SessionState {
     pub id: String,
     pub app_id: Option<String>,
     pub device_id: Option<String>,
+    pub flavor: Option<String>,
     pub started: bool,
     pub mode: Option<AppMode>,
     pub hot_reloading: bool,
@@ -74,7 +76,13 @@ pub struct SessionState {
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SelectDevicePopupState {
     pub visible: bool,
-    pub selected_device_id: Option<String>,
+    pub selected_device: Option<Device>,
+}
+
+#[derive(Default, Clone, PartialEq, Eq)]
+pub struct SelectFlavorPopupState {
+    pub visible: bool,
+    pub selected_flavor: Option<String>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
@@ -83,6 +91,7 @@ pub struct State {
 
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
+    pub flavors: Vec<String>,
 
     pub sessions: Vec<SessionState>,
     pub session_id: Option<String>,
@@ -90,4 +99,5 @@ pub struct State {
     pub supported_platforms: Vec<String>,
 
     pub select_device_popup: SelectDevicePopupState,
+    pub select_flavor_popup: SelectFlavorPopupState,
 }

@@ -18,11 +18,11 @@ use color_eyre::eyre::{eyre, Result};
 use super::Component;
 
 #[derive(Default)]
-pub struct SelectDevicePopupComponent {
+pub struct SelectFlavorPopupComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
-impl SelectDevicePopupComponent {
+impl SelectFlavorPopupComponent {
     pub fn new() -> Self {
         Self::default()
     }
@@ -31,7 +31,7 @@ impl SelectDevicePopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::NextDeviceForRunning.into())?;
+            .send(Action::NextFlavorForRunning.into())?;
         Ok(())
     }
 
@@ -39,7 +39,7 @@ impl SelectDevicePopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::PreviousDeviceForRunning.into())?;
+            .send(Action::PreviousFlavorForRunning.into())?;
         Ok(())
     }
 
@@ -56,60 +56,51 @@ impl SelectDevicePopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::HideSelectFlavorPopUp.into())?;
+        Ok(())
+    }
+
+    fn hide_device_popup(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
             .send(Action::HideSelectDevicePopUp.into())?;
-        Ok(())
-    }
-
-    fn show_select_flavor(&self) -> Result<()> {
-        self.action_tx
-            .as_ref()
-            .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::ShowSelectFlavorPopUp.into())?;
-        Ok(())
-    }
-
-    fn load_flavors(&self) -> Result<()> {
-        self.action_tx
-            .as_ref()
-            .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(ThunkAction::LoadFlavors.into())?;
         Ok(())
     }
 }
 
-impl Component for SelectDevicePopupComponent {
+impl Component for SelectFlavorPopupComponent {
     fn register_action_handler(&mut self, tx: UnboundedSender<ActionOrThunk>) -> Result<()> {
         self.action_tx = Some(tx);
         Ok(())
     }
 
     fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
-        if !state.select_device_popup.visible || state.select_flavor_popup.visible {
+        if !state.select_flavor_popup.visible {
             return Ok(());
         }
 
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
-            KeyCode::Enter => self.run_new_app()?,
-            KeyCode::Esc => self.hide_popup()?,
-            KeyCode::Char('s') => {
-                self.load_flavors()?;
-                self.show_select_flavor()?;
+            KeyCode::Enter => {
+                self.run_new_app()?;
+                self.hide_device_popup()?;
             }
+            KeyCode::Esc => self.hide_popup()?,
             _ => {}
         }
         Ok(())
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let devices = AvailableDevicesSelector.select(state);
+        let flavors = &state.flavors;
 
-        let items = devices
+        let items = flavors
             .iter()
-            .map(|device| {
-                let item = ListItem::new(format!(" {} ", device.name.clone()));
-                if state.select_device_popup.selected_device == Some(device.to_owned()) {
+            .map(|flavor| {
+                let item = ListItem::new(format!(" {} ", flavor.clone()));
+                if state.select_flavor_popup.selected_flavor == Some(flavor.clone()) {
                     item.add_modifier(Modifier::REVERSED)
                         .add_modifier(Modifier::BOLD)
                 } else {
@@ -119,7 +110,7 @@ impl Component for SelectDevicePopupComponent {
             .collect::<Vec<_>>();
 
         let block = Block::default()
-            .title("Which device do you want to use?")
+            .title("Which flavor do you want to use?")
             .borders(Borders::ALL)
             .border_style(Style::default());
 

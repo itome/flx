@@ -622,6 +622,7 @@ dependencies = [
  "pretty_assertions",
  "ratatui",
  "redux-rs",
+ "regex",
  "serde",
  "serde_json",
  "signal-hook",

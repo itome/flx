@@ -9,12 +9,17 @@ pub enum Action {
         device: Device,
     },
 
+    SetFlavors {
+        flavors: Vec<String>,
+    },
+
     NextTab,
     PreviousTab,
 
     RegisterSession {
         session_id: String,
         device_id: Option<String>,
+        flavor: Option<String>,
     },
     UnregisterSession {
         session_id: String,
@@ -36,6 +41,12 @@ pub enum Action {
 
     ShowSelectDevicePopUp,
     HideSelectDevicePopUp,
+
+    ShowSelectFlavorPopUp,
+    HideSelectFlavorPopUp,
+
+    NextFlavorForRunning,
+    PreviousFlavorForRunning,
 
     StartApp {
         session_id: String,

@@ -20,10 +20,11 @@ use crate::components::logs::LogsComponent;
 use crate::components::project::ProjectComponent;
 use crate::components::runners::RunnersComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
+use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::daemon::flutter::FlutterDaemon;
 use crate::redux::action::Action;
-use crate::redux::state::{Focus, SelectDevicePopupState, State, Tab};
+use crate::redux::state::{Focus, SelectDevicePopupState, SelectFlavorPopupState, State, Tab};
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
 use crate::redux::thunk::{thunk_impl, ThunkAction};
@@ -65,6 +66,7 @@ impl App {
                 Box::new(SelectDevicePopupComponent::new()),
                 Box::new(LogsComponent::new()),
                 Box::new(SelectTabControllerComponent::new()),
+                Box::new(SelectFlavorPopupComponent::new()),
             ],
             should_quit: false,
             should_suspend: false,
@@ -221,6 +223,12 @@ impl App {
                 let popup_area = centered_rect(60, 20, f.size());
                 f.render_widget(Clear, popup_area);
                 self.components[3].draw(f, popup_area, state);
+            }
+
+            if state.select_flavor_popup.visible {
+                let popup_area = centered_rect(60, 40, f.size());
+                f.render_widget(Clear, popup_area);
+                self.components[6].draw(f, popup_area, state);
             }
 
             if state.current_focus == Focus::Tab(Tab::Runners) {

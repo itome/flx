@@ -28,13 +28,30 @@ where
 {
     async fn execute(&self, store: Arc<Api>) {
         let device_id = store
-            .select(|state: &State| state.select_device_popup.selected_device_id.clone())
+            .select(|state: &State| {
+                let Some(ref selected_device) = state.select_device_popup.selected_device else {
+                    return None;
+                };
+                Some(selected_device.id.clone())
+            })
+            .await;
+
+        let flavor = store
+            .select(|state: &State| {
+                let Some(ref selected_flavor) = state.select_flavor_popup.selected_flavor else {
+                    return None;
+                };
+                if selected_flavor == "No Option" || selected_flavor == "Runner" {
+                    return None;
+                }
+                Some(selected_flavor.clone())
+            })
             .await;
 
         let Ok(id) = self
             .context
             .session_manager
-            .run_new_app(device_id.clone())
+            .run_new_app(device_id.clone(), flavor.clone())
             .await
         else {
             return;
@@ -44,6 +61,7 @@ where
             .dispatch(Action::RegisterSession {
                 session_id: id.clone(),
                 device_id,
+                flavor,
             })
             .await;
 

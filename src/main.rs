@@ -3,11 +3,13 @@
 #![allow(unused_variables)]
 
 pub mod action;
+pub mod android;
 pub mod app;
 pub mod cli;
 pub mod components;
 pub mod config;
 pub mod daemon;
+pub mod ios;
 pub mod mode;
 pub mod redux;
 pub mod session;

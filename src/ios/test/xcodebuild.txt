@@ -1,0 +1,22 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -list
+
+User defaults from command line:
+    IDEPackageSupportUseBuiltinSCM = YES
+
+Information about project "Runner":
+    Targets:
+        Runner
+
+    Build Configurations:
+        Config1
+        Config2
+        Config3
+
+    If no build configuration is specified and -scheme is not passed then "Debug-Develop" is used.
+
+    Schemes:
+        Scheme1
+        Scheme2
+        Scheme3
+
