@@ -4,7 +4,7 @@ pub mod test;
 use regex::Regex;
 use std::{collections::HashSet, env, process::Command};
 
-pub fn get_schemes(project_root: String) -> Vec<String> {
+pub fn get_schemes(project_root: String) -> Option<Vec<String>> {
     let args = vec!["app:tasks", "--all", "--console=auto"];
     let mut command = Command::new("./gradlew");
     let mut command = command
@@ -22,7 +22,13 @@ pub fn get_schemes(project_root: String) -> Vec<String> {
     let output = String::from_utf8(command.output().expect("failed to execute process").stdout)
         .expect("failed to convert bytes to String");
 
-    parse_schemes(&output)
+    let shemes = parse_schemes(&output);
+
+    if shemes.is_empty() {
+        return None;
+    }
+
+    Some(shemes)
 }
 
 fn parse_schemes(output: &str) -> Vec<String> {

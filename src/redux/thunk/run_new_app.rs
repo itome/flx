@@ -41,7 +41,7 @@ where
                 let Some(ref selected_flavor) = state.select_flavor_popup.selected_flavor else {
                     return None;
                 };
-                if selected_flavor == "No Option" || selected_flavor == "Runner" {
+                if selected_flavor == "Undefined" {
                     return None;
                 }
                 Some(selected_flavor.clone())

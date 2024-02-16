@@ -2,7 +2,7 @@ use std::process::Command;
 #[cfg(test)]
 mod test;
 
-pub fn get_schemes(project_root: String) -> Vec<String> {
+pub fn get_schemes(project_root: String) -> Option<Vec<String>> {
     let args = vec!["-list"];
     let output = Command::new("xcodebuild")
         .current_dir(format!("{}/ios", project_root))
@@ -14,7 +14,11 @@ pub fn get_schemes(project_root: String) -> Vec<String> {
 
     let info = XcodeProjectInfo::new_from_xcode_build_output(&output);
 
-    info.schemes.into_iter().map(|s| s.to_string()).collect()
+    if info.schemes.is_empty() || info.schemes.contains(&"Runner")  {
+        return None;
+    }
+
+    Some(info.schemes.into_iter().map(|s| s.to_string()).collect())
 }
 
 pub struct XcodeProjectInfo<'a> {
@@ -46,9 +50,6 @@ impl<'a> XcodeProjectInfo<'_> {
             if let Some(ref mut c) = collector {
                 c.push(line.trim());
             }
-        }
-        if schemes.is_empty() {
-            schemes.push("Runner")
         }
 
         XcodeProjectInfo {

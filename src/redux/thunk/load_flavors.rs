@@ -29,6 +29,10 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
+        store
+            .dispatch(Action::SetFlavors { flavors: vec![] })
+            .await;
+
         let project_root = store
             .select(|state: &State| state.project_root.clone())
             .await;
@@ -43,12 +47,18 @@ where
 
         // TODO: (takassh): use enum
         let mut flavors = vec![];
-        if selected_device.platform_type == *"ios"
-            || selected_device.platform_type == *"macos"
-        {
-            flavors = ios::get_schemes(project_root.unwrap_or(".".to_string()));
+        if selected_device.platform_type == *"ios" || selected_device.platform_type == *"macos" {
+            match ios::get_schemes(project_root.unwrap_or(".".to_string())) {
+                Some(shemes) => flavors = shemes,
+                None => flavors = vec!["Undefined".to_string()],
+            };
         } else if selected_device.platform_type == *"android" {
-            flavors = android::get_schemes(project_root.unwrap_or(".".to_string()));
+            match android::get_schemes(project_root.unwrap_or(".".to_string())) {
+                Some(shemes) => flavors = shemes,
+                None => flavors = vec!["Undefined".to_string()],
+            };
+        } else {
+            flavors = vec!["Undefined".to_string()];
         }
 
         store
