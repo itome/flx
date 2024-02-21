@@ -43,20 +43,20 @@ where
             return;
         };
 
-        // TODO: (takassh): use enum
-        let flavors;
+        // TODO: (takassh): use enum if possible
+        let mut flavors = vec!["Undefined".to_string()];
         if selected_device.platform_type == *"ios" || selected_device.platform_type == *"macos" {
-            match ios::get_schemes(project_root.unwrap_or(".".to_string())) {
-                Some(shemes) => flavors = shemes,
-                None => flavors = vec!["Undefined".to_string()],
-            };
+            if let Ok(schemes) = ios::get_schemes(project_root.unwrap_or(".".to_string())) {
+                if let Some(schemes) = schemes {
+                    flavors = schemes;
+                }
+            }
         } else if selected_device.platform_type == *"android" {
-            match android::get_schemes(project_root.unwrap_or(".".to_string())) {
-                Some(shemes) => flavors = shemes,
-                None => flavors = vec!["Undefined".to_string()],
-            };
-        } else {
-            flavors = vec!["Undefined".to_string()];
+            if let Ok(schemes) = android::get_schemes(project_root.unwrap_or(".".to_string())) {
+                if let Some(schemes) = schemes {
+                    flavors = schemes;
+                }
+            }
         }
 
         store.dispatch(Action::SetFlavors { flavors }).await;

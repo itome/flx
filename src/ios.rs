@@ -1,24 +1,29 @@
+use color_eyre::{eyre::eyre, Result};
 use std::process::Command;
 #[cfg(test)]
 mod test;
 
-pub fn get_schemes(project_root: String) -> Option<Vec<String>> {
+/// Return schemes if exists.
+pub fn get_schemes(project_root: String) -> Result<Option<Vec<String>>> {
     let args = vec!["-list"];
     let output = Command::new("xcodebuild")
         .current_dir(format!("{}/ios", project_root))
         .args(args)
         .output()
-        .expect("failed to execute process");
+        .map_err(|e| eyre!("failed to execute process: {}", e))?;
 
-    let output = String::from_utf8(output.stdout).expect("failed to convert bytes to String");
+    let output = String::from_utf8(output.stdout)
+        .map_err(|e| eyre!("failed to convert bytes to String: {}", e))?;
 
     let info = XcodeProjectInfo::new_from_xcode_build_output(&output);
 
     if info.schemes.is_empty() || info.schemes.contains(&"Runner") {
-        return None;
+        return Ok(None);
     }
 
-    Some(info.schemes.into_iter().map(|s| s.to_string()).collect())
+    Ok(Some(
+        info.schemes.into_iter().map(|s| s.to_string()).collect(),
+    ))
 }
 
 pub struct XcodeProjectInfo<'a> {

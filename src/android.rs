@@ -1,10 +1,12 @@
+use color_eyre::{eyre::eyre, Result};
 #[cfg(test)]
 pub mod test;
 
 use regex::Regex;
 use std::{collections::HashSet, env, process::Command};
 
-pub fn get_schemes(project_root: String) -> Option<Vec<String>> {
+/// Return schemes if exists.
+pub fn get_schemes(project_root: String) -> Result<Option<Vec<String>>> {
     let args = vec!["app:tasks", "--all", "--console=auto"];
     let mut command = Command::new("./gradlew");
     let mut command = command
@@ -19,16 +21,20 @@ pub fn get_schemes(project_root: String) -> Option<Vec<String>> {
         )
     }
 
-    let output = String::from_utf8(command.output().expect("failed to execute process").stdout)
-        .expect("failed to convert bytes to String");
+    let output = command
+        .output()
+        .map_err(|e| eyre!("failed to execute process: {}", e))?;
+
+    let output = String::from_utf8(output.stdout)
+        .map_err(|e| eyre!("failed to convert bytes to String: {}", e))?;
 
     let shemes = parse_schemes(&output);
 
     if shemes.is_empty() {
-        return None;
+        return Ok(None);
     }
 
-    Some(shemes)
+    Ok(Some(shemes))
 }
 
 fn parse_schemes(output: &str) -> Vec<String> {
@@ -59,10 +65,6 @@ fn parse_schemes(output: &str) -> Vec<String> {
                 product_flavors.insert(variant1.clone());
             }
         }
-    }
-
-    if product_flavors.is_empty() {
-        product_flavors.insert("No Option".to_string());
     }
 
     product_flavors

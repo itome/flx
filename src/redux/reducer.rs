@@ -230,6 +230,10 @@ pub fn reducer(state: State, action: Action) -> State {
                     .get(0)
                     .map(|d| d.to_owned()),
             },
+            select_flavor_popup: SelectFlavorPopupState {
+                visible: false,
+                selected_flavor: None,
+            },
             ..state
         },
         Action::HideSelectDevicePopUp => State {
