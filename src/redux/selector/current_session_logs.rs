@@ -19,6 +19,6 @@ impl Selector<State> for CurrentSessionLogsSelector {
                 return session.logs.clone();
             }
         }
-        return vec![];
+        vec![]
     }
 }

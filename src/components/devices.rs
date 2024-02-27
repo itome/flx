@@ -15,6 +15,12 @@ use super::Component;
 
 pub struct DevicesComponent {}
 
+impl Default for DevicesComponent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DevicesComponent {
     pub fn new() -> Self {
         Self {}

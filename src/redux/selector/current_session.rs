@@ -19,6 +19,6 @@ impl Selector<State> for CurrentSessionSelector {
                 return Some(session);
             }
         }
-        return None;
+        None
     }
 }
