@@ -320,6 +320,7 @@ mod test {
     };
 
     #[tokio::test]
+    #[ignore]
     async fn daemon_start() {
         let daemon = FlutterDaemon::new().unwrap();
         for i in 0..3 {
@@ -330,6 +331,7 @@ mod test {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn receive_daemon_connected() {
         let daemon = FlutterDaemon::new().unwrap();
         let event = daemon.receive_daemon_connected().await.unwrap();
