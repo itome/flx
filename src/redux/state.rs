@@ -1,7 +1,6 @@
 use crate::daemon::io::{device::Device, event::AppMode};
 
-#[derive(Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub enum Tab {
     #[default]
     Project,
@@ -9,25 +8,17 @@ pub enum Tab {
     Devices,
 }
 
-
-
-#[derive(Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub enum PopUp {
     #[default]
     SelectDevice,
 }
 
-
-
-#[derive(Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub enum DevTools {
     #[default]
     Logs,
 }
-
-
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum Focus {

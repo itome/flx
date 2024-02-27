@@ -160,7 +160,8 @@ pub fn reducer(state: State, action: Action) -> State {
             select_device_popup: SelectDevicePopupState {
                 visible: true,
                 selected_device_id: AvailableDevicesSelector
-                    .select(&state).first()
+                    .select(&state)
+                    .first()
                     .map(|d| d.id.clone()),
             },
             ..state
