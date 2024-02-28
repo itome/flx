@@ -26,6 +26,12 @@ pub struct RunnersComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
+impl Default for RunnersComponent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RunnersComponent {
     pub fn new() -> Self {
         Self { action_tx: None }

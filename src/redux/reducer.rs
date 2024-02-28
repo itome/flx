@@ -106,19 +106,17 @@ pub fn reducer(state: State, action: Action) -> State {
                             {
                                 let next_index = (index + 1) % devices.len();
                                 devices.get(next_index).map(|d| d.id.clone())
+                            } else if devices.is_empty() {
+                                None
                             } else {
-                                if devices.is_empty() {
-                                    None
-                                } else {
-                                    devices.get(0).map(|d| d.id.clone())
-                                }
+                                devices.first().map(|d| d.id.clone())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.get(0).map(|d| d.id.clone())
+                                devices.first().map(|d| d.id.clone())
                             }
                         }
                     }
@@ -138,19 +136,17 @@ pub fn reducer(state: State, action: Action) -> State {
                             {
                                 let next_index = (index + devices.len() - 1) % devices.len();
                                 devices.get(next_index).map(|d| d.id.clone())
+                            } else if devices.is_empty() {
+                                None
                             } else {
-                                if devices.is_empty() {
-                                    None
-                                } else {
-                                    devices.get(devices.len() - 1).map(|d| d.id.clone())
-                                }
+                                devices.last().map(|d| d.id.clone())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.get(devices.len() - 1).map(|d| d.id.clone())
+                                devices.last().map(|d| d.id.clone())
                             }
                         }
                     }
@@ -165,7 +161,7 @@ pub fn reducer(state: State, action: Action) -> State {
                 visible: true,
                 selected_device_id: AvailableDevicesSelector
                     .select(&state)
-                    .get(0)
+                    .first()
                     .map(|d| d.id.clone()),
             },
             ..state

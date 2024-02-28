@@ -11,14 +11,11 @@ impl Selector<State> for CurrentSessionSelector {
     type Result = Option<SessionState>;
 
     fn select(&self, state: &State) -> Self::Result {
-        let Some(session_id) = state.session_id.clone() else {
-            return None;
-        };
-        for session in state.sessions.clone() {
-            if session.id == session_id {
-                return Some(session);
-            }
-        }
-        return None;
+        let session_id = state.session_id.clone()?;
+        state
+            .sessions
+            .clone()
+            .into_iter()
+            .find(|session| session.id == session_id)
     }
 }
