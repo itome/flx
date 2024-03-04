@@ -14,37 +14,43 @@ use super::io::{
 pub struct VmService {
     incoming_tx: broadcast::Sender<String>,
     outgoing_tx: mpsc::Sender<String>,
+    outgoing_rx: Arc<Mutex<mpsc::Receiver<String>>>,
     request_count: Arc<Mutex<u32>>,
 }
 
 impl VmService {
-    pub fn new(uri: String) -> Result<Self> {
+    pub fn new() -> Self {
         let (incoming_tx, _) = broadcast::channel::<String>(16);
-        let (outgoing_tx, mut outgoing_rx) = mpsc::channel::<String>(16);
+        let (outgoing_tx, outgoing_rx) = mpsc::channel::<String>(16);
 
-        let _incoming_tx = incoming_tx.clone();
+        Self {
+            incoming_tx,
+            outgoing_tx,
+            outgoing_rx: Arc::new(Mutex::new(outgoing_rx)),
+            request_count: Arc::new(Mutex::new(0)),
+        }
+    }
+
+    pub async fn start_websocket(&self, uri: String) {
+        let _incoming_tx = self.incoming_tx.clone();
+        let _outgoing_rx = self.outgoing_rx.clone();
+        let Ok((stream, _)) = connect_async(uri).await else {
+            return;
+        };
+        let (mut write, mut read) = stream.split();
         tokio::spawn(async move {
-            let Ok((stream, _)) = connect_async(uri).await else {
-                return;
-            };
-            let (mut write, mut read) = stream.split();
+            let mut _outgoing_rx = _outgoing_rx.lock().await;
             loop {
                 tokio::select! {
                     Some(Ok(Message::Text(next))) = read.next() => {
                         _incoming_tx.send(next).unwrap();
                     },
-                    Some(text) = outgoing_rx.recv() => {
+                    Some(text) = _outgoing_rx.recv() => {
                         write.send(Message::Text(text)).await.unwrap();
                     },
                 }
             }
         });
-
-        Ok(Self {
-            incoming_tx,
-            outgoing_tx,
-            request_count: Arc::new(Mutex::new(0)),
-        })
     }
 
     pub async fn get_version(&self) -> Result<GetVersionResult> {

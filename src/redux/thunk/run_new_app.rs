@@ -2,11 +2,18 @@ use async_trait::async_trait;
 use color_eyre::eyre::Result;
 use std::sync::Arc;
 
-use redux_rs::{middlewares::thunk::Thunk, StoreApi};
+use redux_rs::{
+    middlewares::thunk::{self, Thunk},
+    StoreApi,
+};
 
 use crate::{
     daemon::flutter::FlutterDaemon,
-    redux::{action::Action, state::State},
+    redux::{
+        action::Action,
+        state::State,
+        thunk::{run_new_vm_service::RunNewVmServiceThunk, thunk_impl, ThunkAction},
+    },
 };
 
 use super::context::Context;
@@ -47,7 +54,13 @@ where
             })
             .await;
 
-        let Ok(session) = self.context.session_manager.session(id.clone()).await else {
+        let Ok(session) = self
+            .context
+            .clone()
+            .session_manager
+            .session(id.clone())
+            .await
+        else {
             return;
         };
         let session = session.read().await;
@@ -82,6 +95,15 @@ where
                             message: progress.message,
                         })
                         .await;
+                },
+                Ok(params) = run.receive_app_debug_port() => {
+                    let store = store.clone();
+                    let id = id.clone();
+                    let context = self.context.clone();
+                    let uri = params.ws_uri.clone();
+                    tokio::spawn(async move {
+                        RunNewVmServiceThunk::new(context, id, uri).execute(store).await;
+                    });
                 },
                 Ok(line) = run.receive_stdout() => {
                     store
