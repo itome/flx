@@ -6,11 +6,11 @@ use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
 use crate::{
     daemon::flutter::FlutterDaemon,
-    devtools::service::VmService,
+    devtools::{io::request::StreamId, service::VmService},
     redux::{action::Action, state::State},
 };
 
-use super::context::Context;
+use super::{context::Context, watch_frames::WatchFramesThunk};
 
 pub struct RunNewVmServiceThunk {
     uri: String,
@@ -47,7 +47,31 @@ where
 
         vm_service.start_websocket(self.uri.clone()).await;
 
-        let version = vm_service.get_version().await;
-        log::info!("Connected to VM Service version: {:?}", version);
+        let stream_ids = vec![
+            StreamId::VM,
+            StreamId::Isolate,
+            StreamId::Debug,
+            StreamId::Profiler,
+            StreamId::GC,
+            StreamId::Extension,
+            StreamId::Timeline,
+            StreamId::Logging,
+            StreamId::Service,
+            StreamId::HeapSnapshot,
+        ];
+
+        for stream_id in stream_ids {
+            if let Err(e) = vm_service.stream_listen(stream_id.clone()).await {
+                log::error!("Failed to cancel stream {:?}: {:?}", stream_id, e);
+            }
+        }
+
+        let context = self.context.clone();
+        let session_id = self.session_id.clone();
+        tokio::spawn(async move {
+            WatchFramesThunk::new(context, session_id)
+                .execute(store)
+                .await;
+        });
     }
 }
