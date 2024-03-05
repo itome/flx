@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::daemon::io::{device::Device, event::AppMode};
 
 #[derive(Clone, PartialEq, Eq, Default)]
@@ -44,6 +46,16 @@ pub enum SessionLog {
     Stdout(String),
 }
 
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct FlutterFrame {
+    pub build: Duration,
+    pub elapsed: Duration,
+    pub number: u64,
+    pub raster: Duration,
+    pub start_time: Duration,
+    pub vsync_overhead: Duration,
+}
+
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SessionState {
     pub id: String,
@@ -54,6 +66,7 @@ pub struct SessionState {
     pub hot_reloading: bool,
     pub hot_restarting: bool,
     pub logs: Vec<SessionLog>,
+    pub frames: Vec<FlutterFrame>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

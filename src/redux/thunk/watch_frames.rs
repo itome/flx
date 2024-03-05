@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
@@ -50,11 +50,35 @@ where
             let Ok(event) = vm_service.receive_event(StreamId::Extension).await else {
                 break;
             };
-            if event.kind == EventKind::Extension
-                && event.extension_kind == Some("Flutter.Frame".to_string())
-            {
-                log::info!("Received frame event: {:?}", event.extension_data);
+            if event.kind != EventKind::Extension {
+                continue;
             }
+            if event.extension_kind != Some("Flutter.Frame".to_string()) {
+                continue;
+            }
+            let Some(data) = event.extension_data else {
+                continue;
+            };
+
+            let get_u64_data = |key: &str| -> u64 {
+                data.get(key)
+                    .unwrap()
+                    .as_number()
+                    .unwrap()
+                    .as_u64()
+                    .unwrap()
+            };
+            store
+                .dispatch(Action::AppendFlutterFrame {
+                    session_id: self.session_id.clone(),
+                    build: Duration::from_micros(get_u64_data("build")),
+                    elapsed: Duration::from_micros(get_u64_data("elapsed")),
+                    number: get_u64_data("number"),
+                    raster: Duration::from_micros(get_u64_data("raster")),
+                    start_time: Duration::from_micros(get_u64_data("startTime")),
+                    vsync_overhead: Duration::from_micros(get_u64_data("vsyncOverhead")),
+                })
+                .await;
         }
     }
 }

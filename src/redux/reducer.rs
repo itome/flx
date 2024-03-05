@@ -9,7 +9,7 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{SessionState, State, Tab},
+    state::{FlutterFrame, SessionState, State, Tab},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
@@ -380,6 +380,44 @@ pub fn reducer(state: State, action: Action) -> State {
                     if s.id == session_id {
                         SessionState {
                             logs: { [s.logs, vec![SessionLog::Stdout(line.clone())]].concat() },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::AppendFlutterFrame {
+            session_id,
+            build,
+            elapsed,
+            number,
+            raster,
+            start_time,
+            vsync_overhead,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            frames: {
+                                [
+                                    s.frames,
+                                    vec![FlutterFrame {
+                                        build,
+                                        elapsed,
+                                        number,
+                                        raster,
+                                        start_time,
+                                        vsync_overhead,
+                                    }],
+                                ]
+                                .concat()
+                            },
                             ..s
                         }
                     } else {
