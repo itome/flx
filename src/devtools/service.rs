@@ -15,6 +15,7 @@ use super::io::{
 
 pub struct VmService {
     incoming_tx: broadcast::Sender<String>,
+    _incoming_rx: broadcast::Receiver<String>,
     outgoing_tx: mpsc::Sender<String>,
     outgoing_rx: Arc<Mutex<mpsc::Receiver<String>>>,
     request_count: Arc<Mutex<u32>>,
@@ -22,11 +23,12 @@ pub struct VmService {
 
 impl VmService {
     pub fn new() -> Self {
-        let (incoming_tx, _) = broadcast::channel::<String>(16);
+        let (incoming_tx, _incoming_rx) = broadcast::channel::<String>(16);
         let (outgoing_tx, outgoing_rx) = mpsc::channel::<String>(16);
 
         Self {
             incoming_tx,
+            _incoming_rx,
             outgoing_tx,
             outgoing_rx: Arc::new(Mutex::new(outgoing_rx)),
             request_count: Arc::new(Mutex::new(0)),
