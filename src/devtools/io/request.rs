@@ -30,6 +30,20 @@ pub struct StreamListenParams {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct FlutterListViewsParams {
+    #[serde(rename = "isolateId")]
+    pub isolate_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct FlutterGetDisplayRefreshRateParams {
+    #[serde(rename = "isolateId")]
+    pub isolate_id: String,
+    #[serde(rename = "viewId")]
+    pub view_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(tag = "method")]
 pub enum VmServiceRequest {
     #[serde(rename = "getVersion")]
@@ -51,6 +65,23 @@ pub enum VmServiceRequest {
         jsonrpc: String,
         id: u32,
         params: StreamCancelParams,
+    },
+
+    /* ----------------------------- */
+    /* Extension Request for Flutter */
+    /* ----------------------------- */
+    #[serde(rename = "_flutter.listViews")]
+    FlutterListViews {
+        jsonrpc: String,
+        id: u32,
+        params: FlutterListViewsParams,
+    },
+
+    #[serde(rename = "_flutter.getDisplayRefreshRate")]
+    FlutterGetDisplayRefreshRate {
+        jsonrpc: String,
+        id: u32,
+        params: FlutterGetDisplayRefreshRateParams,
     },
 }
 
