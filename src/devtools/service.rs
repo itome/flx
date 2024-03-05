@@ -9,8 +9,8 @@ use tokio_tungstenite::{connect_async, tungstenite::Message};
 use super::io::{
     event::VmServiceEvent,
     request::{EmptyParams, StreamId, VmServiceRequest},
-    response::{GetVersionResponse, GetVersionResult, VmServiceResponse},
-    types::{self, Event},
+    response::{GetVersionResponse, VmServiceResponse},
+    types::{self, Event, Version},
 };
 
 pub struct VmService {
@@ -48,14 +48,16 @@ impl VmService {
                         _incoming_tx.send(next).unwrap();
                     },
                     Some(text) = _outgoing_rx.recv() => {
-                        write.send(Message::Text(text)).await.unwrap();
+                        if let Err(e) = write.send(Message::Text(text)).await {
+                            log::error!("Error sending message: {:?}", e);
+                        };
                     },
-                }
+                };
             }
         });
     }
 
-    pub async fn get_version(&self) -> Result<GetVersionResult> {
+    pub async fn get_version(&self) -> Result<Version> {
         let request_id = self.request_id().await;
         let request = VmServiceRequest::GetVersion {
             jsonrpc: "2.0".to_string(),
@@ -89,13 +91,13 @@ impl VmService {
         Ok(())
     }
 
-    pub async fn receive_event(&self) -> Result<types::Event> {
+    pub async fn receive_event(&self, stream_id: StreamId) -> Result<types::Event> {
         let mut rx = self.incoming_tx.subscribe();
         while let Ok(line) = rx.recv().await {
             let response = serde_json::from_str::<VmServiceEvent>(&line);
             if let Ok(res) = response {
-                if res.method == "streamNotify" {
-                    return Ok(res.params);
+                if res.method == "streamNotify" && res.params.stream_id == stream_id {
+                    return Ok(res.params.event);
                 }
             }
         }
