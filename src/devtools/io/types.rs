@@ -620,7 +620,7 @@ pub enum InstanceKind {
 pub struct IsolateRef {
     pub r#type: String,
     pub id: String,
-    pub number: u32,
+    pub number: String,
     pub name: String,
     #[serde(rename = "isSystemIsolate")]
     pub is_system_isolate: bool,
@@ -632,7 +632,7 @@ pub struct IsolateRef {
 pub struct Isolate {
     pub r#type: String,
     pub id: String,
-    pub number: u32,
+    pub number: String,
     pub name: String,
     #[serde(rename = "isSystemIsolate")]
     pub is_system_isolate: bool,
@@ -662,7 +662,7 @@ pub struct IsolateFlag {
 pub struct IsolateGroupRef {
     pub r#type: String,
     pub id: String,
-    pub number: u32,
+    pub number: String,
     pub name: String,
     #[serde(rename = "isSystemIsolateGroup")]
     pub is_system_isolate_group: bool,
@@ -672,7 +672,7 @@ pub struct IsolateGroupRef {
 pub struct IsolateGroup {
     pub r#type: String,
     pub id: String,
-    pub number: u32,
+    pub number: String,
     pub name: String,
     #[serde(rename = "isSystemIsolateGroup")]
     pub is_system_isolate_group: bool,
