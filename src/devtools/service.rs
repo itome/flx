@@ -7,8 +7,10 @@ use tokio::sync::{broadcast, mpsc, Mutex};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use super::io::{
-    request::{EmptyParams, VmServiceRequest},
+    event::VmServiceEvent,
+    request::{EmptyParams, StreamId, VmServiceRequest},
     response::{GetVersionResponse, GetVersionResult, VmServiceResponse},
+    types::{self, Event},
 };
 
 pub struct VmService {
@@ -63,6 +65,41 @@ impl VmService {
         self.send_request(&request).await?;
         let result: GetVersionResponse = self.receive_response(request_id).await?;
         result.result.ok_or(eyre!("Could not get daemon version"))
+    }
+
+    pub async fn stream_listen(&self, stream_id: StreamId) -> Result<()> {
+        let request_id = self.request_id().await;
+        let request = VmServiceRequest::StreamListen {
+            jsonrpc: "2.0".to_string(),
+            id: request_id,
+            params: super::io::request::StreamListenParams { stream_id },
+        };
+        self.send_request(&request).await?;
+        Ok(())
+    }
+
+    pub async fn stream_cancel(&self, stream_id: StreamId) -> Result<()> {
+        let request_id = self.request_id().await;
+        let request = VmServiceRequest::StreamCancel {
+            jsonrpc: "2.0".to_string(),
+            id: request_id,
+            params: super::io::request::StreamCancelParams { stream_id },
+        };
+        self.send_request(&request).await?;
+        Ok(())
+    }
+
+    pub async fn receive_event(&self) -> Result<types::Event> {
+        let mut rx = self.incoming_tx.subscribe();
+        while let Ok(line) = rx.recv().await {
+            let response = serde_json::from_str::<VmServiceEvent>(&line);
+            if let Ok(res) = response {
+                if res.method == "streamNotify" {
+                    return Ok(res.params);
+                }
+            }
+        }
+        Err(eyre!("Could not receive daemon response"))
     }
 
     async fn request_id(&self) -> u32 {
