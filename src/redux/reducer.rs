@@ -50,6 +50,7 @@ pub fn reducer(state: State, action: Action) -> State {
                 vec![SessionState {
                     id: session_id,
                     device_id,
+                    display_refresh_rate: 60,
                     ..SessionState::default()
                 }],
             ]

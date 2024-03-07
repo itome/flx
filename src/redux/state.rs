@@ -67,6 +67,7 @@ pub struct SessionState {
     pub hot_restarting: bool,
     pub logs: Vec<SessionLog>,
     pub frames: Vec<FlutterFrame>,
+    pub display_refresh_rate: u32,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
