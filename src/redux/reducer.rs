@@ -15,7 +15,23 @@ use super::{
 pub fn reducer(state: State, action: Action) -> State {
     match action {
         Action::AddDevice { device } => State {
-            devices: [state.devices, vec![device]].concat(),
+            devices: [state.devices, vec![device.clone()]].concat(),
+            select_device_popup: SelectDevicePopupState {
+                selected_device_id: {
+                    let is_supported = state.supported_platforms.contains(&device.platform_type)
+                        && state
+                            .sessions
+                            .iter()
+                            .all(|s| s.device_id != Some(device.id.clone()));
+
+                    if state.select_device_popup.selected_device_id.is_none() && is_supported {
+                        Some(device.id.clone())
+                    } else {
+                        state.select_device_popup.selected_device_id
+                    }
+                },
+                ..state.select_device_popup
+            },
             ..state
         },
         Action::RemoveDevice { device } => State {
