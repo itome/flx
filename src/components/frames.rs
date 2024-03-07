@@ -49,7 +49,7 @@ impl Component for FramesComponent {
         };
 
         let max_frame_count =
-            ((area.width - ledgend_width - 2) / (BAR_WIDTH * 2 + GROUP_GAP) as u16) as usize;
+            ((area.width - ledgend_width - 2) / (BAR_WIDTH * 2 + GROUP_GAP)) as usize;
         let skip = if session.frames.len() > max_frame_count {
             session.frames.len() - max_frame_count
         } else {

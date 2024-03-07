@@ -21,6 +21,12 @@ pub struct VmService {
     request_count: Arc<Mutex<u32>>,
 }
 
+impl Default for VmService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VmService {
     pub fn new() -> Self {
         let (incoming_tx, _incoming_rx) = broadcast::channel::<String>(16);
