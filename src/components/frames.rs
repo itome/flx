@@ -25,7 +25,7 @@ const RASTER_COLOR: Color = Color::Rgb(44, 93, 170);
 const UI_JANK_COLOR: Color = Color::Rgb(245, 132, 107);
 const RASTER_JANK_COLOR: Color = Color::Rgb(195, 89, 90);
 const MAX_FRAME_DURATION: u64 = 30;
-const BAR_WIDTH: u16 = 4;
+const BAR_WIDTH: u16 = 3;
 const GROUP_GAP: u16 = 1;
 
 impl Component for FramesComponent {
@@ -53,20 +53,29 @@ impl Component for FramesComponent {
             .skip(skip)
             .enumerate()
             .map(|(index, frame)| {
+                let target_ms_per_frame = 1000 / session.display_refresh_rate as u128;
+                let is_ui_janky = frame.build.as_millis() > target_ms_per_frame;
+                let is_raster_janky = frame.raster.as_millis() > target_ms_per_frame;
                 let ui_bar = Bar::default()
                     .value(frame.build.as_millis() as u64)
                     .text_value("".to_string())
-                    .style(Style::default().fg(UI_COLOR));
+                    .style(Style::default().fg(if is_ui_janky { UI_JANK_COLOR } else { UI_COLOR }));
                 let raster_bar = Bar::default()
                     .value(frame.raster.as_millis() as u64)
                     .text_value("".to_string())
-                    .style(Style::default().fg(RASTER_COLOR));
-                let bar_group = BarGroup::default().bars(&[ui_bar, raster_bar]);
-                if index % 2 == 1 {
-                    bar_group.label(Line::from(frame.number.to_string()).centered())
-                } else {
-                    bar_group
-                }
+                    .style(Style::default().fg(if is_raster_janky {
+                        RASTER_JANK_COLOR
+                    } else {
+                        RASTER_COLOR
+                    }));
+                BarGroup::default().bars(&[ui_bar, raster_bar]).label(
+                    Line::from(if index % 2 == 1 {
+                        frame.number.to_string()
+                    } else {
+                        " ".to_string()
+                    })
+                    .centered(),
+                )
             });
 
         let mut barchart = BarChart::default()
@@ -81,5 +90,33 @@ impl Component for FramesComponent {
         }
 
         f.render_widget(barchart, area);
+
+        let ledgend_width = "Raster Jank".len() as u16 + 2;
+        let ledgend_area = Rect {
+            height: 6,
+            width: ledgend_width,
+            y: area.y,
+            x: area.right() - ledgend_width,
+        };
+
+        let ledgend = Paragraph::new(vec![
+            { Line::from(Span::styled("UI", Style::default().fg(UI_COLOR))) },
+            Line::from(Span::styled("Raster", Style::default().fg(RASTER_COLOR))),
+            Line::from(vec![Span::styled(
+                "UI Jank",
+                Style::default().fg(UI_JANK_COLOR),
+            )]),
+            Line::from(vec![Span::styled(
+                "Raster Jank",
+                Style::default().fg(RASTER_JANK_COLOR),
+            )]),
+        ])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White)),
+        );
+        f.render_widget(Clear, ledgend_area);
+        f.render_widget(ledgend, ledgend_area);
     }
 }
