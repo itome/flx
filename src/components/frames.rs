@@ -35,12 +35,21 @@ impl Component for FramesComponent {
             .padding(Padding::horizontal(1))
             .borders(Borders::ALL);
 
+        let ledgend_width = "Raster Jank".len() as u16 + 2;
+        let ledgend_area = Rect {
+            height: 6,
+            width: ledgend_width,
+            y: area.y,
+            x: area.right() - ledgend_width,
+        };
+
         let Some(session) = CurrentSessionSelector.select(state) else {
             f.render_widget(block, area);
             return;
         };
 
-        let max_frame_count = ((area.width - 2) / (BAR_WIDTH * 2 + GROUP_GAP) as u16) as usize;
+        let max_frame_count =
+            ((area.width - ledgend_width - 2) / (BAR_WIDTH * 2 + GROUP_GAP) as u16) as usize;
         let skip = if session.frames.len() > max_frame_count {
             session.frames.len() - max_frame_count
         } else {
@@ -89,16 +98,6 @@ impl Component for FramesComponent {
             barchart = barchart.data(group);
         }
 
-        f.render_widget(barchart, area);
-
-        let ledgend_width = "Raster Jank".len() as u16 + 2;
-        let ledgend_area = Rect {
-            height: 6,
-            width: ledgend_width,
-            y: area.y,
-            x: area.right() - ledgend_width,
-        };
-
         let ledgend = Paragraph::new(vec![
             { Line::from(Span::styled("UI", Style::default().fg(UI_COLOR))) },
             Line::from(Span::styled("Raster", Style::default().fg(RASTER_COLOR))),
@@ -116,6 +115,8 @@ impl Component for FramesComponent {
                 .borders(Borders::ALL)
                 .style(Style::default().fg(Color::White)),
         );
+
+        f.render_widget(barchart, area);
         f.render_widget(Clear, ledgend_area);
         f.render_widget(ledgend, ledgend_area);
     }
