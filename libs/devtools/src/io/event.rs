@@ -19,7 +19,7 @@ pub struct VmServiceEventParams {
 
 #[cfg(test)]
 mod tests {
-    use crate::devtools::io::request::StreamId;
+    use crate::io::request::StreamId;
 
     #[test]
     fn parse_timeline_event() {

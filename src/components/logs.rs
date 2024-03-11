@@ -8,8 +8,9 @@ use redux_rs::Selector;
 
 use crate::redux::selector::current_session_logs::CurrentSessionLogsSelector;
 use crate::redux::state::{DevTools, Focus, SessionLog, State, Tab};
-use crate::{daemon::flutter::FlutterDaemon, tui::Frame};
+use crate::tui::Frame;
 use color_eyre::eyre::Result;
+use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 

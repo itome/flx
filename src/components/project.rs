@@ -4,8 +4,9 @@ use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 
 use crate::redux::state::{Focus, State, Tab};
-use crate::{daemon::flutter::FlutterDaemon, tui::Frame};
+use crate::tui::Frame;
 use color_eyre::eyre::Result;
+use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 

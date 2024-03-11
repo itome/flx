@@ -4,14 +4,14 @@ use std::{sync::Arc, time::Duration};
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
-use crate::{
-    daemon::flutter::FlutterDaemon,
-    devtools::{
-        io::{request::StreamId, types::EventKind},
-        service::VmService,
-    },
-    redux::{action::Action, state::State},
+use crate::redux::{action::Action, state::State};
+
+use devtools::{
+    io::{request::StreamId, types::EventKind},
+    service::VmService,
 };
+
+use daemon::flutter::FlutterDaemon;
 
 use super::context::Context;
 

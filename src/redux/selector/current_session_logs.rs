@@ -1,9 +1,8 @@
 use redux_rs::Selector;
 
-use crate::{
-    daemon::io::device::Device,
-    redux::state::{SessionLog, State},
-};
+use crate::redux::state::{SessionLog, State};
+
+use daemon::io::device::Device;
 
 pub struct CurrentSessionLogsSelector;
 

@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use crate::{daemon::run::FlutterRun, devtools::service::VmService};
 use color_eyre::eyre::{eyre, Result};
+use daemon::run::FlutterRun;
+use devtools::service::VmService;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 

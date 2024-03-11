@@ -7,14 +7,13 @@ use redux_rs::{
     StoreApi,
 };
 
-use crate::{
-    daemon::flutter::FlutterDaemon,
-    redux::{
-        action::Action,
-        state::State,
-        thunk::{run_new_vm_service::RunNewVmServiceThunk, thunk_impl, ThunkAction},
-    },
+use crate::redux::{
+    action::Action,
+    state::State,
+    thunk::{run_new_vm_service::RunNewVmServiceThunk, thunk_impl, ThunkAction},
 };
+
+use daemon::flutter::FlutterDaemon;
 
 use super::context::Context;
 

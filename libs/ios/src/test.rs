@@ -1,5 +1,3 @@
-use std::fs;
-
 #[test]
 fn get_xcode_project_info() {
     let contents = include_str!("./test/xcodebuild.txt");

@@ -24,7 +24,6 @@ use crate::components::runners::RunnersComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
 use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
-use crate::daemon::flutter::FlutterDaemon;
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::CurrentSessionSelector;
 use crate::redux::state::{Focus, SelectDevicePopupState, SelectFlavorPopupState, State, Tab};
@@ -41,6 +40,7 @@ use crate::{
     redux::{reducer::reducer, ActionOrThunk},
     tui::{self, Tui},
 };
+use daemon::flutter::FlutterDaemon;
 
 pub struct App {
     pub config: Config,

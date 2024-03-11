@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use super::device::{Device, DeviceCapabilities};
+use super::device::Device;
 use super::emulator::Emulator;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -60,6 +60,8 @@ pub type DetachAppResponse = FlutterDaemonResponse<bool>;
 
 #[cfg(test)]
 mod test {
+    use crate::io::device::DeviceCapabilities;
+
     use super::*;
 
     #[test]

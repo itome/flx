@@ -5,11 +5,6 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::{mpsc::UnboundedSender, Mutex};
 
 use crate::{
-    daemon::{
-        self,
-        flutter::FlutterDaemon,
-        io::{device::Device, event::AppMode},
-    },
     redux::{
         action::Action,
         state::{Focus, State, Tab},
@@ -19,6 +14,11 @@ use crate::{
     tui::Frame,
 };
 use color_eyre::eyre::{self, eyre, Result};
+use daemon::{
+    self,
+    flutter::FlutterDaemon,
+    io::{device::Device, event::AppMode},
+};
 
 use super::Component;
 

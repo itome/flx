@@ -35,7 +35,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::daemon::io::{
+    use super::{
         device::{Device, DeviceCapabilities},
         event::ConnectedEventParams,
         response::GetDevicesResponse,

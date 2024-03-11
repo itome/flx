@@ -1,6 +1,7 @@
 use redux_rs::Selector;
 
-use crate::{daemon::io::device::Device, redux::state::State};
+use crate::redux::state::State;
+use daemon::io::device::Device;
 
 pub struct AvailableDevicesSelector;
 

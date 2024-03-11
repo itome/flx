@@ -5,11 +5,11 @@ use redux_rs::{middlewares::thunk::ActionOrThunk, StoreApi};
 use tokio::sync::Mutex;
 
 use crate::{
-    daemon::{flutter::FlutterDaemon, io::device::Device},
     redux::state::{Focus, State, Tab},
     tui::Frame,
 };
 use color_eyre::eyre::Result;
+use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 

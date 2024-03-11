@@ -16,8 +16,7 @@ pub type SuccessResponse = VmServiceResponse<Success>;
 
 #[cfg(test)]
 mod tests {
-    use crate::devtools::io::response::GetVersionResponse;
-    use crate::devtools::io::types::*;
+    use crate::io::types::*;
 
     #[test]
     fn get_version() {

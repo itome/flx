@@ -4,12 +4,10 @@ use std::sync::Arc;
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
-use crate::{
-    daemon::flutter::FlutterDaemon,
-    redux::{action::Action, state::State},
-};
+use crate::redux::{action::Action, state::State};
 
 use super::context::Context;
+use daemon::flutter::FlutterDaemon;
 
 pub struct WatchDevicesThunk {
     context: Arc<Context>,

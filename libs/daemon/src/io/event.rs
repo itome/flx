@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use super::device::{Device, DeviceCapabilities};
+use super::device::Device;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ConnectedEventParams {
@@ -178,6 +178,8 @@ pub enum FlutterDaemonEvent {
 
 #[cfg(test)]
 mod test {
+    use crate::io::device::DeviceCapabilities;
+
     #[test]
     fn test_deserialize_connected_event() {
         let json = r#"{"event":"daemon.connected","params":{"version":"2.0.0","pid": 1234}}"#;
@@ -371,7 +373,7 @@ mod test {
                     ephemeral: false,
                     emulator_id: None,
                     sdk: "macOS 14.1.2 23B92 darwin-arm64".to_string(),
-                    capabilities: super::DeviceCapabilities {
+                    capabilities: DeviceCapabilities {
                         hot_reload: true,
                         hot_restart: true,
                         screenshot: false,
@@ -402,7 +404,7 @@ mod test {
                     ephemeral: false,
                     emulator_id: None,
                     sdk: "macOS 14.1.2 23B92 darwin-arm64".to_string(),
-                    capabilities: super::DeviceCapabilities {
+                    capabilities: DeviceCapabilities {
                         hot_reload: true,
                         hot_restart: true,
                         screenshot: false,

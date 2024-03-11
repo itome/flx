@@ -4,10 +4,9 @@ use std::sync::Arc;
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
-use crate::{
-    daemon::flutter::FlutterDaemon,
-    redux::{action::Action, state::State},
-};
+use crate::redux::{action::Action, state::State};
+
+use daemon::flutter::FlutterDaemon;
 
 use super::context::Context;
 
