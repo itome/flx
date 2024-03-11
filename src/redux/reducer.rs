@@ -9,13 +9,29 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{SessionState, State, Tab},
+    state::{FlutterFrame, SessionState, State, Tab},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
     match action {
         Action::AddDevice { device } => State {
-            devices: [state.devices, vec![device]].concat(),
+            devices: [state.devices, vec![device.clone()]].concat(),
+            select_device_popup: SelectDevicePopupState {
+                selected_device_id: {
+                    let is_supported = state.supported_platforms.contains(&device.platform_type)
+                        && state
+                            .sessions
+                            .iter()
+                            .all(|s| s.device_id != Some(device.id.clone()));
+
+                    if state.select_device_popup.selected_device_id.is_none() && is_supported {
+                        Some(device.id.clone())
+                    } else {
+                        state.select_device_popup.selected_device_id
+                    }
+                },
+                ..state.select_device_popup
+            },
             ..state
         },
         Action::RemoveDevice { device } => State {
@@ -50,6 +66,7 @@ pub fn reducer(state: State, action: Action) -> State {
                 vec![SessionState {
                     id: session_id,
                     device_id,
+                    display_refresh_rate: 60,
                     ..SessionState::default()
                 }],
             ]
@@ -380,6 +397,44 @@ pub fn reducer(state: State, action: Action) -> State {
                     if s.id == session_id {
                         SessionState {
                             logs: { [s.logs, vec![SessionLog::Stdout(line.clone())]].concat() },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::AppendFlutterFrame {
+            session_id,
+            build,
+            elapsed,
+            number,
+            raster,
+            start_time,
+            vsync_overhead,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            frames: {
+                                [
+                                    s.frames,
+                                    vec![FlutterFrame {
+                                        build,
+                                        elapsed,
+                                        number,
+                                        raster,
+                                        start_time,
+                                        vsync_overhead,
+                                    }],
+                                ]
+                                .concat()
+                            },
                             ..s
                         }
                     } else {

@@ -32,6 +32,10 @@ use super::io::{
 
 pub struct FlutterDaemon {
     tx: broadcast::Sender<String>,
+    // FIXME(itome): This is a workaround to keep the receiver alive.
+    // If the receiver is dropped, tx.send will return an SendError.
+    // So we need to keep the receiver alive.
+    _rx: broadcast::Receiver<String>,
     stdin: Arc<Mutex<ChildStdin>>,
     request_count: Arc<Mutex<u32>>,
     _process: tokio::process::Child,
@@ -51,7 +55,7 @@ impl FlutterDaemon {
             .take()
             .ok_or(eyre!("Stdout is not available"))?;
 
-        let (tx, _) = broadcast::channel::<String>(16);
+        let (tx, _rx) = broadcast::channel::<String>(16);
 
         let _tx = tx.clone();
         tokio::spawn(async move {
@@ -64,6 +68,7 @@ impl FlutterDaemon {
         Ok(Self {
             stdin: Arc::new(Mutex::new(process.stdin.take().unwrap())),
             tx,
+            _rx,
             _process: process,
             request_count: Arc::new(Mutex::new(0)),
         })

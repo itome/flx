@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::daemon::run::FlutterRun;
+use crate::{daemon::run::FlutterRun, devtools::service::VmService};
 use color_eyre::eyre::{eyre, Result};
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -8,6 +8,7 @@ use uuid::Uuid;
 pub struct Session {
     pub id: String,
     pub run: FlutterRun,
+    pub vm_service: VmService,
 }
 
 impl Session {
@@ -17,9 +18,11 @@ impl Session {
         flavor: Option<String>,
     ) -> Self {
         let run = FlutterRun::new(project_root, device_id, flavor).unwrap();
+        let vm_service = VmService::new();
         Self {
             id: Uuid::new_v4().to_string(),
             run,
+            vm_service,
         }
     }
 }
