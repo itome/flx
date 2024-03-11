@@ -1,11 +1,13 @@
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
 use crate::{
+    android,
     daemon::flutter::FlutterDaemon,
+    ios,
     redux::{action::Action, state::State},
 };
 
@@ -34,7 +36,7 @@ where
         let Ok(supprted_platforms) = self
             .context
             .daemon
-            .get_supported_platforms(project_root.unwrap_or(".".to_string()))
+            .get_supported_platforms(project_root.clone().unwrap_or(".".to_string()))
             .await
         else {
             return;
@@ -45,5 +47,44 @@ where
                 platforms: supprted_platforms,
             })
             .await;
+
+        let mut flavors = HashMap::new();
+
+        let supported_platforms = store
+            .select(|state: &State| state.supported_platforms.clone())
+            .await;
+
+        for supported_platform in supported_platforms {
+            match supported_platform.as_str() {
+                "ios" => {
+                    if let Ok(Some(schemes)) =
+                        ios::get_schemes(project_root.clone().unwrap_or(".".to_string()))
+                    {
+                        flavors.insert("ios".to_string(), schemes);
+                    }
+                }
+                "macos" => {
+                    if let Ok(Some(schemes)) =
+                        ios::get_schemes(project_root.clone().unwrap_or(".".to_string()))
+                    {
+                        flavors.insert("darwin".to_string(), schemes);
+                    }
+                }
+                "android" => {
+                    if let Ok(Some(schemes)) =
+                        android::get_schemes(project_root.clone().unwrap_or(".".to_string()))
+                    {
+                        flavors.insert("android".to_string(), schemes);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        flavors.entry("ios".to_string()).or_insert(vec![]);
+        flavors.entry("darwin".to_string()).or_insert(vec![]);
+        flavors.entry("android".to_string()).or_insert(vec![]);
+
+        store.dispatch(Action::SetFlavors { flavors }).await;
     }
 }

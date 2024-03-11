@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::Duration;
 
 use crate::daemon::io::{device::Device, event::AppMode};
@@ -14,6 +15,7 @@ pub enum Tab {
 pub enum PopUp {
     #[default]
     SelectDevice,
+    SelectFlavor,
 }
 
 #[derive(Clone, PartialEq, Eq, Default)]
@@ -61,6 +63,7 @@ pub struct SessionState {
     pub id: String,
     pub app_id: Option<String>,
     pub device_id: Option<String>,
+    pub flavor: Option<String>,
     pub started: bool,
     pub mode: Option<AppMode>,
     pub hot_reloading: bool,
@@ -73,7 +76,19 @@ pub struct SessionState {
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SelectDevicePopupState {
     pub visible: bool,
-    pub selected_device_id: Option<String>,
+    pub selected_device: Option<Device>,
+}
+
+impl SelectDevicePopupState {
+    pub fn selected_device_platform(&self) -> Option<String> {
+        Some(self.selected_device.clone()?.platform)
+    }
+}
+
+#[derive(Default, Clone, PartialEq, Eq)]
+pub struct SelectFlavorPopupState {
+    pub visible: bool,
+    pub selected_flavor: Option<String>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
@@ -83,10 +98,13 @@ pub struct State {
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
 
+    pub flavors: HashMap<String, Vec<String>>,
+
     pub sessions: Vec<SessionState>,
     pub session_id: Option<String>,
 
     pub supported_platforms: Vec<String>,
 
     pub select_device_popup: SelectDevicePopupState,
+    pub select_flavor_popup: SelectFlavorPopupState,
 }

@@ -58,8 +58,12 @@ impl SessionManager {
         }
     }
 
-    pub async fn run_new_app(&self, device_id: Option<String>) -> Result<String> {
-        let session = Session::new(self.project_root.clone(), device_id, None);
+    pub async fn run_new_app(
+        &self,
+        device_id: Option<String>,
+        flavor: Option<String>,
+    ) -> Result<String> {
+        let session = Session::new(self.project_root.clone(), device_id, flavor);
         let session_id = session.id.clone();
         for slot in self.sessions() {
             if slot.read().await.is_none() {

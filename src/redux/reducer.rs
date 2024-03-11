@@ -9,7 +9,7 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{FlutterFrame, SessionState, State, Tab},
+    state::{FlutterFrame, SelectFlavorPopupState, SessionState, State, Tab},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
@@ -17,17 +17,17 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::AddDevice { device } => State {
             devices: [state.devices, vec![device.clone()]].concat(),
             select_device_popup: SelectDevicePopupState {
-                selected_device_id: {
+                selected_device: {
                     let is_supported = state.supported_platforms.contains(&device.platform_type)
                         && state
                             .sessions
                             .iter()
                             .all(|s| s.device_id != Some(device.id.clone()));
 
-                    if state.select_device_popup.selected_device_id.is_none() && is_supported {
-                        Some(device.id.clone())
+                    if state.select_device_popup.selected_device.is_none() && is_supported {
+                        Some(device.to_owned())
                     } else {
-                        state.select_device_popup.selected_device_id
+                        state.select_device_popup.selected_device
                     }
                 },
                 ..state.select_device_popup
@@ -38,6 +38,7 @@ pub fn reducer(state: State, action: Action) -> State {
             devices: state.devices.into_iter().filter(|d| d != &device).collect(),
             ..state
         },
+        Action::SetFlavors { flavors } => State { flavors, ..state },
         Action::NextTab => State {
             current_focus: match state.current_focus {
                 Focus::Tab(Tab::Project) => Focus::Tab(Tab::Runners),
@@ -59,6 +60,7 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::RegisterSession {
             session_id,
             device_id,
+            flavor,
         } => State {
             session_id: Some(session_id.clone()),
             sessions: [
@@ -66,6 +68,7 @@ pub fn reducer(state: State, action: Action) -> State {
                 vec![SessionState {
                     id: session_id,
                     device_id,
+                    flavor,
                     display_refresh_rate: 60,
                     ..SessionState::default()
                 }],
@@ -114,26 +117,26 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::NextDeviceForRunning => State {
             select_device_popup: SelectDevicePopupState {
-                selected_device_id: {
+                selected_device: {
                     let devices = AvailableDevicesSelector.select(&state);
-                    match state.select_device_popup.selected_device_id {
-                        Some(selected_device_id) => {
+                    match state.select_device_popup.selected_device {
+                        Some(selected_device) => {
                             if let Some(index) =
-                                devices.iter().position(|d| d.id == selected_device_id)
+                                devices.iter().position(|d| d.id == selected_device.id)
                             {
                                 let next_index = (index + 1) % devices.len();
-                                devices.get(next_index).map(|d| d.id.clone())
+                                devices.get(next_index).map(|d| d.to_owned())
                             } else if devices.is_empty() {
                                 None
                             } else {
-                                devices.first().map(|d| d.id.clone())
+                                devices.first().map(|d| d.to_owned())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.first().map(|d| d.id.clone())
+                                devices.first().map(|d| d.to_owned())
                             }
                         }
                     }
@@ -144,26 +147,26 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::PreviousDeviceForRunning => State {
             select_device_popup: SelectDevicePopupState {
-                selected_device_id: {
+                selected_device: {
                     let devices = AvailableDevicesSelector.select(&state);
-                    match state.select_device_popup.selected_device_id {
-                        Some(selected_device_id) => {
+                    match state.select_device_popup.selected_device {
+                        Some(selected_device) => {
                             if let Some(index) =
-                                devices.iter().position(|d| d.id == selected_device_id)
+                                devices.iter().position(|d| d.id == selected_device.id)
                             {
                                 let next_index = (index + devices.len() - 1) % devices.len();
-                                devices.get(next_index).map(|d| d.id.clone())
+                                devices.get(next_index).map(|d| d.to_owned())
                             } else if devices.is_empty() {
                                 None
                             } else {
-                                devices.last().map(|d| d.id.clone())
+                                devices.last().map(|d| d.to_owned())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.last().map(|d| d.id.clone())
+                                devices.last().map(|d| d.to_owned())
                             }
                         }
                     }
@@ -172,14 +175,86 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
+        Action::NextFlavorForRunning => State {
+            select_flavor_popup: SelectFlavorPopupState {
+                selected_flavor: {
+                    let selected_device_platform = &state
+                        .select_device_popup
+                        .selected_device_platform()
+                        .unwrap_or("".to_string());
+                    let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+                        return state;
+                    };
+
+                    match state.select_flavor_popup.selected_flavor {
+                        Some(selected_flavor) => {
+                            if let Some(index) = flavors.iter().position(|f| f == &selected_flavor)
+                            {
+                                let next_index = (index + 1) % flavors.len();
+                                flavors.get(next_index).map(|d| d.to_owned())
+                            } else if flavors.is_empty() {
+                                None
+                            } else {
+                                flavors.first().map(|d| d.to_owned())
+                            }
+                        }
+                        None => {
+                            if flavors.is_empty() {
+                                None
+                            } else {
+                                flavors.first().map(|f| f.to_owned())
+                            }
+                        }
+                    }
+                },
+                ..state.select_flavor_popup
+            },
+            ..state
+        },
+        Action::PreviousFlavorForRunning => State {
+            select_flavor_popup: SelectFlavorPopupState {
+                selected_flavor: {
+                    let selected_device_platform = &state
+                        .select_device_popup
+                        .selected_device_platform()
+                        .unwrap_or("".to_string());
+                    let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+                        return state;
+                    };
+
+                    match state.select_flavor_popup.selected_flavor {
+                        Some(selected_flavor) => {
+                            if let Some(index) = flavors.iter().position(|f| f == &selected_flavor)
+                            {
+                                let next_index = (index + flavors.len() - 1) % flavors.len();
+                                flavors.get(next_index).map(|d| d.to_owned())
+                            } else if flavors.is_empty() {
+                                None
+                            } else {
+                                flavors.last().map(|d| d.to_owned())
+                            }
+                        }
+                        None => {
+                            if flavors.is_empty() {
+                                None
+                            } else {
+                                flavors.last().map(|d| d.to_owned())
+                            }
+                        }
+                    }
+                },
+                ..state.select_flavor_popup
+            },
+            ..state
+        },
         Action::ShowSelectDevicePopUp => State {
             current_focus: Focus::PopUp(PopUp::SelectDevice),
             select_device_popup: SelectDevicePopupState {
                 visible: true,
-                selected_device_id: AvailableDevicesSelector
+                selected_device: AvailableDevicesSelector
                     .select(&state)
                     .first()
-                    .map(|d| d.id.clone()),
+                    .map(|d| d.to_owned()),
             },
             ..state
         },
@@ -188,6 +263,22 @@ pub fn reducer(state: State, action: Action) -> State {
             select_device_popup: SelectDevicePopupState {
                 visible: false,
                 ..state.select_device_popup
+            },
+            ..state
+        },
+        Action::ShowSelectFlavorPopUp => State {
+            current_focus: Focus::PopUp(PopUp::SelectFlavor),
+            select_flavor_popup: SelectFlavorPopupState {
+                visible: true,
+                selected_flavor: None,
+            },
+            ..state
+        },
+        Action::HideSelectFlavorPopUp => State {
+            current_focus: Focus::Tab(Tab::Runners),
+            select_flavor_popup: SelectFlavorPopupState {
+                visible: false,
+                ..state.select_flavor_popup
             },
             ..state
         },
