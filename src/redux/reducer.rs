@@ -9,7 +9,7 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{FlutterFrame, SessionState, State, Tab,SelectFlavorPopupState},
+    state::{FlutterFrame, SelectFlavorPopupState, SessionState, State, Tab},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
@@ -221,7 +221,7 @@ pub fn reducer(state: State, action: Action) -> State {
                     let Some(flavors) = &state.flavors.get(selected_device_platform) else {
                         return state;
                     };
-                    
+
                     match state.select_flavor_popup.selected_flavor {
                         Some(selected_flavor) => {
                             if let Some(index) = flavors.iter().position(|f| f == &selected_flavor)
