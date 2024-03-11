@@ -165,7 +165,13 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::NextFlavorForRunning => State {
             select_flavor_popup: SelectFlavorPopupState {
                 selected_flavor: {
-                    let flavors = &state.flavors;
+                    let selected_device_platform = &state
+                        .select_device_popup
+                        .selected_device_platform()
+                        .unwrap_or("".to_string());
+                    let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+                        return state;
+                    };
 
                     match state.select_flavor_popup.selected_flavor {
                         Some(selected_flavor) => {
@@ -195,7 +201,14 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::PreviousFlavorForRunning => State {
             select_flavor_popup: SelectFlavorPopupState {
                 selected_flavor: {
-                    let flavors = &state.flavors;
+                    let selected_device_platform = &state
+                        .select_device_popup
+                        .selected_device_platform()
+                        .unwrap_or("".to_string());
+                    let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+                        return state;
+                    };
+                    
                     match state.select_flavor_popup.selected_flavor {
                         Some(selected_flavor) => {
                             if let Some(index) = flavors.iter().position(|f| f == &selected_flavor)

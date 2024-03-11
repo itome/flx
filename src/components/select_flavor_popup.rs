@@ -97,7 +97,13 @@ impl Component for SelectFlavorPopupComponent {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let flavors = &state.flavors;
+        let selected_device_platform = &state
+            .select_device_popup
+            .selected_device_platform()
+            .unwrap_or("".to_string());
+        let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+            return ();
+        };
 
         let items = flavors
             .iter()

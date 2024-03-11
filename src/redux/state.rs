@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::daemon::io::{device::Device, event::AppMode};
 
 #[derive(Clone, PartialEq, Eq)]
@@ -79,6 +81,12 @@ pub struct SelectDevicePopupState {
     pub selected_device: Option<Device>,
 }
 
+impl SelectDevicePopupState {
+    pub fn selected_device_platform(&self) -> Option<String> {
+        Some(self.selected_device.clone()?.platform)
+    }
+}
+
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SelectFlavorPopupState {
     pub visible: bool,
@@ -91,7 +99,8 @@ pub struct State {
 
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
-    pub flavors: Vec<String>,
+
+    pub flavors: HashMap<String, Vec<String>>,
 
     pub sessions: Vec<SessionState>,
     pub session_id: Option<String>,

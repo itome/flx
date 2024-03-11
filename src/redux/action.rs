@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::daemon::io::{device::Device, event::AppMode};
 
 #[derive(Debug)]
@@ -10,7 +12,7 @@ pub enum Action {
     },
 
     SetFlavors {
-        flavors: Vec<String>,
+        flavors: HashMap<String, Vec<String>>,
     },
 
     NextTab,

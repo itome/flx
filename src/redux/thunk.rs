@@ -9,7 +9,6 @@ use super::{action::Action, state::State};
 pub mod context;
 pub mod hot_reload;
 pub mod hot_restart;
-pub mod load_flavors;
 pub mod load_supported_platforms;
 pub mod run_new_app;
 pub mod stop_app;
@@ -22,7 +21,6 @@ pub enum ThunkAction {
     HotReload,
     HotRestart,
     StopApp,
-    LoadFlavors,
 }
 
 pub fn thunk_impl<Api>(
@@ -41,6 +39,5 @@ where
         ThunkAction::LoadSupportedPlatforms => Box::new(
             load_supported_platforms::LoadSupportedPlatformsThunk::new(context),
         ),
-        ThunkAction::LoadFlavors => Box::new(load_flavors::LoadFlavorsThunk::new(context)),
     }
 }

@@ -67,14 +67,6 @@ impl SelectDevicePopupComponent {
             .send(Action::ShowSelectFlavorPopUp.into())?;
         Ok(())
     }
-
-    fn load_flavors(&self) -> Result<()> {
-        self.action_tx
-            .as_ref()
-            .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(ThunkAction::LoadFlavors.into())?;
-        Ok(())
-    }
 }
 
 impl Component for SelectDevicePopupComponent {
@@ -91,12 +83,26 @@ impl Component for SelectDevicePopupComponent {
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
-            KeyCode::Enter => self.run_new_app()?,
-            KeyCode::Esc => self.hide_popup()?,
-            KeyCode::Char('f') => {
-                self.load_flavors()?;
-                self.show_select_flavor()?;
+            KeyCode::Enter => {
+                let selected_device_platform = &state
+                    .select_device_popup
+                    .selected_device_platform()
+                    .unwrap_or("".to_string());
+
+                let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+                    self.run_new_app()?;
+                    return Ok(());
+                };
+
+                if flavors.is_empty() {
+                    self.run_new_app()?;
+                    return Ok(());
+                }
+
+                self.show_select_flavor()?
             }
+            KeyCode::Esc => self.hide_popup()?,
+
             _ => {}
         }
         Ok(())
