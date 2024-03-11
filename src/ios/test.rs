@@ -3,7 +3,7 @@ use std::fs;
 #[test]
 fn get_xcode_project_info() {
     let contents = include_str!("./test/xcodebuild.txt");
-    let info = super::XcodeProjectInfo::new_from_xcode_build_output(&contents);
+    let info = super::XcodeProjectInfo::new_from_xcode_build_output(contents);
     assert!(info.targets.contains(&"Runner"));
     assert!(!info.targets.contains(&"Undefined"));
 
