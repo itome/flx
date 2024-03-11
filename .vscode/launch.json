@@ -6,40 +6,9 @@
     "configurations": [
         {
             "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'flx'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=flx",
-                    "--package=flx"
-                ],
-                "filter": {
-                    "name": "flx",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'flx'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=flx",
-                    "--package=flx"
-                ],
-                "filter": {
-                    "name": "flx",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "request": "attach",
+            "pid": "${command:pickProcess}",
+            "name": "Attach",
         }
     ]
 }
