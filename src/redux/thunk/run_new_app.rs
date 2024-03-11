@@ -36,19 +36,15 @@ where
     async fn execute(&self, store: Arc<Api>) {
         let device_id = store
             .select(|state: &State| {
-                let Some(ref selected_device) = state.select_device_popup.selected_device else {
-                    return None;
-                };
-                Some(selected_device.id.clone())
+                let selected_device = state.select_device_popup.selected_device.clone()?;
+                Some(selected_device.id)
             })
             .await;
 
         let flavor = store
             .select(|state: &State| {
-                let Some(ref selected_flavor) = state.select_flavor_popup.selected_flavor else {
-                    return None;
-                };
-                if selected_flavor == "Undefined" {
+                let selected_flavor = state.select_flavor_popup.selected_flavor.clone()?;
+                if selected_flavor == *"Undefined" {
                     return None;
                 }
                 Some(selected_flavor.clone())
