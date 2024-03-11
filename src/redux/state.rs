@@ -1,41 +1,27 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::daemon::io::{device::Device, event::AppMode};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub enum Tab {
+    #[default]
     Project,
     Runners,
     Devices,
 }
 
-impl Default for Tab {
-    fn default() -> Self {
-        Tab::Project
-    }
-}
-
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub enum PopUp {
+    #[default]
     SelectDevice,
     SelectFlavor,
 }
 
-impl Default for PopUp {
-    fn default() -> Self {
-        PopUp::SelectDevice
-    }
-}
-
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub enum DevTools {
+    #[default]
     Logs,
-}
-
-impl Default for DevTools {
-    fn default() -> Self {
-        DevTools::Logs
-    }
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -62,6 +48,16 @@ pub enum SessionLog {
     Stdout(String),
 }
 
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct FlutterFrame {
+    pub build: Duration,
+    pub elapsed: Duration,
+    pub number: u64,
+    pub raster: Duration,
+    pub start_time: Duration,
+    pub vsync_overhead: Duration,
+}
+
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SessionState {
     pub id: String,
@@ -73,6 +69,8 @@ pub struct SessionState {
     pub hot_reloading: bool,
     pub hot_restarting: bool,
     pub logs: Vec<SessionLog>,
+    pub frames: Vec<FlutterFrame>,
+    pub display_refresh_rate: u32,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

@@ -11,8 +11,10 @@ pub mod hot_reload;
 pub mod hot_restart;
 pub mod load_supported_platforms;
 pub mod run_new_app;
+pub mod run_new_vm_service;
 pub mod stop_app;
 pub mod watch_devices;
+pub mod watch_frames;
 
 pub enum ThunkAction {
     WatchDevices,

@@ -9,13 +9,29 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{SelectFlavorPopupState, SessionState, State, Tab},
+    state::{FlutterFrame, SessionState, State, Tab,SelectFlavorPopupState},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
     match action {
         Action::AddDevice { device } => State {
-            devices: [state.devices, vec![device]].concat(),
+            devices: [state.devices, vec![device.clone()]].concat(),
+            select_device_popup: SelectDevicePopupState {
+                selected_device: {
+                    let is_supported = state.supported_platforms.contains(&device.platform_type)
+                        && state
+                            .sessions
+                            .iter()
+                            .all(|s| s.device_id != Some(device.id.clone()));
+
+                    if state.select_device_popup.selected_device.is_none() && is_supported {
+                        Some(device.to_owned())
+                    } else {
+                        state.select_device_popup.selected_device
+                    }
+                },
+                ..state.select_device_popup
+            },
             ..state
         },
         Action::RemoveDevice { device } => State {
@@ -53,6 +69,7 @@ pub fn reducer(state: State, action: Action) -> State {
                     id: session_id,
                     device_id,
                     flavor,
+                    display_refresh_rate: 60,
                     ..SessionState::default()
                 }],
             ]
@@ -109,19 +126,17 @@ pub fn reducer(state: State, action: Action) -> State {
                             {
                                 let next_index = (index + 1) % devices.len();
                                 devices.get(next_index).map(|d| d.to_owned())
+                            } else if devices.is_empty() {
+                                None
                             } else {
-                                if devices.is_empty() {
-                                    None
-                                } else {
-                                    devices.get(0).map(|d| d.to_owned())
-                                }
+                                devices.first().map(|d| d.to_owned())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.get(0).map(|d| d.to_owned())
+                                devices.first().map(|d| d.to_owned())
                             }
                         }
                     }
@@ -141,19 +156,17 @@ pub fn reducer(state: State, action: Action) -> State {
                             {
                                 let next_index = (index + devices.len() - 1) % devices.len();
                                 devices.get(next_index).map(|d| d.to_owned())
+                            } else if devices.is_empty() {
+                                None
                             } else {
-                                if devices.is_empty() {
-                                    None
-                                } else {
-                                    devices.get(devices.len() - 1).map(|d| d.to_owned())
-                                }
+                                devices.last().map(|d| d.to_owned())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.get(devices.len() - 1).map(|d| d.to_owned())
+                                devices.last().map(|d| d.to_owned())
                             }
                         }
                     }
@@ -240,12 +253,8 @@ pub fn reducer(state: State, action: Action) -> State {
                 visible: true,
                 selected_device: AvailableDevicesSelector
                     .select(&state)
-                    .get(0)
+                    .first()
                     .map(|d| d.to_owned()),
-            },
-            select_flavor_popup: SelectFlavorPopupState {
-                visible: false,
-                selected_flavor: None,
             },
             ..state
         },
@@ -479,6 +488,44 @@ pub fn reducer(state: State, action: Action) -> State {
                     if s.id == session_id {
                         SessionState {
                             logs: { [s.logs, vec![SessionLog::Stdout(line.clone())]].concat() },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::AppendFlutterFrame {
+            session_id,
+            build,
+            elapsed,
+            number,
+            raster,
+            start_time,
+            vsync_overhead,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            frames: {
+                                [
+                                    s.frames,
+                                    vec![FlutterFrame {
+                                        build,
+                                        elapsed,
+                                        number,
+                                        raster,
+                                        start_time,
+                                        vsync_overhead,
+                                    }],
+                                ]
+                                .concat()
+                            },
                             ..s
                         }
                     } else {

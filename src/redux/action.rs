@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::daemon::io::{device::Device, event::AppMode};
 
@@ -86,5 +87,15 @@ pub enum Action {
     AppendStdoutLog {
         session_id: String,
         line: String,
+    },
+
+    AppendFlutterFrame {
+        session_id: String,
+        build: Duration,
+        elapsed: Duration,
+        number: u64,
+        raster: Duration,
+        start_time: Duration,
+        vsync_overhead: Duration,
     },
 }

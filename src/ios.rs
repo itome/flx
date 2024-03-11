@@ -38,7 +38,7 @@ impl<'a> XcodeProjectInfo<'_> {
         let mut build_configurations = vec![];
         let mut schemes = vec![];
         let mut collector = None;
-        for line in output.split("\n") {
+        for line in output.split('\n') {
             if line.is_empty() {
                 collector = None;
                 continue;
@@ -58,9 +58,9 @@ impl<'a> XcodeProjectInfo<'_> {
         }
 
         XcodeProjectInfo {
-            targets: targets,
-            build_configurations: build_configurations,
-            schemes: schemes,
+            targets,
+            build_configurations,
+            schemes,
         }
     }
 }

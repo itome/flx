@@ -39,7 +39,7 @@ pub fn get_schemes(project_root: String) -> Result<Option<Vec<String>>> {
 
 fn parse_schemes(output: &str) -> Vec<String> {
     let mut variants = HashSet::new();
-    for task in output.split("\n") {
+    for task in output.split('\n') {
         let assemble_task_pattern = Regex::new(r"(assemble)(\S+)").unwrap();
         let caps = assemble_task_pattern.captures(task);
         let Some(caps) = caps else {

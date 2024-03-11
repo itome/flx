@@ -102,7 +102,7 @@ impl Component for SelectFlavorPopupComponent {
             .selected_device_platform()
             .unwrap_or("".to_string());
         let Some(flavors) = &state.flavors.get(selected_device_platform) else {
-            return ();
+            return;
         };
 
         let items = flavors
