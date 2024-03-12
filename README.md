@@ -1,5 +1,5 @@
 # flx
 
-[![CI](https://github.com//flx/workflows/CI/badge.svg)](https://github.com//flx/actions)
+[![CI](https://github.com/itome/flx/workflows/CI/badge.svg)](https://github.com/itome/flx/actions)
 
 Flutter tui tool
