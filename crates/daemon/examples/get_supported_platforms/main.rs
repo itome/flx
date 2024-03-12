@@ -26,5 +26,5 @@ async fn main() -> Result<()> {
         .unwrap();
     println!("{:?}", results);
 
-    return Ok(());
+    Ok(())
 }
