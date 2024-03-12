@@ -87,7 +87,7 @@ pub enum VmServiceRequest {
 
 #[cfg(test)]
 mod tests {
-    use crate::devtools::io::request::{EmptyParams, StreamId};
+    use crate::io::request::{EmptyParams, StreamId};
 
     use super::VmServiceRequest;
 

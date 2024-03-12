@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::daemon::io::{device::Device, event::AppMode};
+use daemon::io::{device::Device, event::AppMode};
 
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum Tab {

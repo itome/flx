@@ -10,7 +10,7 @@ use super::io::{
     event::VmServiceEvent,
     request::{EmptyParams, StreamId, VmServiceRequest},
     response::{GetVersionResponse, VmServiceResponse},
-    types::{self, Event, Version},
+    types::{self, Version},
 };
 
 pub struct VmService {

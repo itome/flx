@@ -1,12 +1,11 @@
 use std::{process::Stdio, sync::Arc};
 
 use color_eyre::{eyre::eyre, Result};
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::de::DeserializeOwned;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncRead, AsyncWriteExt, BufReader},
-    process::{Child, ChildStdin, ChildStdout, Command},
-    sync::{broadcast, mpsc, Mutex},
-    task::JoinHandle,
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    process::{ChildStdin, Command},
+    sync::{broadcast, Mutex},
 };
 
 use super::io::{
@@ -314,21 +313,14 @@ impl FlutterDaemon {
 
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
 
-    use color_eyre::Result;
-    use tokio::time::sleep;
-
-    use crate::daemon::{
-        flutter::FlutterDaemon,
-        io::event::{ConnectedEventParams, LogMessageEventParams, MessageLevel},
-    };
+    use crate::flutter::FlutterDaemon;
 
     #[tokio::test]
     #[ignore]
     async fn daemon_start() {
         let daemon = FlutterDaemon::new().unwrap();
-        for i in 0..3 {
+        for _ in 0..3 {
             let version = daemon.version().await.unwrap();
             assert_eq!(version, "0.6.1".to_string());
         }

@@ -12,8 +12,9 @@ use crate::redux::selector::availale_devices::AvailableDevicesSelector;
 use crate::redux::state::{State, Tab};
 use crate::redux::thunk::ThunkAction;
 use crate::redux::ActionOrThunk;
-use crate::{daemon::flutter::FlutterDaemon, tui::Frame};
+use crate::tui::Frame;
 use color_eyre::eyre::{eyre, Result};
+use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 

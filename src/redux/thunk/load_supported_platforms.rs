@@ -4,12 +4,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
-use crate::{
-    android,
-    daemon::flutter::FlutterDaemon,
-    ios,
-    redux::{action::Action, state::State},
-};
+use crate::redux::{action::Action, state::State};
+
+use android;
+use ios;
+
+use daemon::flutter::FlutterDaemon;
 
 use super::context::Context;
 

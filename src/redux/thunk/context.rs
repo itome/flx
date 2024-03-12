@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use tokio::sync::{Mutex, RwLock};
 
-use crate::{
-    daemon::flutter::FlutterDaemon,
-    session::session_manager::{self, SessionManager},
-};
+use crate::session::session_manager::{self, SessionManager};
+
+use daemon::flutter::FlutterDaemon;
 
 pub struct Context {
     pub daemon: Arc<FlutterDaemon>,

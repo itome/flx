@@ -4,11 +4,10 @@ use std::sync::Arc;
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
-use crate::{
-    daemon::flutter::FlutterDaemon,
-    devtools::{io::request::StreamId, service::VmService},
-    redux::{action::Action, state::State},
-};
+use crate::redux::{action::Action, state::State};
+
+use daemon::flutter::FlutterDaemon;
+use devtools::{io::request::StreamId, service::VmService};
 
 use super::{context::Context, watch_frames::WatchFramesThunk};
 
