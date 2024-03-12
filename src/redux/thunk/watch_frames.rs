@@ -48,7 +48,7 @@ where
 
         loop {
             let Ok(event) = vm_service.receive_event(StreamId::Extension).await else {
-                break;
+                continue;
             };
             if event.kind != EventKind::Extension {
                 continue;
