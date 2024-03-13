@@ -20,6 +20,7 @@ use crate::components::frames::FramesComponent;
 use crate::components::logs::LogsComponent;
 use crate::components::network::NetworkComponent;
 use crate::components::project::ProjectComponent;
+use crate::components::pubspec::PubspecComponent;
 use crate::components::runners::RunnersComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
 use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
@@ -58,6 +59,7 @@ impl App {
     pub fn new(project_root: Option<String>) -> Result<Self> {
         let config = Config::new()?;
         let mode = Mode::Home;
+        let pubspec_path = project_root.clone().unwrap_or(".".to_string()) + "/pubspec.yaml";
         Ok(Self {
             tick_rate: 4.0,
             frame_rate: 60.0,
@@ -72,6 +74,7 @@ impl App {
                 Box::new(NetworkComponent::new()),
                 Box::new(SelectTabControllerComponent::new()),
                 Box::new(SelectFlavorPopupComponent::new()),
+                Box::new(PubspecComponent::new(pubspec_path)),
             ],
             should_quit: false,
             should_suspend: false,
@@ -256,6 +259,10 @@ impl App {
                         self.components[6].draw(f, horizontal_layout[1], state);
                     }
                 }
+            }
+
+            if state.current_focus == Focus::Tab(Tab::Project) {
+                self.components[9].draw(f, layout[1], state);
             }
         })?;
         Ok(())

@@ -15,6 +15,7 @@ pub mod frames;
 pub mod logs;
 pub mod network;
 pub mod project;
+pub mod pubspec;
 pub mod runners;
 pub mod select_device_popup;
 pub mod select_flavor_popup;
