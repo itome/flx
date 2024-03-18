@@ -39,6 +39,7 @@ impl FlutterRun {
         project_root: Option<String>,
         device_id: Option<String>,
         flavor: Option<String>,
+        use_fvm: bool,
     ) -> Result<Self> {
         let mut args = vec!["run".to_string(), "--machine".to_string()];
         if let Some(flavor) = flavor {
@@ -49,7 +50,15 @@ impl FlutterRun {
             args.push("-d".to_string());
             args.push(device_id);
         }
-        let mut process = Command::new("flutter")
+        let mut command = if use_fvm {
+            Command::new("fvm")
+        } else {
+            Command::new("flutter")
+        };
+        if use_fvm {
+            command.arg("flutter");
+        }
+        let mut process = command
             .args(args)
             .kill_on_drop(true)
             .current_dir(project_root.unwrap_or(".".to_string()))

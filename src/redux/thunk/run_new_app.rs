@@ -19,11 +19,12 @@ use super::context::Context;
 
 pub struct RunNewAppThunk {
     context: Arc<Context>,
+    use_fvm: bool,
 }
 
 impl RunNewAppThunk {
-    pub fn new(context: Arc<Context>) -> Self {
-        Self { context }
+    pub fn new(context: Arc<Context>, use_fvm: bool) -> Self {
+        Self { context, use_fvm }
     }
 }
 
@@ -53,7 +54,7 @@ where
         let Ok(id) = self
             .context
             .session_manager
-            .run_new_app(device_id.clone(), flavor.clone())
+            .run_new_app(device_id.clone(), flavor.clone(), self.use_fvm)
             .await
         else {
             return;

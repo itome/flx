@@ -19,7 +19,7 @@ pub mod watch_frames;
 pub enum ThunkAction {
     WatchDevices,
     LoadSupportedPlatforms,
-    RunNewApp,
+    RunNewApp { use_fvm: bool },
     HotReload,
     HotRestart,
     StopApp,
@@ -34,7 +34,9 @@ where
 {
     match action {
         ThunkAction::WatchDevices => Box::new(watch_devices::WatchDevicesThunk::new(context)),
-        ThunkAction::RunNewApp => Box::new(run_new_app::RunNewAppThunk::new(context)),
+        ThunkAction::RunNewApp { use_fvm } => {
+            Box::new(run_new_app::RunNewAppThunk::new(context, use_fvm))
+        }
         ThunkAction::HotReload => Box::new(hot_reload::HotReloadThunk::new(context)),
         ThunkAction::HotRestart => Box::new(hot_restart::HotRestartThunk::new(context)),
         ThunkAction::StopApp => Box::new(stop_app::StopAppThunk::new(context)),

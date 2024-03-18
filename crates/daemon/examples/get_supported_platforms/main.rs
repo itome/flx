@@ -19,7 +19,7 @@ pub struct Args {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    let flutter_daemon = FlutterDaemon::new()?;
+    let flutter_daemon = FlutterDaemon::new(false)?;
     let results = flutter_daemon
         .get_supported_platforms(args.project_root)
         .await

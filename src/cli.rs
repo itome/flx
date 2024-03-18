@@ -14,4 +14,7 @@ pub struct Cli {
         help = "Path to the Flutter project"
     )]
     pub project_root: Option<String>,
+
+    #[arg(long, value_name = "bool", help = "Enable FVM support")]
+    pub fvm: bool,
 }
