@@ -20,12 +20,16 @@ use super::Component;
 
 #[derive(Default)]
 pub struct SelectDevicePopupComponent {
+    use_fvm: bool,
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
 impl SelectDevicePopupComponent {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(use_fvm: bool) -> Self {
+        Self {
+            use_fvm,
+            ..Self::default()
+        }
     }
 
     fn next(&self) -> Result<()> {
@@ -48,7 +52,12 @@ impl SelectDevicePopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(ThunkAction::RunNewApp.into())?;
+            .send(
+                ThunkAction::RunNewApp {
+                    use_fvm: self.use_fvm,
+                }
+                .into(),
+            )?;
         self.hide_popup()?;
         Ok(())
     }

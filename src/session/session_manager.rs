@@ -17,8 +17,9 @@ impl Session {
         project_root: Option<String>,
         device_id: Option<String>,
         flavor: Option<String>,
+        use_fvm: bool,
     ) -> Self {
-        let run = FlutterRun::new(project_root, device_id, flavor).unwrap();
+        let run = FlutterRun::new(project_root, device_id, flavor, use_fvm).unwrap();
         let vm_service = VmService::new();
         Self {
             id: Uuid::new_v4().to_string(),
@@ -63,8 +64,9 @@ impl SessionManager {
         &self,
         device_id: Option<String>,
         flavor: Option<String>,
+        use_fvm: bool,
     ) -> Result<String> {
-        let session = Session::new(self.project_root.clone(), device_id, flavor);
+        let session = Session::new(self.project_root.clone(), device_id, flavor, use_fvm);
         let session_id = session.id.clone();
         for slot in self.sessions() {
             if slot.read().await.is_none() {

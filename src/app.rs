@@ -48,6 +48,7 @@ pub struct App {
     pub tick_rate: f64,
     pub frame_rate: f64,
     pub project_root: Option<String>,
+    pub use_fvm: bool,
     pub components: Vec<Box<dyn Component>>,
     pub should_quit: bool,
     pub should_suspend: bool,
@@ -56,7 +57,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(project_root: Option<String>) -> Result<Self> {
+    pub fn new(project_root: Option<String>, use_fvm: bool) -> Result<Self> {
         let config = Config::new()?;
         let mode = Mode::Home;
         let pubspec_path = project_root.clone().unwrap_or(".".to_string()) + "/pubspec.yaml";
@@ -64,16 +65,17 @@ impl App {
             tick_rate: 4.0,
             frame_rate: 60.0,
             project_root,
+            use_fvm,
             components: vec![
                 Box::new(ProjectComponent::new()),
                 Box::new(RunnersComponent::new()),
                 Box::new(DevicesComponent::new()),
-                Box::new(SelectDevicePopupComponent::new()),
+                Box::new(SelectDevicePopupComponent::new(use_fvm)),
                 Box::new(FramesComponent::new()),
                 Box::new(LogsComponent::new()),
                 Box::new(NetworkComponent::new()),
                 Box::new(SelectTabControllerComponent::new()),
-                Box::new(SelectFlavorPopupComponent::new()),
+                Box::new(SelectFlavorPopupComponent::new(use_fvm)),
                 Box::new(PubspecComponent::new(pubspec_path)),
             ],
             should_quit: false,
@@ -86,7 +88,7 @@ impl App {
 
     pub async fn run(&mut self) -> Result<()> {
         let store = Store::new(reducer).wrap(ThunkMiddleware).await;
-        let daemon = Arc::new(FlutterDaemon::new()?);
+        let daemon = Arc::new(FlutterDaemon::new(self.use_fvm)?);
         let session_manager = Arc::new(SessionManager::new(self.project_root.clone()));
         let context = Arc::new(Context::new(daemon.clone(), session_manager.clone()));
         let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel::<TuiAction>();

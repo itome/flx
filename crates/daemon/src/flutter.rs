@@ -41,8 +41,16 @@ pub struct FlutterDaemon {
 }
 
 impl FlutterDaemon {
-    pub fn new() -> Result<Self> {
-        let mut process = Command::new("flutter")
+    pub fn new(use_fvm: bool) -> Result<Self> {
+        let mut command = if use_fvm {
+            Command::new("fvm")
+        } else {
+            Command::new("flutter")
+        };
+        if use_fvm {
+            command.arg("flutter");
+        }
+        let mut process = command
             .arg("daemon")
             .kill_on_drop(true)
             .stdin(Stdio::piped())
@@ -319,7 +327,7 @@ mod test {
     #[tokio::test]
     #[ignore]
     async fn daemon_start() {
-        let daemon = FlutterDaemon::new().unwrap();
+        let daemon = FlutterDaemon::new(false).unwrap();
         for _ in 0..3 {
             let version = daemon.version().await.unwrap();
             assert_eq!(version, "0.6.1".to_string());
@@ -330,7 +338,7 @@ mod test {
     #[tokio::test]
     #[ignore]
     async fn receive_daemon_connected() {
-        let daemon = FlutterDaemon::new().unwrap();
+        let daemon = FlutterDaemon::new(false).unwrap();
         let event = daemon.receive_daemon_connected().await.unwrap();
         assert_eq!(event.version, "0.6.1");
         assert!(daemon.shutdown().await.is_ok());
