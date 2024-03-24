@@ -44,7 +44,7 @@ where
         let session = session.read().await;
         let vm_service = &session.as_ref().unwrap().vm_service;
 
-        vm_service.start_websocket(self.uri.clone()).await;
+        vm_service.connect(self.uri.clone()).await;
 
         let stream_ids = vec![
             StreamId::VM,

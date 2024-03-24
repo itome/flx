@@ -41,7 +41,7 @@ impl VmService {
         }
     }
 
-    pub async fn start_websocket(&self, uri: String) {
+    pub async fn connect(&self, uri: String) {
         let _incoming_tx = self.incoming_tx.clone();
         let _outgoing_rx = self.outgoing_rx.clone();
         let Ok((stream, _)) = connect_async(uri).await else {

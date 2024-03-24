@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     let vm_service = VmService::new();
-    vm_service.start_websocket(args.ws_uri).await;
+    vm_service.connect(args.ws_uri).await;
 
     vm_service.stream_listen(StreamId::Extension).await?;
 
