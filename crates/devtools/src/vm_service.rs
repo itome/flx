@@ -1,9 +1,8 @@
-use crate::{params, protocols::vm_service::Event};
-use std::sync::Arc;
-
+use crate::params;
 use color_eyre::{eyre::eyre, Result};
 use futures::{SinkExt, StreamExt};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, Mutex};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
