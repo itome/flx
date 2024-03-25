@@ -7,7 +7,7 @@ use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 use crate::redux::{action::Action, state::State};
 
 use devtools::{
-    io::{request::StreamId, types::EventKind},
+    protocols::vm_service::{EventKind, StreamId},
     service::VmService,
 };
 
@@ -47,7 +47,7 @@ where
         let vm_service = &session.as_ref().unwrap().vm_service;
 
         loop {
-            let Ok(event) = vm_service.receive_event(StreamId::Extension).await else {
+            let Ok(event) = vm_service.next_event(StreamId::Extension).await else {
                 continue;
             };
             if event.kind != EventKind::Extension {

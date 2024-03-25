@@ -186,6 +186,7 @@ pub trait VmServiceProtocol {
 
     fn get_supported_protocols(&self) -> impl Future<Output = Result<ProtocolList>> + Send;
 
+    #[allow(clippy::too_many_arguments)]
     fn get_source_report(
         &self,
         isolate_id: &str,
