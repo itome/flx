@@ -7,161 +7,186 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 
 pub trait VmServiceProtocol {
-    async fn add_breakpoint(
+    fn add_breakpoint(
         &self,
         isolate_id: &str,
         script_id: &str,
         line: i32,
         column: Option<i32>,
-    ) -> Result<BreakpointOrSentinel>;
+    ) -> impl Future<Output = Result<BreakpointOrSentinel>> + Send;
 
-    async fn add_breakpoint_with_script_uri(
+    fn add_breakpoint_with_script_uri(
         &self,
         isolate_id: &str,
         script_uri: &str,
         line: i32,
         column: Option<i32>,
-    ) -> Result<BreakpointOrSentinel>;
+    ) -> impl Future<Output = Result<BreakpointOrSentinel>> + Send;
 
-    async fn add_breakpoint_at_entry(
+    fn add_breakpoint_at_entry(
         &self,
         isolate_id: &str,
         function_id: &str,
-    ) -> Result<BreakpointOrSentinel>;
+    ) -> impl Future<Output = Result<BreakpointOrSentinel>> + Send;
 
-    async fn clear_cpu_samples(&self, isolate_id: &str) -> Result<SuccessOrSentinel>;
+    fn clear_cpu_samples(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn clear_vm_timeline(&self) -> Result<Success>;
+    fn clear_vm_timeline(&self) -> impl Future<Output = Result<Success>> + Send;
 
-    async fn invoke(
+    fn invoke(
         &self,
         isolate_id: &str,
         target_id: &str,
         selector: &str,
         argument_ids: Vec<String>,
         disable_breakpoints: Option<bool>,
-    ) -> Result<InstanceRefOrSentinelOrErrorRef>;
+    ) -> impl Future<Output = Result<InstanceRefOrSentinelOrErrorRef>> + Send;
 
-    async fn evaluate(
+    fn evaluate(
         &self,
         isolate_id: &str,
         frame_index: i32,
         expression: &str,
         scope: Option<HashMap<String, String>>,
         disable_breakpoints: Option<bool>,
-    ) -> Result<InstanceRefOrSentinelOrErrorRef>;
+    ) -> impl Future<Output = Result<InstanceRefOrSentinelOrErrorRef>> + Send;
 
-    async fn evaluate_in_frame(
+    fn evaluate_in_frame(
         &self,
         isolate_id: &str,
         frame_index: i32,
         expression: &str,
         scope: Option<HashMap<String, String>>,
         disable_breakpoints: Option<bool>,
-    ) -> Result<InstanceRefOrSentinelOrErrorRef>;
+    ) -> impl Future<Output = Result<InstanceRefOrSentinelOrErrorRef>> + Send;
 
-    async fn get_allocation_profile(
+    fn get_allocation_profile(
         &self,
         isolate_id: &str,
         reset: Option<bool>,
         gc: Option<bool>,
-    ) -> Result<AllocationProfileOrSentinel>;
+    ) -> impl Future<Output = Result<AllocationProfileOrSentinel>> + Send;
 
-    async fn get_allocation_traces(
+    fn get_allocation_traces(
         &self,
         isolate_id: &str,
         time_origin_micros: Option<i32>,
         time_extent_micros: Option<i32>,
         class_id: Option<&str>,
-    ) -> Result<CpuSamples>;
+    ) -> impl Future<Output = Result<CpuSamples>> + Send;
 
-    async fn get_class_list(&self, isolate_id: &str) -> Result<ClassListOrSentinel>;
+    fn get_class_list(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<ClassListOrSentinel>> + Send;
 
-    async fn get_cpu_samples(
+    fn get_cpu_samples(
         &self,
         isolate_id: &str,
         time_origin_micros: i32,
         time_extent_micros: i32,
-    ) -> Result<CpuSamplesOrSentinel>;
+    ) -> impl Future<Output = Result<CpuSamplesOrSentinel>> + Send;
 
-    async fn get_flag_list(&self) -> Result<FlagList>;
+    fn get_flag_list(&self) -> impl Future<Output = Result<FlagList>> + Send;
 
-    async fn get_inbound_references(
+    fn get_inbound_references(
         &self,
         isolate_id: &str,
         target_id: &str,
         limit: i32,
-    ) -> Result<InboundReferencesOrSentinel>;
+    ) -> impl Future<Output = Result<InboundReferencesOrSentinel>> + Send;
 
-    async fn get_instances(
+    fn get_instances(
         &self,
         isolate_id: &str,
         object_id: &str,
         limit: i32,
         include_subclasses: Option<bool>,
         include_implementers: Option<bool>,
-    ) -> Result<InstanceSetOrSentinel>;
+    ) -> impl Future<Output = Result<InstanceSetOrSentinel>> + Send;
 
-    async fn get_instances_as_list(
+    fn get_instances_as_list(
         &self,
         isolate_id: &str,
         object_id: &str,
         include_subclasses: Option<bool>,
         include_implementers: Option<bool>,
-    ) -> Result<InstanceRefOrSentinel>;
+    ) -> impl Future<Output = Result<InstanceRefOrSentinel>> + Send;
 
-    async fn get_isolate(&self, isolate_id: &str) -> Result<IsolateOrSentinel>;
+    fn get_isolate(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<IsolateOrSentinel>> + Send;
 
-    async fn get_isolate_group(&self, isolate_group_id: &str) -> Result<IsolateGroupOrSentinel>;
-
-    async fn get_isolate_pause_event(&self, isolate_id: &str) -> Result<EventOrSentinel>;
-
-    async fn get_memory_usage(&self, isolate_id: &str) -> Result<MemoryUsageOrSentinel>;
-
-    async fn get_isolate_group_memory_usage(
+    fn get_isolate_group(
         &self,
         isolate_group_id: &str,
-    ) -> Result<MemoryUsageOrSentinel>;
+    ) -> impl Future<Output = Result<IsolateGroupOrSentinel>> + Send;
 
-    async fn get_scripts(&self, isolate_id: &str) -> Result<ScriptListOrSentinel>;
+    fn get_isolate_pause_event(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<EventOrSentinel>> + Send;
 
-    async fn get_object(
+    fn get_memory_usage(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<MemoryUsageOrSentinel>> + Send;
+
+    fn get_isolate_group_memory_usage(
+        &self,
+        isolate_group_id: &str,
+    ) -> impl Future<Output = Result<MemoryUsageOrSentinel>> + Send;
+
+    fn get_scripts(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<ScriptListOrSentinel>> + Send;
+
+    fn get_object(
         &self,
         isolate_id: &str,
         object_id: &str,
         offset: Option<i32>,
         count: Option<i32>,
-    ) -> Result<ObjectOrSentinel>;
+    ) -> impl Future<Output = Result<ObjectOrSentinel>> + Send;
 
-    async fn get_perfetto_cpu_samples(
+    fn get_perfetto_cpu_samples(
         &self,
         isolate_id: &str,
         time_origin_micros: Option<i32>,
         time_extent_micros: Option<i32>,
-    ) -> Result<PerfettoCpuSamplesOrSentinel>;
+    ) -> impl Future<Output = Result<PerfettoCpuSamplesOrSentinel>> + Send;
 
-    async fn get_perfecto_vm_timeline(
+    fn get_perfecto_vm_timeline(
         &self,
         time_origin_micros: Option<i32>,
         time_extent_micros: Option<i32>,
-    ) -> Result<PerfettoTimeline>;
+    ) -> impl Future<Output = Result<PerfettoTimeline>> + Send;
 
-    async fn get_ports(&self, isolate_id: &str) -> Result<PortList>;
+    fn get_ports(&self, isolate_id: &str) -> impl Future<Output = Result<PortList>> + Send;
 
-    async fn get_retaining_path(
+    fn get_retaining_path(
         &self,
         isolate_id: &str,
         target_id: &str,
         limit: i32,
-    ) -> Result<RetainingPathOrSentinel>;
+    ) -> impl Future<Output = Result<RetainingPathOrSentinel>> + Send;
 
-    async fn get_process_memory_usage(&self) -> Result<ProcessMemoryUsage>;
+    fn get_process_memory_usage(&self) -> impl Future<Output = Result<ProcessMemoryUsage>> + Send;
 
-    async fn get_stack(&self, isolate_id: &str, limit: Option<i32>) -> Result<StackOrSentinel>;
+    fn get_stack(
+        &self,
+        isolate_id: &str,
+        limit: Option<i32>,
+    ) -> impl Future<Output = Result<StackOrSentinel>> + Send;
 
-    async fn get_supported_protocols(&self) -> Result<ProtocolList>;
+    fn get_supported_protocols(&self) -> impl Future<Output = Result<ProtocolList>> + Send;
 
-    async fn get_source_report(
+    fn get_source_report(
         &self,
         isolate_id: &str,
         reports: Vec<SourceReportKind>,
@@ -172,109 +197,131 @@ pub trait VmServiceProtocol {
         report_lines: Option<bool>,
         library_filters: Option<Vec<String>>,
         libraries_already_compiled: Option<Vec<String>>,
-    ) -> Result<SourceReportOrSentinel>;
+    ) -> impl Future<Output = Result<SourceReportOrSentinel>> + Send;
 
-    async fn get_version(&self) -> Result<Version>;
+    fn get_version(&self) -> impl Future<Output = Result<Version>> + Send;
 
-    async fn get_vm(&self) -> Result<VM>;
+    fn get_vm(&self) -> impl Future<Output = Result<VM>> + Send;
 
-    async fn get_vm_timeline(
+    fn get_vm_timeline(
         &self,
         time_origin_micros: Option<i32>,
         time_extent_micros: Option<i32>,
-    ) -> Result<Timeline>;
+    ) -> impl Future<Output = Result<Timeline>> + Send;
 
-    async fn get_vm_timeline_flags(&self) -> Result<TimelineFlags>;
+    fn get_vm_timeline_flags(&self) -> impl Future<Output = Result<TimelineFlags>> + Send;
 
-    async fn get_vm_timeline_micros(&self) -> Result<Timestamp>;
+    fn get_vm_timeline_micros(&self) -> impl Future<Output = Result<Timestamp>> + Send;
 
-    async fn pause(&self, isolate_id: &str) -> Result<SuccessOrSentinel>;
+    fn pause(&self, isolate_id: &str) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn kill(&self, isolate_id: &str) -> Result<SuccessOrSentinel>;
+    fn kill(&self, isolate_id: &str) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn lookup_resolved_package_uris(
+    fn lookup_resolved_package_uris(
         &self,
         isolate_id: &str,
         uris: Vec<String>,
         local: Option<bool>,
-    ) -> Result<UriList>;
+    ) -> impl Future<Output = Result<UriList>> + Send;
 
-    async fn lookup_package_uris(&self, isolate_id: &str, uris: Vec<String>) -> Result<UriList>;
+    fn lookup_package_uris(
+        &self,
+        isolate_id: &str,
+        uris: Vec<String>,
+    ) -> impl Future<Output = Result<UriList>> + Send;
 
-    async fn register_service(&self, service: &str, alias: &str) -> Result<SuccessOrSentinel>;
+    fn register_service(
+        &self,
+        service: &str,
+        alias: &str,
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn reload_sources(
+    fn reload_sources(
         &self,
         isolate_id: &str,
         force: Option<bool>,
         pause: Option<bool>,
         root_lib_uri: Option<&str>,
         packages_uri: Option<&str>,
-    ) -> Result<ReloadReportOrSentinel>;
+    ) -> impl Future<Output = Result<ReloadReportOrSentinel>> + Send;
 
-    async fn remove_breakpoint(
+    fn remove_breakpoint(
         &self,
         isolate_id: &str,
         breakpoint_id: &str,
-    ) -> Result<SuccessOrSentinel>;
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn request_heap_snapshot(&self, isolate_id: &str) -> Result<SuccessOrSentinel>;
+    fn request_heap_snapshot(
+        &self,
+        isolate_id: &str,
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn resume(
+    fn resume(
         &self,
         isolate_id: &str,
         step: Option<StepOption>,
         frame_index: Option<i32>,
-    ) -> Result<SuccessOrSentinel>;
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn set_breakpoint_state(
+    fn set_breakpoint_state(
         &self,
         isolate_id: &str,
         breakpoint_id: &str,
         enable: bool,
-    ) -> Result<Breakpoint>;
+    ) -> impl Future<Output = Result<Breakpoint>> + Send;
 
     #[deprecated]
-    async fn set_exception_pause_mode(
+    fn set_exception_pause_mode(
         &self,
         isolate_id: &str,
         mode: ExceptionPauseMode,
-    ) -> Result<SuccessOrSentinel>;
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn set_isolate_pause_mode(
+    fn set_isolate_pause_mode(
         &self,
         isolate_id: &str,
         exception_pause_mode: Option<ExceptionPauseMode>,
         should_pause_on_exit: Option<bool>,
-    ) -> Result<SuccessOrSentinel>;
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn set_flag(&self, name: &str, value: &str) -> Result<SuccessOrError>;
+    fn set_flag(
+        &self,
+        name: &str,
+        value: &str,
+    ) -> impl Future<Output = Result<SuccessOrError>> + Send;
 
-    async fn set_library_debuggable(
+    fn set_library_debuggable(
         &self,
         isolate_id: &str,
         library_id: &str,
         is_debuggable: bool,
-    ) -> Result<SuccessOrSentinel>;
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn set_name(&self, isolate_id: &str, name: &str) -> Result<SuccessOrSentinel>;
+    fn set_name(
+        &self,
+        isolate_id: &str,
+        name: &str,
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn set_trace_class_allocation(
+    fn set_trace_class_allocation(
         &self,
         isolate_id: &str,
         class_id: &str,
         enable: bool,
-    ) -> Result<SuccessOrSentinel>;
+    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
 
-    async fn set_vm_name(&self, name: &str) -> Result<Success>;
+    fn set_vm_name(&self, name: &str) -> impl Future<Output = Result<Success>> + Send;
 
-    async fn set_vm_timeline_flags(&self, recorded_streams: Vec<String>) -> Result<Success>;
+    fn set_vm_timeline_flags(
+        &self,
+        recorded_streams: Vec<String>,
+    ) -> impl Future<Output = Result<Success>> + Send;
 
-    async fn stream_cancel(&self, stream_id: StreamId) -> Result<Success>;
+    fn stream_cancel(&self, stream_id: StreamId) -> impl Future<Output = Result<Success>> + Send;
 
-    async fn stream_enable(&self, stream_id: StreamId) -> Result<Success>;
+    fn stream_enable(&self, stream_id: StreamId) -> impl Future<Output = Result<Success>> + Send;
 
-    async fn stream_listen(&self, stream_id: StreamId) -> Result<Success>;
+    fn stream_listen(&self, stream_id: StreamId) -> impl Future<Output = Result<Success>> + Send;
 }
 
 // Public types from the Dart VM Service Protocol
