@@ -1,7 +1,7 @@
 use color_eyre::Result;
 use devtools::{
     protocols::vm_service::{StreamId, VmServiceProtocol},
-    service::VmService,
+    vm_service::VmService,
 };
 
 use clap::Parser;
