@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use color_eyre::Result;
+use futures::Future;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::{Map, Value};
