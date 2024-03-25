@@ -1,4 +1,4 @@
-use crate::protocols::vm_service::Event;
+use crate::{params, protocols::vm_service::Event};
 use std::sync::Arc;
 
 use color_eyre::{eyre::eyre, Result};
@@ -12,36 +12,6 @@ use crate::protocols::vm_service::*;
 use std::collections::HashMap;
 
 use serde_json::Map;
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-struct VmServiceRequest {
-    jsonrpc: String,
-    id: u32,
-    method: String,
-    params: serde_json::Map<String, serde_json::Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct VmServiceResponse<R> {
-    pub id: u32,
-    pub jsonrpc: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<R>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct VmServiceEvent {
-    pub jsonrpc: String,
-    pub method: String,
-    pub params: VmServiceEventParams,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct VmServiceEventParams {
-    #[serde(rename = "streamId")]
-    pub stream_id: StreamId,
-    pub event: Event,
-}
 
 pub struct VmService {
     pub incoming_tx: broadcast::Sender<String>,
@@ -159,18 +129,34 @@ impl VmService {
     }
 }
 
-macro_rules! params {
-    ( $( $k:expr => $v:expr ),* ) => {
-        {
-            #[allow(unused_mut)]
-            let mut map = Map::new();
-            $( map.insert($k, $v); )*
-            map
-        }
-    };
-    ( $( $k:expr => $v:expr ),+ , ) => {
-        params! { $( $k => $v ),* }
-    };
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+struct VmServiceRequest {
+    jsonrpc: String,
+    id: u32,
+    method: String,
+    params: serde_json::Map<String, serde_json::Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct VmServiceResponse<R> {
+    pub id: u32,
+    pub jsonrpc: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<R>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct VmServiceEvent {
+    pub jsonrpc: String,
+    pub method: String,
+    pub params: VmServiceEventParams,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct VmServiceEventParams {
+    #[serde(rename = "streamId")]
+    pub stream_id: StreamId,
+    pub event: Event,
 }
 
 impl VmServiceProtocol for VmService {
