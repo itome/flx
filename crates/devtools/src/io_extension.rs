@@ -1,4 +1,4 @@
-use crate::{params, protocols::io_extension::*, service::VmService};
+use crate::{params, protocols::io_extension::*, vm_service::VmService};
 use color_eyre::Result;
 use serde_json::Map;
 

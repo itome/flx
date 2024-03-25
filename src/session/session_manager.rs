@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use color_eyre::eyre::{eyre, Result};
 use daemon::run::FlutterRun;
-use devtools::service::VmService;
+use devtools::vm_service::VmService;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 

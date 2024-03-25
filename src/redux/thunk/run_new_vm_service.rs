@@ -9,7 +9,7 @@ use crate::redux::{action::Action, state::State};
 use daemon::flutter::FlutterDaemon;
 use devtools::{
     protocols::vm_service::{StreamId, VmServiceProtocol},
-    service::VmService,
+    vm_service::VmService,
 };
 
 use super::{context::Context, watch_frames::WatchFramesThunk};

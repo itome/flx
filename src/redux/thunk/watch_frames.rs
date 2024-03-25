@@ -8,7 +8,7 @@ use crate::redux::{action::Action, state::State};
 
 use devtools::{
     protocols::vm_service::{EventKind, StreamId},
-    service::VmService,
+    vm_service::VmService,
 };
 
 use daemon::flutter::FlutterDaemon;
