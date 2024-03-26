@@ -127,6 +127,48 @@ pub trait FlutterExtensionProtocol {
         isolate_id: &str,
         value: Option<&str>,
     ) -> impl Future<Output = Result<Value>> + Send;
+
+    // Service extensions for flutter widget package
+    // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/widgets/service_extensions.dart
+    fn debug_dump_app(&self, isolate_id: &str) -> impl Future<Output = Result<Dump>> + Send;
+
+    fn debug_dump_focus_tree(&self, isolate_id: &str) -> impl Future<Output = Result<Dump>> + Send;
+
+    fn show_performance_overlay(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    fn did_send_first_frame_event(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    fn did_send_first_frame_rasterized_event(
+        &self,
+        isolate_id: &str,
+        enabled: Option<&str>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    fn profile_widget_builds(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    fn profile_user_widget_builds(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    fn debug_allow_banner(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

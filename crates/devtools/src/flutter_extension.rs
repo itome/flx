@@ -233,4 +233,94 @@ impl FlutterExtensionProtocol for VmService {
         };
         self.call("ext.flutter.brightnessOverride", params).await
     }
+
+    async fn debug_dump_app(&self, isolate_id: &str) -> Result<Dump> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.debugDumpApp", params).await
+    }
+
+    async fn debug_dump_focus_tree(&self, isolate_id: &str) -> Result<Dump> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.debugDumpFocusTree", params).await
+    }
+
+    async fn show_performance_overlay(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.showPerformanceOverlay", params)
+            .await
+    }
+
+    async fn did_send_first_frame_event(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.didSendFirstFrameEvent", params)
+            .await
+    }
+
+    async fn did_send_first_frame_rasterized_event(
+        &self,
+        isolate_id: &str,
+        enabled: Option<&str>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.didSendFirstFrameRasterizedEvent", params)
+            .await
+    }
+
+    async fn profile_widget_builds(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.profileWidgetBuilds", params).await
+    }
+
+    async fn profile_user_widget_builds(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.profileUserWidgetBuilds", params)
+            .await
+    }
+
+    async fn debug_allow_banner(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.debugAllowBanner", params).await
+    }
 }
