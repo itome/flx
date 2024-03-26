@@ -52,9 +52,11 @@ impl VmService {
             loop {
                 tokio::select! {
                     Some(Ok(Message::Text(next))) = read.next() => {
+                        log::debug!("[<====] {}", next);
                         _incoming_tx.send(next).unwrap();
                     },
                     Some(text) = _outgoing_rx.recv() => {
+                        log::debug!("[====>] {}", text);
                         if let Err(e) = write.send(Message::Text(text)).await {
                             log::error!("Error sending message: {:?}", e);
                         };

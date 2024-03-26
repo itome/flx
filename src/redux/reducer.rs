@@ -69,7 +69,7 @@ pub fn reducer(state: State, action: Action) -> State {
                     id: session_id,
                     device_id,
                     flavor,
-                    display_refresh_rate: 60,
+                    display_refresh_rate: 60.0,
                     ..SessionState::default()
                 }],
             ]
@@ -526,6 +526,23 @@ pub fn reducer(state: State, action: Action) -> State {
                                 ]
                                 .concat()
                             },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetDisplayRefreshRate { session_id, rate } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            display_refresh_rate: rate,
                             ..s
                         }
                     } else {

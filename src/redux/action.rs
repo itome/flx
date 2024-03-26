@@ -98,4 +98,9 @@ pub enum Action {
         start_time: Duration,
         vsync_overhead: Duration,
     },
+
+    SetDisplayRefreshRate {
+        session_id: String,
+        rate: f32,
+    },
 }
