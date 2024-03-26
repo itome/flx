@@ -75,6 +75,24 @@ pub trait FlutterExtensionProtocol {
         isolate_id: &str,
         enabled: Option<bool>,
     ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    // Service extensions for flutter scheduler package
+    // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/scheduler/service_extensions.dart
+    fn time_dilation(
+        &self,
+        isolate_id: &str,
+        value: Option<String>,
+    ) -> impl Future<Output = Result<TimeDilation>> + Send;
+
+    // Service extensions for flutter services package
+    // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/services/service_extensions.dart
+    fn profile_platform_channels(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> impl Future<Output = Result<Togglable>> + Send;
+
+    fn evict(&self, isolate_id: &str, value: String) -> impl Future<Output = Result<Value>> + Send;
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -117,5 +135,20 @@ pub struct Togglable {
 pub struct Dump {
     pub r#type: String,
     pub data: String,
+    pub method: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Value {
+    pub r#type: String,
+    pub value: String,
+    pub method: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct TimeDilation {
+    pub r#type: String,
+    #[serde(rename = "timeDilation")]
+    pub time_dilation: f32,
     pub method: String,
 }

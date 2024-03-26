@@ -1,7 +1,8 @@
 use crate::{
     params,
     protocols::flutter_extension::{
-        DisplayRefreshRate, Dump, FlutterExtensionProtocol, FlutterViewList, Togglable,
+        DisplayRefreshRate, Dump, FlutterExtensionProtocol, FlutterViewList, TimeDilation,
+        Togglable, Value,
     },
     vm_service::VmService,
 };
@@ -147,5 +148,34 @@ impl FlutterExtensionProtocol for VmService {
         };
         self.call("ext.flutter.profileRenderObjectLayouts", params)
             .await
+    }
+
+    async fn time_dilation(&self, isolate_id: &str, value: Option<String>) -> Result<TimeDilation> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "value".to_owned() => value.into(),
+        };
+        self.call("ext.flutter.timeDilation", params).await
+    }
+
+    async fn profile_platform_channels(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.profilePlatformChannels", params)
+            .await
+    }
+
+    async fn evict(&self, isolate_id: &str, value: String) -> Result<Value> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "value".to_owned() => value.into(),
+        };
+        self.call("ext.flutter.evict", params).await
     }
 }
