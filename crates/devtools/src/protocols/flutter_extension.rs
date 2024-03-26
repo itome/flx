@@ -81,7 +81,7 @@ pub trait FlutterExtensionProtocol {
     fn time_dilation(
         &self,
         isolate_id: &str,
-        value: Option<String>,
+        value: Option<&str>,
     ) -> impl Future<Output = Result<TimeDilation>> + Send;
 
     // Service extensions for flutter services package
@@ -92,7 +92,41 @@ pub trait FlutterExtensionProtocol {
         enabled: Option<bool>,
     ) -> impl Future<Output = Result<Togglable>> + Send;
 
-    fn evict(&self, isolate_id: &str, value: String) -> impl Future<Output = Result<Value>> + Send;
+    fn evict(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> impl Future<Output = Result<Value>> + Send;
+
+    // Service extensions for flutter foundation package
+    // https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/foundation/service_extensions.dart
+    fn reassemble(&self, isolate_id: &str) -> impl Future<Output = Result<Response>> + Send;
+
+    fn exit(&self, isolate_id: &str) -> impl Future<Output = Result<Response>> + Send;
+
+    fn connected_vm_service_uri(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> impl Future<Output = Result<Value>> + Send;
+
+    fn active_dev_tools_server_address(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> impl Future<Output = Result<Value>> + Send;
+
+    fn platform_override(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> impl Future<Output = Result<Value>> + Send;
+
+    fn brightness_override(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> impl Future<Output = Result<Value>> + Send;
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -142,6 +176,12 @@ pub struct Dump {
 pub struct Value {
     pub r#type: String,
     pub value: String,
+    pub method: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Response {
+    pub r#type: String,
     pub method: String,
 }
 

@@ -1,8 +1,8 @@
 use crate::{
     params,
     protocols::flutter_extension::{
-        DisplayRefreshRate, Dump, FlutterExtensionProtocol, FlutterViewList, TimeDilation,
-        Togglable, Value,
+        DisplayRefreshRate, Dump, FlutterExtensionProtocol, FlutterViewList, Response,
+        TimeDilation, Togglable, Value,
     },
     vm_service::VmService,
 };
@@ -150,7 +150,7 @@ impl FlutterExtensionProtocol for VmService {
             .await
     }
 
-    async fn time_dilation(&self, isolate_id: &str, value: Option<String>) -> Result<TimeDilation> {
+    async fn time_dilation(&self, isolate_id: &str, value: Option<&str>) -> Result<TimeDilation> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "value".to_owned() => value.into(),
@@ -171,11 +171,66 @@ impl FlutterExtensionProtocol for VmService {
             .await
     }
 
-    async fn evict(&self, isolate_id: &str, value: String) -> Result<Value> {
+    async fn evict(&self, isolate_id: &str, value: Option<&str>) -> Result<Value> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "value".to_owned() => value.into(),
         };
         self.call("ext.flutter.evict", params).await
+    }
+
+    async fn reassemble(&self, isolate_id: &str) -> Result<Response> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.reassemble", params).await
+    }
+
+    async fn exit(&self, isolate_id: &str) -> Result<Response> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.exit", params).await
+    }
+
+    async fn connected_vm_service_uri(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> Result<Value> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "value".to_owned() => value.into(),
+        };
+        self.call("ext.flutter.connectedVmServiceUri", params).await
+    }
+
+    async fn active_dev_tools_server_address(
+        &self,
+        isolate_id: &str,
+        value: Option<&str>,
+    ) -> Result<Value> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "value".to_owned() => value.into(),
+        };
+        self.call("ext.flutter.activeDevToolsServerAddress", params)
+            .await
+    }
+
+    async fn platform_override(&self, isolate_id: &str, value: Option<&str>) -> Result<Value> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "value".to_owned() => value.into(),
+        };
+        self.call("ext.flutter.platformOverride", params).await
+    }
+
+    async fn brightness_override(&self, isolate_id: &str, value: Option<&str>) -> Result<Value> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "value".to_owned() => value.into(),
+        };
+        self.call("ext.flutter.brightnessOverride", params).await
     }
 }
