@@ -31,10 +31,13 @@ use super::io::{
 
 pub struct FlutterDaemon {
     tx: broadcast::Sender<String>,
+    error_tx: broadcast::Sender<String>,
     // FIXME(itome): This is a workaround to keep the receiver alive.
     // If the receiver is dropped, tx.send will return an SendError.
     // So we need to keep the receiver alive.
     _rx: broadcast::Receiver<String>,
+    _error_rx: broadcast::Receiver<String>,
+
     stdin: Arc<Mutex<ChildStdin>>,
     request_count: Arc<Mutex<u32>>,
     _process: tokio::process::Child,
@@ -55,14 +58,20 @@ impl FlutterDaemon {
             .kill_on_drop(true)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()?;
 
         let stdout = process
             .stdout
             .take()
             .ok_or(eyre!("Stdout is not available"))?;
+        let stderr = process
+            .stderr
+            .take()
+            .ok_or(eyre!("Stderr is not available"))?;
 
         let (tx, _rx) = broadcast::channel::<String>(16);
+        let (error_tx, _error_rx) = broadcast::channel::<String>(16);
 
         let _tx = tx.clone();
         tokio::spawn(async move {
@@ -72,10 +81,20 @@ impl FlutterDaemon {
             }
         });
 
+        let _error_tx = error_tx.clone();
+        tokio::spawn(async move {
+            let mut lines = BufReader::new(stderr).lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                let _ = _error_tx.send(line);
+            }
+        });
+
         Ok(Self {
             stdin: Arc::new(Mutex::new(process.stdin.take().unwrap())),
             tx,
+            error_tx,
             _rx,
+            _error_rx,
             _process: process,
             request_count: Arc::new(Mutex::new(0)),
         })
@@ -278,6 +297,15 @@ impl FlutterDaemon {
             }
         }
         Err(eyre!("Could not receive daemon response"))
+    }
+
+    pub async fn receive_stderr(&self) -> Result<String> {
+        let mut rx = self.error_tx.subscribe();
+        loop {
+            if let Ok(line) = rx.recv().await {
+                return Ok(line);
+            }
+        }
     }
 
     async fn request_id(&self) -> u32 {

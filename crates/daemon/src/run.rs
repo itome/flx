@@ -25,10 +25,13 @@ use super::io::{
 pub struct FlutterRun {
     app_id: Arc<Mutex<Option<String>>>,
     tx: broadcast::Sender<String>,
+    error_tx: broadcast::Sender<String>,
     // FIXME(itome): This is a workaround to keep the receiver alive.
     // If the receiver is dropped, tx.send will return an SendError.
     // So we need to keep the receiver alive.
     _rx: broadcast::Receiver<String>,
+    _error_rx: broadcast::Receiver<String>,
+
     stdin: Arc<Mutex<ChildStdin>>,
     request_count: Arc<Mutex<u32>>,
     _process: tokio::process::Child,
@@ -64,21 +67,35 @@ impl FlutterRun {
             .current_dir(project_root.unwrap_or(".".to_string()))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()?;
 
         let stdout = process
             .stdout
             .take()
             .ok_or(eyre!("Stdout is not available"))?;
+        let stderr = process
+            .stderr
+            .take()
+            .ok_or(eyre!("Stderr is not available"))?;
 
         let app_id = Arc::new(Mutex::new(None::<String>));
         let (tx, _rx) = broadcast::channel::<String>(16);
+        let (error_tx, _error_rx) = broadcast::channel::<String>(16);
 
         let _tx = tx.clone();
         tokio::spawn(async move {
             let mut lines = BufReader::new(stdout).lines();
             while let Ok(Some(line)) = lines.next_line().await {
                 let _ = _tx.send(line);
+            }
+        });
+
+        let _error_tx = error_tx.clone();
+        tokio::spawn(async move {
+            let mut lines = BufReader::new(stderr).lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                let _ = _error_tx.send(line);
             }
         });
 
@@ -98,7 +115,9 @@ impl FlutterRun {
             app_id,
             stdin: Arc::new(Mutex::new(process.stdin.take().unwrap())),
             tx,
+            error_tx,
             _rx,
+            _error_rx,
             request_count: Arc::new(Mutex::new(0)),
             _process: process,
         })
@@ -257,6 +276,15 @@ impl FlutterRun {
             }
         }
         Err(eyre!("Could not receive daemon response"))
+    }
+
+    pub async fn receive_stderr(&self) -> Result<String> {
+        let mut rx = self.error_tx.subscribe();
+        loop {
+            if let Ok(line) = rx.recv().await {
+                return Ok(line);
+            }
+        }
     }
 
     async fn restart(&self, full_restart: bool) -> Result<RestartAppResult> {
