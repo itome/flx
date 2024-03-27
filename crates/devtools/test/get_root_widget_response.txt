@@ -1,0 +1,159 @@
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "result": {
+            "description": "[root]",
+            "type": "_ElementDiagnosticableTreeNode",
+            "style": "dense",
+            "hasChildren": true,
+            "allowWrap": false,
+            "valueId": "inspector-13",
+            "locationId": 0,
+            "creationLocation": {
+                "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/binding.dart",
+                "line": 1070,
+                "column": 24,
+                "name": "RootWidget"
+            },
+            "children": [
+                {
+                    "description": "View",
+                    "type": "_ElementDiagnosticableTreeNode",
+                    "style": "dense",
+                    "hasChildren": true,
+                    "allowWrap": false,
+                    "valueId": "inspector-14",
+                    "locationId": 1,
+                    "creationLocation": {
+                        "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/binding.dart",
+                        "line": 1041,
+                        "column": 12,
+                        "name": "View"
+                    },
+                    "children": [
+                        {
+                            "description": "_RawView-[_DeprecatedRawViewKey FlutterView#b791e]",
+                            "type": "_ElementDiagnosticableTreeNode",
+                            "style": "dense",
+                            "hasChildren": true,
+                            "allowWrap": false,
+                            "valueId": "inspector-15",
+                            "locationId": 2,
+                            "creationLocation": {
+                                "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/view.dart",
+                                "line": 175,
+                                "column": 12,
+                                "name": "_RawView"
+                            },
+                            "children": [
+                                {
+                                    "description": "_ViewScope",
+                                    "type": "_ElementDiagnosticableTreeNode",
+                                    "style": "dense",
+                                    "hasChildren": true,
+                                    "allowWrap": false,
+                                    "valueId": "inspector-16",
+                                    "locationId": 3,
+                                    "creationLocation": {
+                                        "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/view.dart",
+                                        "line": 180,
+                                        "column": 16,
+                                        "name": "_ViewScope"
+                                    },
+                                    "children": [
+                                        {
+                                            "description": "_PipelineOwnerScope",
+                                            "type": "_ElementDiagnosticableTreeNode",
+                                            "style": "dense",
+                                            "hasChildren": true,
+                                            "allowWrap": false,
+                                            "valueId": "inspector-17",
+                                            "locationId": 4,
+                                            "creationLocation": {
+                                                "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/view.dart",
+                                                "line": 182,
+                                                "column": 18,
+                                                "name": "_PipelineOwnerScope"
+                                            },
+                                            "children": [
+                                                {
+                                                    "description": "_MediaQueryFromView",
+                                                    "type": "_ElementDiagnosticableTreeNode",
+                                                    "style": "dense",
+                                                    "hasChildren": true,
+                                                    "allowWrap": false,
+                                                    "valueId": "inspector-18",
+                                                    "locationId": 5,
+                                                    "creationLocation": {
+                                                        "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/media_query.dart",
+                                                        "line": 1080,
+                                                        "column": 12,
+                                                        "name": "_MediaQueryFromView"
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "description": "MediaQuery",
+                                                            "type": "_ElementDiagnosticableTreeNode",
+                                                            "style": "dense",
+                                                            "hasChildren": true,
+                                                            "allowWrap": false,
+                                                            "valueId": "inspector-19",
+                                                            "locationId": 6,
+                                                            "creationLocation": {
+                                                                "file": "file:///Users/itome/flutter/packages/flutter/lib/src/widgets/media_query.dart",
+                                                                "line": 1907,
+                                                                "column": 12,
+                                                                "name": "MediaQuery"
+                                                            },
+                                                            "children": [
+                                                                {
+                                                                    "description": "MyApp",
+                                                                    "type": "_ElementDiagnosticableTreeNode",
+                                                                    "style": "dense",
+                                                                    "hasChildren": true,
+                                                                    "allowWrap": false,
+                                                                    "valueId": "inspector-20",
+                                                                    "locationId": 7,
+                                                                    "creationLocation": {
+                                                                        "file": "file:///Users/itome/Projects/github.com/itome/demo/lib/main.dart",
+                                                                        "line": 4,
+                                                                        "column": 16,
+                                                                        "name": "MyApp"
+                                                                    },
+                                                                    "createdByLocalProject": true,
+                                                                    "widgetRuntimeType": "MyApp",
+                                                                    "stateful": false
+                                                                }
+                                                            ],
+                                                            "widgetRuntimeType": "MediaQuery",
+                                                            "stateful": false
+                                                        }
+                                                    ],
+                                                    "widgetRuntimeType": "_MediaQueryFromView",
+                                                    "stateful": true
+                                                }
+                                            ],
+                                            "widgetRuntimeType": "_PipelineOwnerScope",
+                                            "stateful": false
+                                        }
+                                    ],
+                                    "widgetRuntimeType": "_ViewScope",
+                                    "stateful": false
+                                }
+                            ],
+                            "widgetRuntimeType": "_RawView",
+                            "stateful": false
+                        }
+                    ],
+                    "widgetRuntimeType": "View",
+                    "stateful": false
+                }
+            ],
+            "widgetRuntimeType": "RootWidget",
+            "stateful": false
+        },
+        "type": "_extensionType",
+        "method": "ext.flutter.inspector.getRootWidget"
+    },
+    "id": 2
+}

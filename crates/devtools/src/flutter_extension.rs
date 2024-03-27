@@ -1,7 +1,8 @@
 use crate::{
     params,
     protocols::flutter_extension::{
-        DisplayRefreshRate, Dump, FlutterExtensionProtocol, FlutterViewList, Response,
+        CrossAxisAlignment, DiagnosticNode, DiagnosticPathNode, DisplayRefreshRate, Dump, FlexFit,
+        FlutterExtensionProtocol, FlutterViewList, MainAxisAlignment, Response, ResultResponse,
         TimeDilation, Togglable, Value,
     },
     vm_service::VmService,
@@ -322,5 +323,419 @@ impl FlutterExtensionProtocol for VmService {
             "enabled".to_owned() => enabled.into(),
         };
         self.call("ext.flutter.debugAllowBanner", params).await
+    }
+
+    async fn structured_errors(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.inspector.structuredErrors", params)
+            .await
+    }
+
+    async fn show(&self, isolate_id: &str, enabled: Option<bool>) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.inspector.show", params).await
+    }
+
+    async fn track_rebuild_dirty_widgets(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.inspector.trackRebuildDirtyWidgets", params)
+            .await
+    }
+
+    async fn track_repaint_widgets(
+        &self,
+        isolate_id: &str,
+        enabled: Option<bool>,
+    ) -> Result<Togglable> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "enabled".to_owned() => enabled.into(),
+        };
+        self.call("ext.flutter.inspector.trackRepaintWidgets", params)
+            .await
+    }
+
+    async fn dispose_all_groups(&self, isolate_id: &str, object_group: &str) -> Result<Response> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.disposeAllGroups", params)
+            .await
+    }
+
+    async fn dispose_group(&self, isolate_id: &str, object_group: &str) -> Result<Response> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.disposeGroup", params)
+            .await
+    }
+
+    async fn is_widget_tree_ready(&self, isolate_id: &str) -> Result<ResultResponse<bool>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.inspector.isWidgetTreeReady", params)
+            .await
+    }
+
+    async fn dispose_id(
+        &self,
+        isolate_id: &str,
+        object_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<Response> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => object_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.disposeId", params).await
+    }
+
+    async fn set_pub_root_directories(
+        &self,
+        isolate_id: &str,
+        args: Vec<&str>,
+    ) -> Result<Response> {
+        let mut params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        for (i, arg) in args.iter().enumerate() {
+            params.insert(format!("arg{}", i), (*arg).into());
+        }
+        self.call("ext.flutter.inspector.setPubRootDirectories", params)
+            .await
+    }
+
+    async fn add_pub_root_directories(
+        &self,
+        isolate_id: &str,
+        args: Vec<&str>,
+    ) -> Result<Response> {
+        let mut params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        for (i, arg) in args.iter().enumerate() {
+            params.insert(format!("arg{}", i), (*arg).into());
+        }
+        self.call("ext.flutter.inspector.addPubRootDirectories", params)
+            .await
+    }
+
+    async fn remove_pub_root_directories(
+        &self,
+        isolate_id: &str,
+        args: Vec<&str>,
+    ) -> Result<Response> {
+        let mut params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        for (i, arg) in args.iter().enumerate() {
+            params.insert(format!("arg{}", i), (*arg).into());
+        }
+        self.call("ext.flutter.inspector.removePubRootDirectories", params)
+            .await
+    }
+
+    async fn get_pub_root_directories(
+        &self,
+        isolate_id: &str,
+    ) -> Result<ResultResponse<Vec<String>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.inspector.getPubRootDirectories", params)
+            .await
+    }
+
+    async fn set_selection_by_id(
+        &self,
+        isolate_id: &str,
+        object_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<bool>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => object_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.setSelectionById", params)
+            .await
+    }
+
+    async fn get_parent_chain(
+        &self,
+        isolate_id: &str,
+        object_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<Vec<DiagnosticPathNode>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => object_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getParentChain", params)
+            .await
+    }
+
+    async fn get_properties(
+        &self,
+        isolate_id: &str,
+        diagnosticable_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<Vec<DiagnosticNode>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => diagnosticable_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getProperties", params)
+            .await
+    }
+
+    async fn get_children(
+        &self,
+        isolate_id: &str,
+        diagnosticable_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<Vec<DiagnosticNode>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => diagnosticable_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getChildren", params).await
+    }
+
+    async fn get_children_summary_tree(
+        &self,
+        isolate_id: &str,
+        diagnosticable_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<Vec<DiagnosticNode>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => diagnosticable_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getChildrenSummaryTree", params)
+            .await
+    }
+
+    async fn get_children_details_subtree(
+        &self,
+        isolate_id: &str,
+        diagnosticable_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<Vec<DiagnosticNode>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => diagnosticable_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getChildrenDetailsSubtree", params)
+            .await
+    }
+
+    async fn get_root_widget(
+        &self,
+        isolate_id: &str,
+        object_group: Option<&str>,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getRootWidget", params)
+            .await
+    }
+
+    async fn get_root_widget_summary_tree(
+        &self,
+        isolate_id: &str,
+        object_group: Option<&str>,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getRootWidgetSummaryTree", params)
+            .await
+    }
+
+    async fn get_root_widget_summary_tree_with_previews(
+        &self,
+        isolate_id: &str,
+        object_group: Option<&str>,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call(
+            "ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews",
+            params,
+        )
+        .await
+    }
+
+    async fn get_details_subtree(
+        &self,
+        isolate_id: &str,
+        diagnosticable_id: Option<&str>,
+        subtree_depth: Option<i64>,
+        object_group: &str,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => diagnosticable_id.into(),
+            "subtreeDepth".to_owned() => subtree_depth.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getDetailsSubtree", params)
+            .await
+    }
+
+    async fn get_selected_widget(
+        &self,
+        isolate_id: &str,
+        previous_selection_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => previous_selection_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getSelectedWidget", params)
+            .await
+    }
+
+    async fn get_selected_summary_widget(
+        &self,
+        isolate_id: &str,
+        previous_selection_id: Option<&str>,
+        object_group: &str,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "arg".to_owned() => previous_selection_id.into(),
+            "objectGroup".to_owned() => object_group.into(),
+        };
+        self.call("ext.flutter.inspector.getSelectedSummaryWidget", params)
+            .await
+    }
+
+    async fn is_widget_creation_tracked(&self, isolate_id: &str) -> Result<ResultResponse<bool>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+        };
+        self.call("ext.flutter.inspector.isWidgetCreationTracked", params)
+            .await
+    }
+
+    async fn screenshot(
+        &self,
+        isolate_id: &str,
+        id: &str,
+        width: f64,
+        height: f64,
+        margin: Option<f64>,
+        max_pixel_ratio: Option<f64>,
+        debug_paint: Option<bool>,
+    ) -> Result<ResultResponse<Option<String>>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "id".to_owned() => id.into(),
+            "width".to_owned() => width.to_string().into(),
+            "height".to_owned() => height.to_string().into(),
+            "margin".to_owned() => margin.map(|m| m.to_string()).into(),
+            "maxPixelRatio".to_owned() => max_pixel_ratio.map(|m| m.to_string()).into(),
+            "debugPaint".to_owned() => debug_paint.map(|d| d.to_string()).into(),
+        };
+        self.call("ext.flutter.inspector.screenshot", params).await
+    }
+
+    async fn get_layout_explorer_node(
+        &self,
+        isolate_id: &str,
+        id: Option<&str>,
+        object_group: &str,
+        subtree_depth: Option<i64>,
+    ) -> Result<ResultResponse<DiagnosticNode>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "id".to_owned() => id.into(),
+            "groupName".to_owned() => object_group.into(),
+            "subtreeDepth".to_owned() => subtree_depth.map(|e| e.to_string()).into(),
+        };
+        self.call("ext.flutter.inspector.getLayoutExplorerNode", params)
+            .await
+    }
+
+    async fn set_flex_fit(
+        &self,
+        isolate_id: &str,
+        id: Option<&str>,
+        flex_fit: FlexFit,
+    ) -> Result<ResultResponse<bool>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "id".to_owned() => id.into(),
+            "flexFit".to_owned() => serde_json::to_string(&flex_fit).unwrap().into(),
+        };
+        self.call("ext.flutter.inspector.setFlexFit", params).await
+    }
+
+    async fn set_flex_factor(
+        &self,
+        isolate_id: &str,
+        id: Option<&str>,
+        flex_factor: i64,
+    ) -> Result<ResultResponse<bool>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "id".to_owned() => id.into(),
+            "flexFactor".to_owned() => flex_factor.to_string().into(),
+        };
+        self.call("ext.flutter.inspector.setFlexFactor", params)
+            .await
+    }
+
+    async fn set_flex_properties(
+        &self,
+        isolate_id: &str,
+        id: Option<&str>,
+        main_axis_alignment: MainAxisAlignment,
+        cross_axis_alignment: CrossAxisAlignment,
+    ) -> Result<ResultResponse<bool>> {
+        let params = params! {
+            "isolateId".to_owned() => isolate_id.into(),
+            "id".to_owned() => id.into(),
+            "mainAxisAlignment".to_owned() => serde_json::to_string(&main_axis_alignment).unwrap().into(),
+            "crossAxisAlignment".to_owned() => serde_json::to_string(&cross_axis_alignment).unwrap().into(),
+        };
+        self.call("ext.flutter.inspector.setFlexProperties", params)
+            .await
     }
 }
