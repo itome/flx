@@ -127,6 +127,14 @@ where
                         })
                         .await;
                 },
+                Ok(line) = run.receive_stderr() => {
+                    store
+                        .dispatch(Action::AppendStderrLog {
+                            session_id: id.clone(),
+                            line,
+                        })
+                        .await;
+                },
                 _ = run.receive_app_stop() => {
                     store
                         .dispatch(Action::UnregisterSession {

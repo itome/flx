@@ -497,6 +497,23 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::AppendStderrLog { session_id, line } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            logs: { [s.logs, vec![SessionLog::Stderr(line.clone())]].concat() },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
         Action::AppendFlutterFrame {
             session_id,
             build,

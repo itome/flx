@@ -34,27 +34,27 @@ impl Component for LogsComponent {
         let items = CurrentSessionLogsSelector
             .select(state)
             .iter()
-            .map(|log| {
-                let text = match log {
-                    SessionLog::Stdout(line) => line.clone(),
-                    SessionLog::Progress {
-                        id,
-                        message,
-                        start_at,
-                        end_at,
-                    } => {
-                        if let Some(end_at) = end_at {
-                            format!(
-                                "{} ({}ms)",
-                                message.clone().unwrap_or("".to_string()),
-                                end_at - start_at
-                            )
-                        } else {
-                            message.clone().unwrap_or("".to_string())
-                        }
+            .map(|log| match log {
+                SessionLog::Stdout(line) => ListItem::new(line.clone()),
+                SessionLog::Stderr(line) => {
+                    ListItem::new(line.clone()).style(Style::default().fg(Color::Red))
+                }
+                SessionLog::Progress {
+                    id,
+                    message,
+                    start_at,
+                    end_at,
+                } => {
+                    if let Some(end_at) = end_at {
+                        ListItem::new(format!(
+                            "{} ({}ms)",
+                            message.clone().unwrap_or("".to_string()),
+                            end_at - start_at
+                        ))
+                    } else {
+                        ListItem::new(message.clone().unwrap_or("".to_string()))
                     }
-                };
-                ListItem::new(text)
+                }
             })
             .collect::<Vec<_>>();
 
