@@ -7,8 +7,11 @@ use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 use crate::redux::{action::Action, state::State};
 
 use devtools::{
-    io::{request::StreamId, types::EventKind},
-    service::VmService,
+    protocols::{
+        flutter_extension::FlutterExtensionProtocol,
+        vm_service::{EventKind, StreamId},
+    },
+    vm_service::VmService,
 };
 
 use daemon::flutter::FlutterDaemon;
@@ -46,8 +49,29 @@ where
         let session = session.read().await;
         let vm_service = &session.as_ref().unwrap().vm_service;
 
+        let Ok(flutter_view_list) = vm_service.list_views().await else {
+            return;
+        };
+        let Some(flutter_view) = flutter_view_list
+            .views
+            .iter()
+            .find(|view| view.r#type == "FlutterView")
+        else {
+            return;
+        };
+        let Ok(display_refresh_rate) = vm_service.get_display_refresh_rate(&flutter_view.id).await
+        else {
+            return;
+        };
+        store
+            .dispatch(Action::SetDisplayRefreshRate {
+                session_id: self.session_id.clone(),
+                rate: display_refresh_rate.fps,
+            })
+            .await;
+
         loop {
-            let Ok(event) = vm_service.receive_event(StreamId::Extension).await else {
+            let Ok(event) = vm_service.next_event(StreamId::Extension).await else {
                 continue;
             };
             if event.kind != EventKind::Extension {

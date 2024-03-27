@@ -58,7 +58,7 @@ pub struct FlutterFrame {
     pub vsync_overhead: Duration,
 }
 
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq)]
 pub struct SessionState {
     pub id: String,
     pub app_id: Option<String>,
@@ -70,7 +70,7 @@ pub struct SessionState {
     pub hot_restarting: bool,
     pub logs: Vec<SessionLog>,
     pub frames: Vec<FlutterFrame>,
-    pub display_refresh_rate: u32,
+    pub display_refresh_rate: f32,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
@@ -85,13 +85,13 @@ impl SelectDevicePopupState {
     }
 }
 
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq)]
 pub struct SelectFlavorPopupState {
     pub visible: bool,
     pub selected_flavor: Option<String>,
 }
 
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq)]
 pub struct State {
     pub current_focus: Focus,
 
