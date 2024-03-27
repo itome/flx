@@ -122,7 +122,7 @@ impl Component for RunnersComponent {
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(border_color));
 
-        let items = state
+        let mut items = state
             .sessions
             .iter()
             .map(|session| {
@@ -156,6 +156,10 @@ impl Component for RunnersComponent {
                 }
             })
             .collect::<Vec<_>>();
+
+        if items.is_empty() {
+            items.push(ListItem::new(Text::raw(" Press 'n' to run new app ")));
+        }
 
         let list = List::new(items).block(block);
 
