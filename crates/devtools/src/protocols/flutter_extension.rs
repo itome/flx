@@ -342,6 +342,7 @@ pub trait FlutterExtensionProtocol {
         isolate_id: &str,
     ) -> impl Future<Output = Result<ResultResponse<bool>>> + Send;
 
+    #[allow(clippy::too_many_arguments)]
     fn screenshot(
         &self,
         isolate_id: &str,
