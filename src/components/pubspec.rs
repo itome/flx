@@ -2,6 +2,7 @@ use std::fs;
 use std::sync::Arc;
 
 use color_eyre::owo_colors::OwoColorize;
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 
@@ -21,6 +22,7 @@ use super::Component;
 pub struct PubspecComponent {
     pub pubspec_path: String,
     pub lines: Vec<Vec<(String, Style)>>,
+    scroll_poition: usize,
 }
 
 impl PubspecComponent {
@@ -28,6 +30,7 @@ impl PubspecComponent {
         Self {
             pubspec_path,
             lines: vec![],
+            scroll_poition: 0,
         }
     }
 }
@@ -60,6 +63,27 @@ impl Component for PubspecComponent {
         Ok(())
     }
 
+    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        match key.code {
+            KeyCode::Up | KeyCode::Char('k') => {
+                self.scroll_poition = if self.scroll_poition > 0 {
+                    self.scroll_poition - 1
+                } else {
+                    0
+                };
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                self.scroll_poition = if self.scroll_poition < self.lines.len() - 1 {
+                    self.scroll_poition + 1
+                } else {
+                    self.lines.len() - 1
+                };
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let lines = self.lines.iter().map(|items| {
             return Line::from(
@@ -71,6 +95,10 @@ impl Component for PubspecComponent {
                     .collect::<Vec<_>>(),
             );
         });
+
+        let mut list_state = ListState::default().with_selected(Some(self.scroll_poition));
+        let mut scrollbar_state = ScrollbarState::new((&lines).len()).position(self.scroll_poition);
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         let block = Block::default()
             .title("pubspec.yaml")
             .padding(Padding::horizontal(1))
@@ -79,8 +107,17 @@ impl Component for PubspecComponent {
             .border_style(Style::default().fg(Color::White));
         let text = List::new(lines)
             .block(block)
-            .highlight_symbol(symbols::scrollbar::HORIZONTAL.end)
-            .highlight_spacing(HighlightSpacing::Always);
-        f.render_widget(text, area);
+            .highlight_style(Style::default().bg(Color::DarkGray))
+            .highlight_spacing(HighlightSpacing::Never);
+
+        f.render_stateful_widget(text, area, &mut list_state);
+        f.render_stateful_widget(
+            scrollbar,
+            area.inner(&Margin {
+                vertical: 1,
+                horizontal: 0,
+            }),
+            &mut scrollbar_state,
+        );
     }
 }
