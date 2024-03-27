@@ -131,7 +131,8 @@ impl Component for SelectFlavorPopupComponent {
         let block = Block::default()
             .title("Which flavor do you want to use?")
             .borders(Borders::ALL)
-            .border_style(Style::default());
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(Color::Green));
 
         let list = List::new(items).block(block);
 

@@ -110,16 +110,17 @@ impl Component for RunnersComponent {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let default_color = if state.current_focus == Focus::Tab(Tab::Runners) {
-            Color::White
+        let border_color = if state.current_focus == Focus::Tab(Tab::Runners) {
+            Color::Green
         } else {
-            Color::DarkGray
+            Color::White
         };
 
         let block = Block::default()
             .title("Apps")
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(default_color));
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(border_color));
 
         let items = state
             .sessions
@@ -131,23 +132,23 @@ impl Component for RunnersComponent {
                     .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
                 let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
                 let flavor = &session.flavor;
-                let status_color = if state.current_focus != Focus::Tab(Tab::Runners) {
-                    Color::DarkGray
-                } else if session.hot_reloading {
+                let status_color = if session.hot_reloading {
                     Color::Yellow
                 } else if session.hot_restarting {
                     Color::LightMagenta
                 } else if !session.started {
                     Color::DarkGray
                 } else {
-                    Color::Green
+                    Color::White
                 };
                 let mut name = format!(" {} ", device_name);
                 if let Some(flavor) = flavor {
                     name.push_str(&format!("({})", flavor))
                 }
                 let item = ListItem::new(name).style(Style::default().fg(status_color));
-                if state.session_id == Some(session.id.clone()) {
+                if state.current_focus == Focus::Tab(Tab::Runners)
+                    && state.session_id == Some(session.id.clone())
+                {
                     item.add_modifier(Modifier::REVERSED)
                         .add_modifier(Modifier::BOLD)
                 } else {

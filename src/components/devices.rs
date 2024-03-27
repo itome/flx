@@ -30,24 +30,22 @@ impl DevicesComponent {
 impl Component for DevicesComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let devices = state.devices.clone();
-        let default_color = if state.current_focus == Focus::Tab(Tab::Devices) {
-            Color::White
+        let border_color = if state.current_focus == Focus::Tab(Tab::Devices) {
+            Color::Green
         } else {
-            Color::DarkGray
+            Color::White
         };
 
         let block = Block::default()
             .title("Devices")
             .padding(Padding::horizontal(1))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(default_color));
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(border_color));
 
         let items: Vec<ListItem> = devices
             .iter()
-            .map(|d| {
-                ListItem::new(format!("{} ({})", d.name, d.platform))
-                    .style(Style::default().fg(default_color))
-            })
+            .map(|d| ListItem::new(format!("{} ({})", d.name, d.platform)))
             .collect();
         let list = List::new(items)
             .style(Style::default().fg(Color::White))

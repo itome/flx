@@ -75,6 +75,7 @@ impl Component for PubspecComponent {
             .title("pubspec.yaml")
             .padding(Padding::horizontal(1))
             .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(Color::White));
         let text = List::new(lines)
             .block(block)

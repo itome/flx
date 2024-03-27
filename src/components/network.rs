@@ -26,6 +26,7 @@ impl Component for NetworkComponent {
         let block = Block::default()
             .title("Network")
             .padding(Padding::horizontal(1))
+            .border_type(BorderType::Rounded)
             .borders(Borders::ALL);
 
         f.render_widget(block, area);

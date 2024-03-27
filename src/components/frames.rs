@@ -114,6 +114,7 @@ impl Component for FramesComponent {
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
                 .style(Style::default().fg(Color::White)),
         );
 

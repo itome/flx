@@ -29,6 +29,7 @@ impl Component for LogsComponent {
             .title("Logs")
             .padding(Padding::horizontal(1))
             .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
             .border_style(Style::default());
 
         let items = CurrentSessionLogsSelector

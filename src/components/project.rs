@@ -21,20 +21,19 @@ impl ProjectComponent {
 
 impl Component for ProjectComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let default_color = if state.current_focus == Focus::Tab(Tab::Project) {
-            Color::White
+        let border_color = if state.current_focus == Focus::Tab(Tab::Project) {
+            Color::Green
         } else {
-            Color::DarkGray
+            Color::White
         };
 
         let block = Block::default()
             .title("Project")
             .padding(Padding::horizontal(1))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(default_color));
-        let text = Paragraph::new("flx")
-            .style(Style::default().fg(default_color))
-            .block(block);
+            .border_type(BorderType::Rounded)
+            .border_style(Style::default().fg(border_color));
+        let text = Paragraph::new("flx").block(block);
         f.render_widget(text, area);
     }
 }
