@@ -89,6 +89,11 @@ pub enum Action {
         line: String,
     },
 
+    AppendStderrLog {
+        session_id: String,
+        line: String,
+    },
+
     AppendFlutterFrame {
         session_id: String,
         build: Duration,

@@ -129,7 +129,7 @@ where
                 },
                 Ok(line) = run.receive_stderr() => {
                     store
-                        .dispatch(Action::AppendStdoutLog {
+                        .dispatch(Action::AppendStderrLog {
                             session_id: id.clone(),
                             line,
                         })

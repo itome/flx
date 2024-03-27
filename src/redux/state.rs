@@ -46,6 +46,7 @@ pub enum SessionLog {
         end_at: Option<u128>,
     },
     Stdout(String),
+    Stderr(String),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
