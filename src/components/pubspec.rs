@@ -64,6 +64,9 @@ impl Component for PubspecComponent {
     }
 
     fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        if state.current_focus != Focus::Tab(Tab::Project) {
+            return Ok(());
+        }
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => {
                 self.scroll_poition = if self.scroll_poition > 0 {
