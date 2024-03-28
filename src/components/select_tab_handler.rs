@@ -9,7 +9,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use super::{Component, Frame};
 use crate::{
     action::TuiAction,
-    config::{Config, KeyBindings},
     redux::{action::Action, state::State, ActionOrThunk},
 };
 

@@ -7,7 +7,7 @@ use tokio::sync::{mpsc::UnboundedSender, Mutex};
 use crate::{
     redux::{
         action::Action,
-        state::{Focus, State, Tab},
+        state::{Focus, Mode, State, Tab},
         thunk::ThunkAction,
         ActionOrThunk,
     },
@@ -84,6 +84,19 @@ impl RunnersComponent {
             .send(ThunkAction::StopApp.into())?;
         Ok(())
     }
+
+    fn start_devtool_mode(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(
+                Action::SetMode {
+                    mode: Mode::Devtools,
+                }
+                .into(),
+            )?;
+        Ok(())
+    }
 }
 
 impl Component for RunnersComponent {
@@ -104,6 +117,7 @@ impl Component for RunnersComponent {
             KeyCode::Char('d') => self.stop_app()?,
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
+            KeyCode::Enter => self.start_devtool_mode()?,
             _ => {}
         }
         Ok(())

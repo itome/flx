@@ -9,11 +9,17 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{FlutterFrame, SelectFlavorPopupState, SessionState, State, Tab},
+    state::{FlutterFrame, Mode, SelectFlavorPopupState, SessionState, State, Tab},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
     match action {
+        Action::SetMode { mode } => {
+            if mode == Mode::Devtools && state.session_id.is_none() {
+                return state;
+            }
+            State { mode, ..state }
+        }
         Action::AddDevice { device } => State {
             devices: [state.devices, vec![device.clone()]].concat(),
             select_device_popup: SelectDevicePopupState {

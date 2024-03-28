@@ -3,6 +3,13 @@ use std::time::Duration;
 
 use daemon::io::{device::Device, event::AppMode};
 
+#[derive(Clone, PartialEq, Eq, Default, Debug)]
+pub enum Mode {
+    #[default]
+    Home,
+    Devtools,
+}
+
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum Tab {
     #[default]
@@ -94,6 +101,7 @@ pub struct SelectFlavorPopupState {
 
 #[derive(Default, Clone, PartialEq)]
 pub struct State {
+    pub mode: Mode,
     pub current_focus: Focus,
 
     pub project_root: Option<String>,

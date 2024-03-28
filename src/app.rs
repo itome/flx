@@ -1,5 +1,5 @@
-use color_eyre::eyre::Result;
-use crossterm::event::KeyEvent;
+use color_eyre::eyre::{eyre, Result};
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::Rect;
 use ratatui::prelude::*;
 use ratatui::widgets::Clear;
@@ -10,6 +10,7 @@ use redux_rs::{
 };
 use redux_rs::{Selector, Store};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedSender};
 use tokio::sync::{Mutex, RwLock};
@@ -27,7 +28,9 @@ use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::CurrentSessionSelector;
-use crate::redux::state::{Focus, SelectDevicePopupState, SelectFlavorPopupState, State, Tab};
+use crate::redux::state::{
+    Focus, Mode, SelectDevicePopupState, SelectFlavorPopupState, State, Tab,
+};
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
 use crate::redux::thunk::{thunk_impl, ThunkAction};
@@ -36,53 +39,88 @@ use crate::utils::centered_rect;
 use crate::{
     action::TuiAction,
     components::Component,
-    config::Config,
-    mode::Mode,
     redux::{reducer::reducer, ActionOrThunk},
     tui::{self, Tui},
 };
 use daemon::flutter::FlutterDaemon;
 
+#[derive(Hash, Eq, PartialEq, Debug)]
+pub enum ComponentId {
+    Project,
+    Runners,
+    Devices,
+    SelectDevicePopup,
+    Frames,
+    Logs,
+    Network,
+    SelectTabController,
+    SelectFlavorPopup,
+    Pubspec,
+}
+
 pub struct App {
-    pub config: Config,
     pub tick_rate: f64,
     pub frame_rate: f64,
     pub project_root: Option<String>,
     pub use_fvm: bool,
-    pub components: Vec<Box<dyn Component>>,
+    pub components: HashMap<ComponentId, Box<dyn Component>>,
     pub should_quit: bool,
     pub should_suspend: bool,
-    pub mode: Mode,
-    pub last_tick_key_events: Vec<KeyEvent>,
 }
 
 impl App {
     pub fn new(project_root: Option<String>, use_fvm: bool) -> Result<Self> {
-        let config = Config::new()?;
-        let mode = Mode::Home;
         let pubspec_path = project_root.clone().unwrap_or(".".to_string()) + "/pubspec.yaml";
+
         Ok(Self {
             tick_rate: 4.0,
             frame_rate: 60.0,
             project_root,
             use_fvm,
-            components: vec![
-                Box::new(ProjectComponent::new()),
-                Box::new(RunnersComponent::new()),
-                Box::new(DevicesComponent::new()),
-                Box::new(SelectDevicePopupComponent::new(use_fvm)),
-                Box::new(FramesComponent::new()),
-                Box::new(LogsComponent::new()),
-                Box::new(NetworkComponent::new()),
-                Box::new(SelectTabControllerComponent::new()),
-                Box::new(SelectFlavorPopupComponent::new(use_fvm)),
-                Box::new(PubspecComponent::new(pubspec_path)),
-            ],
+            components: HashMap::from([
+                (
+                    ComponentId::Project,
+                    Box::new(ProjectComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Runners,
+                    Box::new(RunnersComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Devices,
+                    Box::new(DevicesComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::SelectDevicePopup,
+                    Box::new(SelectDevicePopupComponent::new(use_fvm)) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Frames,
+                    Box::new(FramesComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Logs,
+                    Box::new(LogsComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Network,
+                    Box::new(NetworkComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::SelectTabController,
+                    Box::new(SelectTabControllerComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::SelectFlavorPopup,
+                    Box::new(SelectFlavorPopupComponent::new(use_fvm)) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Pubspec,
+                    Box::new(PubspecComponent::new(pubspec_path)) as Box<dyn Component>,
+                ),
+            ]),
             should_quit: false,
             should_suspend: false,
-            config,
-            mode,
-            last_tick_key_events: Vec::new(),
         })
     }
 
@@ -109,15 +147,11 @@ impl App {
         // tui.mouse(true);
         tui.enter()?;
 
-        for component in self.components.iter_mut() {
+        for (_, component) in self.components.iter_mut() {
             component.register_action_handler(redux_action_tx.clone())?;
         }
 
-        for component in self.components.iter_mut() {
-            component.register_config_handler(self.config.clone())?;
-        }
-
-        for component in self.components.iter_mut() {
+        for (_, component) in self.components.iter_mut() {
             component.init(tui.size()?)?;
         }
 
@@ -129,36 +163,20 @@ impl App {
                     tui::Event::Tick => tui_action_tx.send(TuiAction::Tick)?,
                     tui::Event::Render => tui_action_tx.send(TuiAction::Render)?,
                     tui::Event::Resize(x, y) => tui_action_tx.send(TuiAction::Resize(x, y))?,
-                    tui::Event::Key(key) => {
-                        if let Some(keymap) = self.config.keybindings.get(&self.mode) {
-                            if let Some(action) = keymap.get(&vec![key]) {
-                                log::info!("Got action: {action:?}");
-                                tui_action_tx.send(action.clone())?;
-                            } else {
-                                // If the key was not handled as a single key action,
-                                // then consider it for multi-key combinations.
-                                self.last_tick_key_events.push(key);
-
-                                // Check for multi-key combinations
-                                if let Some(action) = keymap.get(&self.last_tick_key_events) {
-                                    log::info!("Got action: {action:?}");
-                                    tui_action_tx.send(action.clone())?;
-                                }
-                            }
-                        };
-                    }
+                    tui::Event::Key(key) => match key.code {
+                        KeyCode::Char('q') => tui_action_tx.send(TuiAction::Quit)?,
+                        KeyCode::Char('z') => tui_action_tx.send(TuiAction::Suspend)?,
+                        _ => {}
+                    },
                     _ => {}
                 }
-                for component in self.components.iter_mut() {
+                for (_, component) in self.components.iter_mut() {
                     component.handle_events(Some(e.clone()), &state)?;
                 }
             }
 
             while let Ok(action) = tui_action_rx.try_recv() {
                 match action {
-                    TuiAction::Tick => {
-                        self.last_tick_key_events.drain(..);
-                    }
                     TuiAction::Quit => self.should_quit = true,
                     TuiAction::Suspend => self.should_suspend = true,
                     TuiAction::Resume => self.should_suspend = false,
@@ -171,7 +189,7 @@ impl App {
                     }
                     _ => {}
                 }
-                for component in self.components.iter_mut() {
+                for (_, component) in self.components.iter_mut() {
                     if let Some(action) = component.update(action.clone())? {
                         tui_action_tx.send(action)?
                     };
@@ -211,6 +229,13 @@ impl App {
     }
 
     fn draw(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
+        match state.mode {
+            Mode::Home => self.draw_home(tui, state),
+            _ => Err(eyre!("Unknown mode")),
+        }
+    }
+
+    fn draw_home(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
         tui.draw(|f| {
             let layout = Layout::default()
                 .direction(Direction::Horizontal)
@@ -225,28 +250,44 @@ impl App {
                 ])
                 .split(layout[0]);
 
-            self.components[0].draw(f, tab_layout[0], state);
-            self.components[1].draw(f, tab_layout[1], state);
-            self.components[2].draw(f, tab_layout[2], state);
+            self.components
+                .get_mut(&ComponentId::Project)
+                .unwrap()
+                .draw(f, tab_layout[0], state);
+            self.components
+                .get_mut(&ComponentId::Runners)
+                .unwrap()
+                .draw(f, tab_layout[1], state);
+            self.components
+                .get_mut(&ComponentId::Devices)
+                .unwrap()
+                .draw(f, tab_layout[2], state);
 
             if state.select_device_popup.visible {
                 let popup_area = centered_rect(60, 20, f.size());
                 f.render_widget(Clear, popup_area);
-                self.components[3].draw(f, popup_area, state);
+                self.components
+                    .get_mut(&ComponentId::SelectDevicePopup)
+                    .unwrap()
+                    .draw(f, popup_area, state);
             }
 
             if state.select_flavor_popup.visible {
                 let popup_area = centered_rect(60, 40, f.size());
                 f.render_widget(Clear, popup_area);
-                self.components[8].draw(f, popup_area, state);
+                self.components
+                    .get_mut(&ComponentId::SelectFlavorPopup)
+                    .unwrap()
+                    .draw(f, popup_area, state);
             }
 
-            if state.current_focus == Focus::Tab(Tab::Runners)
-                || matches!(state.current_focus, Focus::DevTools(_))
-            {
+            if state.current_focus == Focus::Tab(Tab::Runners) {
                 if let Some(session) = CurrentSessionSelector.select(state) {
                     if !session.started {
-                        self.components[5].draw(f, layout[1], state);
+                        self.components
+                            .get_mut(&ComponentId::Logs)
+                            .unwrap()
+                            .draw(f, layout[1], state);
                     } else {
                         let vertical_layout = Layout::default()
                             .direction(Direction::Vertical)
@@ -256,15 +297,29 @@ impl App {
                             .direction(Direction::Horizontal)
                             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
                             .split(vertical_layout[1]);
-                        self.components[4].draw(f, vertical_layout[0], state);
-                        self.components[5].draw(f, horizontal_layout[0], state);
-                        self.components[6].draw(f, horizontal_layout[1], state);
+                        self.components.get_mut(&ComponentId::Frames).unwrap().draw(
+                            f,
+                            vertical_layout[0],
+                            state,
+                        );
+                        self.components.get_mut(&ComponentId::Logs).unwrap().draw(
+                            f,
+                            horizontal_layout[0],
+                            state,
+                        );
+                        self.components
+                            .get_mut(&ComponentId::Network)
+                            .unwrap()
+                            .draw(f, horizontal_layout[1], state);
                     }
                 }
             }
 
             if state.current_focus == Focus::Tab(Tab::Project) {
-                self.components[9].draw(f, layout[1], state);
+                self.components
+                    .get_mut(&ComponentId::Pubspec)
+                    .unwrap()
+                    .draw(f, layout[1], state);
             }
         })?;
         Ok(())

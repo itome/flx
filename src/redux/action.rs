@@ -3,8 +3,13 @@ use std::time::Duration;
 
 use daemon::io::{device::Device, event::AppMode};
 
+use super::state::Mode;
+
 #[derive(Debug)]
 pub enum Action {
+    SetMode {
+        mode: Mode,
+    },
     AddDevice {
         device: Device,
     },
