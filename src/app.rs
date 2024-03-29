@@ -16,10 +16,13 @@ use tokio::sync::mpsc::{self, UnboundedSender};
 use tokio::sync::{Mutex, RwLock};
 
 use crate::components;
+use crate::components::app::AppComponent;
 use crate::components::devices::DevicesComponent;
 use crate::components::frames::FramesComponent;
+use crate::components::inspector::InspectorComponent;
 use crate::components::logs::LogsComponent;
 use crate::components::network::NetworkComponent;
+use crate::components::performance::PerformanceComponent;
 use crate::components::project::ProjectComponent;
 use crate::components::pubspec::PubspecComponent;
 use crate::components::runners::RunnersComponent;
@@ -56,6 +59,9 @@ pub enum ComponentId {
     SelectTabController,
     SelectFlavorPopup,
     Pubspec,
+    App,
+    Performance,
+    Inspector,
 }
 
 pub struct App {
@@ -117,6 +123,18 @@ impl App {
                 (
                     ComponentId::Pubspec,
                     Box::new(PubspecComponent::new(pubspec_path)) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::App,
+                    Box::new(AppComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Performance,
+                    Box::new(PerformanceComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Inspector,
+                    Box::new(InspectorComponent::new()) as Box<dyn Component>,
                 ),
             ]),
             should_quit: false,
@@ -231,7 +249,7 @@ impl App {
     fn draw(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
         match state.mode {
             Mode::Home => self.draw_home(tui, state),
-            _ => Err(eyre!("Unknown mode")),
+            Mode::Devtools => self.draw_devtools(tui, state),
         }
     }
 
@@ -321,6 +339,62 @@ impl App {
                     .unwrap()
                     .draw(f, layout[1], state);
             }
+        })?;
+        Ok(())
+    }
+
+    fn draw_devtools(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
+        tui.draw(|f| {
+            let layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
+                .split(f.size());
+            let tab_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(match state.current_focus {
+                    Focus::Tab(Tab::Inspector) => vec![
+                        Constraint::Length(3),
+                        Constraint::Fill(1),
+                        Constraint::Length(2),
+                        Constraint::Length(1),
+                    ],
+                    Focus::Tab(Tab::Performance) => vec![
+                        Constraint::Length(3),
+                        Constraint::Length(1),
+                        Constraint::Fill(1),
+                        Constraint::Length(1),
+                    ],
+                    Focus::Tab(Tab::Network) => vec![
+                        Constraint::Length(3),
+                        Constraint::Length(1),
+                        Constraint::Length(1),
+                        Constraint::Fill(1),
+                    ],
+                    _ => vec![
+                        Constraint::Length(3),
+                        Constraint::Fill(1),
+                        Constraint::Fill(1),
+                        Constraint::Fill(1),
+                    ],
+                })
+                .split(layout[0]);
+
+            self.components
+                .get_mut(&ComponentId::App)
+                .unwrap()
+                .draw(f, tab_layout[0], state);
+            self.components
+                .get_mut(&ComponentId::Performance)
+                .unwrap()
+                .draw(f, tab_layout[1], state);
+            self.components
+                .get_mut(&ComponentId::Inspector)
+                .unwrap()
+                .draw(f, tab_layout[2], state);
+            self.components
+                .get_mut(&ComponentId::Network)
+                .unwrap()
+                .draw(f, tab_layout[3], state);
         })?;
         Ok(())
     }

@@ -9,10 +9,13 @@ use crate::{
     tui::{Event, Frame},
 };
 
+pub mod app;
 pub mod devices;
 pub mod frames;
+pub mod inspector;
 pub mod logs;
 pub mod network;
+pub mod performance;
 pub mod project;
 pub mod pubspec;
 pub mod runners;
