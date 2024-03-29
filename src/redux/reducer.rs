@@ -575,5 +575,67 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::NextFrame => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if Some(s.id.clone()) == state.session_id {
+                        SessionState {
+                            selected_frame_number: {
+                                let frames = s.frames.iter().map(|f| f.number).collect::<Vec<_>>();
+                                if let Some(selected_frame_number) = s.selected_frame_number {
+                                    if let Some(index) =
+                                        frames.iter().position(|n| n == &selected_frame_number)
+                                    {
+                                        let next_index = (index + 1) % frames.len();
+                                        Some(frames[next_index])
+                                    } else {
+                                        frames.first().map(|n| n.to_owned())
+                                    }
+                                } else {
+                                    frames.first().map(|n| n.to_owned())
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::PreviousFrame => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if Some(s.id.clone()) == state.session_id {
+                        SessionState {
+                            selected_frame_number: {
+                                let frames = s.frames.iter().map(|f| f.number).collect::<Vec<_>>();
+                                if let Some(selected_frame_number) = s.selected_frame_number {
+                                    if let Some(index) =
+                                        frames.iter().position(|n| n == &selected_frame_number)
+                                    {
+                                        let next_index = (index + frames.len() - 1) % frames.len();
+                                        Some(frames[next_index])
+                                    } else {
+                                        frames.last().map(|n| n.to_owned())
+                                    }
+                                } else {
+                                    frames.last().map(|n| n.to_owned())
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
     }
 }

@@ -16,6 +16,10 @@ pub enum Tab {
     Project,
     Runners,
     Devices,
+    App,
+    Performance,
+    Inspector,
+    Network,
 }
 
 #[derive(Clone, PartialEq, Eq, Default)]
@@ -78,6 +82,7 @@ pub struct SessionState {
     pub hot_restarting: bool,
     pub logs: Vec<SessionLog>,
     pub frames: Vec<FlutterFrame>,
+    pub selected_frame_number: Option<u64>,
     pub display_refresh_rate: f32,
 }
 

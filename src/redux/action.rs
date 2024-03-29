@@ -113,4 +113,7 @@ pub enum Action {
         session_id: String,
         rate: f32,
     },
+
+    NextFrame,
+    PreviousFrame,
 }
