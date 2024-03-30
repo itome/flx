@@ -7,7 +7,7 @@ use tokio::sync::{mpsc::UnboundedSender, Mutex};
 use crate::{
     redux::{
         action::Action,
-        state::{Focus, Mode, State, Tab},
+        state::{Focus, Home, State},
         thunk::ThunkAction,
         ActionOrThunk,
     },
@@ -85,16 +85,11 @@ impl RunnersComponent {
         Ok(())
     }
 
-    fn start_devtool_mode(&self) -> Result<()> {
+    fn enter_devtools(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(
-                Action::SetMode {
-                    mode: Mode::Devtools,
-                }
-                .into(),
-            )?;
+            .send(Action::EnterDevTools.into())?;
         Ok(())
     }
 }
@@ -106,7 +101,7 @@ impl Component for RunnersComponent {
     }
 
     fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
-        if state.current_focus != Focus::Tab(Tab::Runners) {
+        if state.focus != Focus::Home(Home::Runners) || state.popup.is_some() {
             return Ok(());
         }
 
@@ -117,14 +112,14 @@ impl Component for RunnersComponent {
             KeyCode::Char('d') => self.stop_app()?,
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
-            KeyCode::Enter => self.start_devtool_mode()?,
+            KeyCode::Enter => self.enter_devtools()?,
             _ => {}
         }
         Ok(())
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let border_color = if state.current_focus == Focus::Tab(Tab::Runners) {
+        let border_color = if state.focus == Focus::Home(Home::Runners) && state.popup.is_none() {
             Color::Green
         } else {
             Color::White
@@ -160,7 +155,7 @@ impl Component for RunnersComponent {
                     name.push_str(&format!("({})", flavor))
                 }
                 let item = ListItem::new(name).style(Style::default().fg(status_color));
-                if state.current_focus == Focus::Tab(Tab::Runners)
+                if state.focus == Focus::Home(Home::Runners)
                     && state.session_id == Some(session.id.clone())
                 {
                     item.add_modifier(Modifier::REVERSED)

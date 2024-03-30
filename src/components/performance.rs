@@ -8,7 +8,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::CurrentSessionSelector;
-use crate::redux::state::{Focus, State, Tab};
+use crate::redux::state::{DevTools, Focus, Home, State};
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
 use color_eyre::eyre::{eyre, Result};
@@ -60,7 +60,7 @@ impl Component for PerformanceComponent {
     }
 
     fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
-        if state.current_focus != Focus::Tab(Tab::Runners) {
+        if state.focus != Focus::DevTools(DevTools::Performance) || state.popup.is_some() {
             return Ok(());
         }
 
@@ -73,14 +73,17 @@ impl Component for PerformanceComponent {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let border_color = if state.current_focus == Focus::Tab(Tab::Performance) {
-            Color::Green
-        } else {
-            Color::White
-        };
+        let border_color =
+            if state.focus == Focus::DevTools(DevTools::Performance) && state.popup.is_none() {
+                Color::Green
+            } else {
+                Color::White
+            };
         let block = Block::default()
             .title("Performance")
             .padding(Padding::horizontal(1))
+            .border_style(Style::default().fg(border_color))
+            .border_type(BorderType::Rounded)
             .borders(Borders::ALL);
 
         let Some(session) = CurrentSessionSelector.select(state) else {

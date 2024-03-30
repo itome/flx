@@ -9,17 +9,11 @@ use crate::redux::{
 
 use super::{
     action::Action,
-    state::{FlutterFrame, Mode, SelectFlavorPopupState, SessionState, State, Tab},
+    state::{DevTools, FlutterFrame, Home, SelectFlavorPopupState, SessionState, State},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
     match action {
-        Action::SetMode { mode } => {
-            if mode == Mode::Devtools && state.session_id.is_none() {
-                return state;
-            }
-            State { mode, ..state }
-        }
         Action::AddDevice { device } => State {
             devices: [state.devices, vec![device.clone()]].concat(),
             select_device_popup: SelectDevicePopupState {
@@ -45,22 +39,56 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::SetFlavors { flavors } => State { flavors, ..state },
-        Action::NextTab => State {
-            current_focus: match state.current_focus {
-                Focus::Tab(Tab::Project) => Focus::Tab(Tab::Runners),
-                Focus::Tab(Tab::Runners) => Focus::Tab(Tab::Devices),
-                Focus::Tab(Tab::Devices) => Focus::Tab(Tab::Project),
-                _ => state.current_focus,
+        Action::NextHomeTab => State {
+            focus: match state.focus {
+                Focus::Home(Home::Project) => Focus::Home(Home::Runners),
+                Focus::Home(Home::Runners) => Focus::Home(Home::Devices),
+                Focus::Home(Home::Devices) => Focus::Home(Home::Project),
+                _ => state.focus,
             },
             ..state
         },
-        Action::PreviousTab => State {
-            current_focus: match state.current_focus {
-                Focus::Tab(Tab::Project) => Focus::Tab(Tab::Devices),
-                Focus::Tab(Tab::Runners) => Focus::Tab(Tab::Project),
-                Focus::Tab(Tab::Devices) => Focus::Tab(Tab::Runners),
-                _ => state.current_focus,
+        Action::PreviousHomeTab => State {
+            focus: match state.focus {
+                Focus::Home(Home::Project) => Focus::Home(Home::Devices),
+                Focus::Home(Home::Runners) => Focus::Home(Home::Project),
+                Focus::Home(Home::Devices) => Focus::Home(Home::Runners),
+                _ => state.focus,
             },
+            ..state
+        },
+        Action::NextDevToolsTab => State {
+            focus: match state.focus {
+                Focus::DevTools(DevTools::App) => Focus::DevTools(DevTools::Inspector),
+                Focus::DevTools(DevTools::Inspector) => Focus::DevTools(DevTools::Performance),
+                Focus::DevTools(DevTools::Performance) => Focus::DevTools(DevTools::Network),
+                Focus::DevTools(DevTools::Network) => Focus::DevTools(DevTools::App),
+                _ => state.focus,
+            },
+            ..state
+        },
+        Action::PreviousDevToolsTab => State {
+            focus: match state.focus {
+                Focus::DevTools(DevTools::App) => Focus::DevTools(DevTools::Network),
+                Focus::DevTools(DevTools::Inspector) => Focus::DevTools(DevTools::App),
+                Focus::DevTools(DevTools::Performance) => Focus::DevTools(DevTools::Inspector),
+                Focus::DevTools(DevTools::Network) => Focus::DevTools(DevTools::Performance),
+                _ => state.focus,
+            },
+            ..state
+        },
+        Action::EnterDevTools => {
+            if state.session_id.is_none() {
+                state
+            } else {
+                State {
+                    focus: Focus::DevTools(DevTools::App),
+                    ..state
+                }
+            }
+        }
+        Action::ExitDevTools => State {
+            focus: Focus::Home(Home::Runners),
             ..state
         },
         Action::RegisterSession {
@@ -254,9 +282,8 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::ShowSelectDevicePopUp => State {
-            current_focus: Focus::PopUp(PopUp::SelectDevice),
+            popup: Some(PopUp::SelectDevice),
             select_device_popup: SelectDevicePopupState {
-                visible: true,
                 selected_device: AvailableDevicesSelector
                     .select(&state)
                     .first()
@@ -265,27 +292,18 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::HideSelectDevicePopUp => State {
-            current_focus: Focus::Tab(Tab::Runners),
-            select_device_popup: SelectDevicePopupState {
-                visible: false,
-                ..state.select_device_popup
-            },
+            popup: None,
             ..state
         },
         Action::ShowSelectFlavorPopUp => State {
-            current_focus: Focus::PopUp(PopUp::SelectFlavor),
+            popup: Some(PopUp::SelectDevice),
             select_flavor_popup: SelectFlavorPopupState {
-                visible: true,
                 selected_flavor: None,
             },
             ..state
         },
         Action::HideSelectFlavorPopUp => State {
-            current_focus: Focus::Tab(Tab::Runners),
-            select_flavor_popup: SelectFlavorPopupState {
-                visible: false,
-                ..state.select_flavor_popup
-            },
+            focus: Focus::Home(Home::Runners),
             ..state
         },
         Action::StartApp {

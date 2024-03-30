@@ -3,23 +3,12 @@ use std::time::Duration;
 
 use daemon::io::{device::Device, event::AppMode};
 
-#[derive(Clone, PartialEq, Eq, Default, Debug)]
-pub enum Mode {
-    #[default]
-    Home,
-    Devtools,
-}
-
 #[derive(Clone, PartialEq, Eq, Default)]
-pub enum Tab {
-    #[default]
+pub enum Home {
     Project,
+    #[default]
     Runners,
     Devices,
-    App,
-    Performance,
-    Inspector,
-    Network,
 }
 
 #[derive(Clone, PartialEq, Eq, Default)]
@@ -32,19 +21,21 @@ pub enum PopUp {
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum DevTools {
     #[default]
-    Logs,
+    App,
+    Performance,
+    Inspector,
+    Network,
 }
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum Focus {
-    Tab(Tab),
-    PopUp(PopUp),
+    Home(Home),
     DevTools(DevTools),
 }
 
 impl Default for Focus {
     fn default() -> Self {
-        Focus::Tab(Tab::Runners)
+        Focus::Home(Home::Runners)
     }
 }
 
@@ -88,7 +79,6 @@ pub struct SessionState {
 
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SelectDevicePopupState {
-    pub visible: bool,
     pub selected_device: Option<Device>,
 }
 
@@ -100,14 +90,13 @@ impl SelectDevicePopupState {
 
 #[derive(Default, Clone, PartialEq)]
 pub struct SelectFlavorPopupState {
-    pub visible: bool,
     pub selected_flavor: Option<String>,
 }
 
 #[derive(Default, Clone, PartialEq)]
 pub struct State {
-    pub mode: Mode,
-    pub current_focus: Focus,
+    pub focus: Focus,
+    pub popup: Option<PopUp>,
 
     pub project_root: Option<String>,
     pub devices: Vec<Device>,

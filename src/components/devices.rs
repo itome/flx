@@ -5,7 +5,7 @@ use redux_rs::{middlewares::thunk::ActionOrThunk, StoreApi};
 use tokio::sync::Mutex;
 
 use crate::{
-    redux::state::{Focus, State, Tab},
+    redux::state::{Focus, Home, State},
     tui::Frame,
 };
 use color_eyre::eyre::Result;
@@ -30,7 +30,7 @@ impl DevicesComponent {
 impl Component for DevicesComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let devices = state.devices.clone();
-        let border_color = if state.current_focus == Focus::Tab(Tab::Devices) {
+        let border_color = if state.focus == Focus::Home(Home::Devices) && state.popup.is_none() {
             Color::Green
         } else {
             Color::White

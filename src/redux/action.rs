@@ -3,13 +3,8 @@ use std::time::Duration;
 
 use daemon::io::{device::Device, event::AppMode};
 
-use super::state::Mode;
-
 #[derive(Debug)]
 pub enum Action {
-    SetMode {
-        mode: Mode,
-    },
     AddDevice {
         device: Device,
     },
@@ -21,8 +16,13 @@ pub enum Action {
         flavors: HashMap<String, Vec<String>>,
     },
 
-    NextTab,
-    PreviousTab,
+    NextHomeTab,
+    PreviousHomeTab,
+    NextDevToolsTab,
+    PreviousDevToolsTab,
+
+    EnterDevTools,
+    ExitDevTools,
 
     RegisterSession {
         session_id: String,

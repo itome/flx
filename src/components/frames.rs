@@ -5,7 +5,7 @@ use ratatui::{prelude::*, widgets::*};
 use redux_rs::Selector;
 
 use crate::redux::selector::current_session::CurrentSessionSelector;
-use crate::redux::state::{Focus, State, Tab};
+use crate::redux::state::{Focus, Home, State};
 use crate::tui::Frame;
 use color_eyre::eyre::Result;
 use daemon::flutter::FlutterDaemon;
@@ -34,6 +34,7 @@ impl Component for FramesComponent {
         let block = Block::default()
             .title("Frames")
             .padding(Padding::horizontal(1))
+            .border_type(BorderType::Rounded)
             .borders(Borders::ALL);
 
         let ledgend_width = "Raster Jank".len() as u16 + 2;

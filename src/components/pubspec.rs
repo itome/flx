@@ -6,7 +6,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 
-use crate::redux::state::{Focus, State, Tab};
+use crate::redux::state::{Focus, Home, State};
 use crate::tui::Frame;
 use color_eyre::eyre::Result;
 use daemon::flutter::FlutterDaemon;
@@ -64,7 +64,7 @@ impl Component for PubspecComponent {
     }
 
     fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
-        if state.current_focus != Focus::Tab(Tab::Project) {
+        if state.focus != Focus::Home(Home::Project) || state.popup.is_some() {
             return Ok(());
         }
         match key.code {

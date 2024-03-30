@@ -5,7 +5,7 @@ use ratatui::{prelude::*, widgets::*};
 use redux_rs::Selector;
 
 use crate::redux::selector::current_session::CurrentSessionSelector;
-use crate::redux::state::{Focus, State, Tab};
+use crate::redux::state::{DevTools, Focus, State};
 use crate::tui::Frame;
 use color_eyre::eyre::Result;
 use daemon::flutter::FlutterDaemon;
@@ -27,7 +27,8 @@ impl Component for AppComponent {
             return;
         };
 
-        let border_color = if state.current_focus == Focus::Tab(Tab::App) {
+        let border_color = if state.focus == Focus::DevTools(DevTools::App) && state.popup.is_none()
+        {
             Color::Green
         } else {
             Color::White
@@ -55,7 +56,6 @@ impl Component for AppComponent {
 
         let block = Block::default()
             .title("App")
-            .padding(Padding::horizontal(1))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(border_color));

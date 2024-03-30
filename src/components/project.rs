@@ -3,7 +3,7 @@ use std::sync::Arc;
 use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 
-use crate::redux::state::{Focus, State, Tab};
+use crate::redux::state::{Focus, Home, State};
 use crate::tui::Frame;
 use color_eyre::eyre::Result;
 use daemon::flutter::FlutterDaemon;
@@ -21,7 +21,7 @@ impl ProjectComponent {
 
 impl Component for ProjectComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let border_color = if state.current_focus == Focus::Tab(Tab::Project) {
+        let border_color = if state.focus == Focus::Home(Home::Project) && state.popup.is_none() {
             Color::Green
         } else {
             Color::White

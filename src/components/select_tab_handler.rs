@@ -9,7 +9,11 @@ use tokio::sync::mpsc::UnboundedSender;
 use super::{Component, Frame};
 use crate::{
     action::TuiAction,
-    redux::{action::Action, state::State, ActionOrThunk},
+    redux::{
+        action::Action,
+        state::{self, Focus, State},
+        ActionOrThunk,
+    },
 };
 
 #[derive(Default)]
@@ -22,19 +26,43 @@ impl SelectTabControllerComponent {
         Self::default()
     }
 
-    fn next(&self) -> Result<()> {
+    fn next_home_tab(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .unwrap()
-            .send(Action::NextTab.into())?;
+            .send(Action::NextHomeTab.into())?;
         Ok(())
     }
 
-    fn previous(&self) -> Result<()> {
+    fn previous_home_tab(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .unwrap()
-            .send(Action::PreviousTab.into())?;
+            .send(Action::PreviousHomeTab.into())?;
+        Ok(())
+    }
+
+    fn next_devtools_tab(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .unwrap()
+            .send(Action::NextDevToolsTab.into())?;
+        Ok(())
+    }
+
+    fn previous_devtools_tab(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .unwrap()
+            .send(Action::PreviousDevToolsTab.into())?;
+        Ok(())
+    }
+
+    fn exit_devtools(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .unwrap()
+            .send(Action::ExitDevTools.into())?;
         Ok(())
     }
 }
@@ -45,11 +73,22 @@ impl Component for SelectTabControllerComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, _: &State) -> Result<()> {
-        match key.code {
-            KeyCode::Left | KeyCode::Char('h') => self.previous()?,
-            KeyCode::Right | KeyCode::Char('l') => self.next()?,
-            _ => {}
+    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        if state.popup.is_some() {
+            return Ok(());
+        }
+        match state.focus {
+            Focus::Home(_) => match key.code {
+                KeyCode::Left | KeyCode::Char('h') => self.previous_home_tab()?,
+                KeyCode::Right | KeyCode::Char('l') => self.next_home_tab()?,
+                _ => {}
+            },
+            Focus::DevTools(_) => match key.code {
+                KeyCode::Left | KeyCode::Char('h') => self.previous_devtools_tab()?,
+                KeyCode::Right | KeyCode::Char('l') => self.next_devtools_tab()?,
+                KeyCode::Esc => self.exit_devtools()?,
+                _ => {}
+            },
         }
         Ok(())
     }

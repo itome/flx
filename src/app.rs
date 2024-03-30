@@ -32,7 +32,7 @@ use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::CurrentSessionSelector;
 use crate::redux::state::{
-    Focus, Mode, SelectDevicePopupState, SelectFlavorPopupState, State, Tab,
+    DevTools, Focus, Home, SelectDevicePopupState, SelectFlavorPopupState, State,
 };
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
@@ -214,6 +214,7 @@ impl App {
                 }
             }
             while let Ok(action) = redux_action_rx.try_recv() {
+                log::info!("Received action: {:?}", action);
                 match action {
                     ActionOrThunk::Action(action) => {
                         store.dispatch(action).await;
@@ -247,9 +248,9 @@ impl App {
     }
 
     fn draw(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
-        match state.mode {
-            Mode::Home => self.draw_home(tui, state),
-            Mode::Devtools => self.draw_devtools(tui, state),
+        match state.focus {
+            Focus::Home(_) => self.draw_home(tui, state),
+            Focus::DevTools(_) => self.draw_devtools(tui, state),
         }
     }
 
@@ -281,25 +282,19 @@ impl App {
                 .unwrap()
                 .draw(f, tab_layout[2], state);
 
-            if state.select_device_popup.visible {
-                let popup_area = centered_rect(60, 20, f.size());
-                f.render_widget(Clear, popup_area);
-                self.components
-                    .get_mut(&ComponentId::SelectDevicePopup)
-                    .unwrap()
-                    .draw(f, popup_area, state);
-            }
+            let popup_area = centered_rect(60, 20, f.size());
+            self.components
+                .get_mut(&ComponentId::SelectDevicePopup)
+                .unwrap()
+                .draw(f, popup_area, state);
 
-            if state.select_flavor_popup.visible {
-                let popup_area = centered_rect(60, 40, f.size());
-                f.render_widget(Clear, popup_area);
-                self.components
-                    .get_mut(&ComponentId::SelectFlavorPopup)
-                    .unwrap()
-                    .draw(f, popup_area, state);
-            }
+            let popup_area = centered_rect(60, 40, f.size());
+            self.components
+                .get_mut(&ComponentId::SelectFlavorPopup)
+                .unwrap()
+                .draw(f, popup_area, state);
 
-            if state.current_focus == Focus::Tab(Tab::Runners) {
+            if state.focus == Focus::Home(Home::Runners) {
                 if let Some(session) = CurrentSessionSelector.select(state) {
                     if !session.started {
                         self.components
@@ -333,7 +328,7 @@ impl App {
                 }
             }
 
-            if state.current_focus == Focus::Tab(Tab::Project) {
+            if state.focus == Focus::Home(Home::Project) {
                 self.components
                     .get_mut(&ComponentId::Pubspec)
                     .unwrap()
@@ -351,23 +346,23 @@ impl App {
                 .split(f.size());
             let tab_layout = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints(match state.current_focus {
-                    Focus::Tab(Tab::Inspector) => vec![
+                .constraints(match state.focus {
+                    Focus::DevTools(DevTools::Inspector) => vec![
                         Constraint::Length(3),
                         Constraint::Fill(1),
                         Constraint::Length(2),
-                        Constraint::Length(1),
+                        Constraint::Length(2),
                     ],
-                    Focus::Tab(Tab::Performance) => vec![
+                    Focus::DevTools(DevTools::Performance) => vec![
                         Constraint::Length(3),
-                        Constraint::Length(1),
+                        Constraint::Length(2),
                         Constraint::Fill(1),
-                        Constraint::Length(1),
+                        Constraint::Length(2),
                     ],
-                    Focus::Tab(Tab::Network) => vec![
+                    Focus::DevTools(DevTools::Network) => vec![
                         Constraint::Length(3),
-                        Constraint::Length(1),
-                        Constraint::Length(1),
+                        Constraint::Length(2),
+                        Constraint::Length(2),
                         Constraint::Fill(1),
                     ],
                     _ => vec![
@@ -384,11 +379,11 @@ impl App {
                 .unwrap()
                 .draw(f, tab_layout[0], state);
             self.components
-                .get_mut(&ComponentId::Performance)
+                .get_mut(&ComponentId::Inspector)
                 .unwrap()
                 .draw(f, tab_layout[1], state);
             self.components
-                .get_mut(&ComponentId::Inspector)
+                .get_mut(&ComponentId::Performance)
                 .unwrap()
                 .draw(f, tab_layout[2], state);
             self.components
