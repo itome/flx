@@ -4,6 +4,7 @@ pub mod selector;
 pub mod state;
 pub mod thunk;
 
+#[derive(Debug)]
 pub enum ActionOrThunk {
     Action(action::Action),
     Thunk(thunk::ThunkAction),

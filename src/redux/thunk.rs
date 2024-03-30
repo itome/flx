@@ -16,6 +16,7 @@ pub mod stop_app;
 pub mod watch_devices;
 pub mod watch_frames;
 
+#[derive(Debug)]
 pub enum ThunkAction {
     WatchDevices,
     LoadSupportedPlatforms,
