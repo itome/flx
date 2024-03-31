@@ -72,6 +72,7 @@ pub trait IoExtensionProtocol {
 //
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct OpenFileRef {
     pub r#type: String,
     pub id: i64,
@@ -79,6 +80,7 @@ pub struct OpenFileRef {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct OpenFile {
     pub r#type: String,
     pub id: i64,
@@ -92,18 +94,21 @@ pub struct OpenFile {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct OpenFileList {
     pub r#type: String,
     pub files: Vec<OpenFileRef>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpTimelineLoggingState {
     pub r#type: String,
     pub enabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfile {
     pub r#type: String,
     pub timestamp: i64,
@@ -111,13 +116,13 @@ pub struct HttpProfile {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfileRequestRef {
     pub r#type: String,
     pub id: String,
     pub isolate_id: String,
     pub method: String,
     pub uri: String,
-    pub events: Vec<HttpProfileRequestEvent>,
     pub start_time: i64,
     pub end_time: Option<i64>,
     pub request: Option<HttpProfileRequestData>,
@@ -125,13 +130,13 @@ pub struct HttpProfileRequestRef {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfileRequest {
     pub r#type: String,
     pub id: String,
     pub isolate_id: String,
     pub method: String,
     pub uri: String,
-    pub events: Vec<HttpProfileRequestEvent>,
     pub start_time: i64,
     pub end_time: Option<i64>,
     pub request: Option<HttpProfileRequestData>,
@@ -141,12 +146,13 @@ pub struct HttpProfileRequest {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfileRequestData {
-    pub r#type: String,
     pub connection_info: Option<serde_json::Map<String, serde_json::Value>>,
     pub content_length: Option<i64>,
     pub cookies: Option<Vec<String>>,
     pub error: Option<String>,
+    pub events: Vec<HttpProfileRequestEvent>,
     pub follow_redirects: Option<bool>,
     pub headers: Option<serde_json::Map<String, serde_json::Value>>,
     pub max_redirects: Option<i64>,
@@ -155,8 +161,8 @@ pub struct HttpProfileRequestData {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfileResponseData {
-    pub r#type: String,
     pub redirects: Vec<serde_json::Map<String, serde_json::Value>>,
     pub cookies: Option<Vec<String>>,
     pub connection_info: Option<serde_json::Map<String, serde_json::Value>>,
@@ -173,6 +179,7 @@ pub struct HttpProfileResponseData {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfileProxyData {
     pub r#type: String,
     pub host: Option<String>,
@@ -182,20 +189,22 @@ pub struct HttpProfileProxyData {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpProfileRequestEvent {
-    pub r#type: String,
     pub event: String,
     pub timestamp: i64,
     pub arguments: Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SocketProfilingState {
     pub r#type: String,
     pub enabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SpawnedProcessRef {
     pub r#type: String,
     pub id: i64,
@@ -203,6 +212,7 @@ pub struct SpawnedProcessRef {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SpawnedProcess {
     pub r#type: String,
     pub id: i64,
@@ -214,23 +224,27 @@ pub struct SpawnedProcess {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SpawnedProcessList {
     pub r#type: String,
     pub processes: Vec<SpawnedProcessRef>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Response {
     pub r#type: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SocketProfile {
     pub r#type: String,
     pub sockets: Vec<SocketStatistic>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SocketStatistic {
     pub id: i64,
     pub start_time: i64,
@@ -245,13 +259,28 @@ pub struct SocketStatistic {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Success {
     pub r#type: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Version {
     pub r#type: String,
     pub major: i64,
     pub minor: i64,
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{protocols::io_extension::HttpProfile, vm_service::VmServiceResponse};
+
+    #[test]
+    fn parse_http_profile() {
+        let response = include_str!("../../test/get_http_profile_response.txt");
+        let node = serde_json::from_str::<VmServiceResponse<HttpProfile>>(response);
+        println!("{:?}", node);
+        assert!(node.is_ok());
+    }
 }
