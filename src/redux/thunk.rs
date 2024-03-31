@@ -15,6 +15,7 @@ pub mod run_new_vm_service;
 pub mod stop_app;
 pub mod watch_devices;
 pub mod watch_frames;
+pub mod watch_requests;
 
 #[derive(Debug)]
 pub enum ThunkAction {

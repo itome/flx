@@ -1,7 +1,8 @@
-use std::collections::HashMap;
 use std::time::Duration;
+use std::{collections::HashMap, time::SystemTime};
 
 use daemon::io::{device::Device, event::AppMode};
+use devtools::protocols::io_extension::HttpProfileRequestRef;
 
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum Home {
@@ -73,7 +74,9 @@ pub struct SessionState {
     pub hot_restarting: bool,
     pub logs: Vec<SessionLog>,
     pub frames: Vec<FlutterFrame>,
+    pub requests: Vec<HttpProfileRequestRef>,
     pub selected_frame_number: Option<u64>,
+    pub selected_request_id: Option<String>,
     pub display_refresh_rate: f32,
 }
 

@@ -214,7 +214,6 @@ impl App {
                 }
             }
             while let Ok(action) = redux_action_rx.try_recv() {
-                log::info!("Received action: {:?}", action);
                 match action {
                     ActionOrThunk::Action(action) => {
                         store.dispatch(action).await;
@@ -390,6 +389,18 @@ impl App {
                 .get_mut(&ComponentId::Network)
                 .unwrap()
                 .draw(f, tab_layout[3], state);
+
+            if state.focus == Focus::DevTools(DevTools::Performance) {
+                let vertical_layout = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                    .split(layout[1]);
+                self.components.get_mut(&ComponentId::Frames).unwrap().draw(
+                    f,
+                    vertical_layout[0],
+                    state,
+                );
+            }
         })?;
         Ok(())
     }

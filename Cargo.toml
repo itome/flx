@@ -55,6 +55,7 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter", "serde"] }
 uuid = "1.7.0"
 syntect = "5.2.0"
 syntect-tui = "3.0.2"
+url = "2.5.0"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = ["build", "git", "gitoxide", "cargo"] }

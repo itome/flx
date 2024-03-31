@@ -576,6 +576,54 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::AppendHttpProfileRequest {
+            session_id,
+            requests,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        // If new request is already in the previous requests, then update the previous request.
+                        let mut requests = [
+                            s.requests
+                                .iter()
+                                .filter(|r| requests.iter().all(|next_r| next_r.id != r.id))
+                                .map(|r| r.clone())
+                                .collect::<Vec<_>>(),
+                            requests.clone(),
+                        ]
+                        .concat();
+                        requests.sort_by(|a, b| a.start_time.cmp(&b.start_time));
+                        SessionState {
+                            requests: requests.clone(),
+                            // If the selected request is the last one in the previous requests or None,
+                            // then select the last one in the new requests.
+                            // Otherwise, keep the selected request.
+                            selected_request_id: {
+                                match s.selected_request_id.clone() {
+                                    Some(selected_request_id) => {
+                                        if s.requests.last().map(|r| r.id.clone())
+                                            == Some(selected_request_id.clone())
+                                        {
+                                            requests.last().map(|r| r.id.clone())
+                                        } else {
+                                            s.selected_request_id
+                                        }
+                                    }
+                                    None => requests.last().map(|r| r.id.clone()),
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
         Action::SetDisplayRefreshRate { session_id, rate } => State {
             sessions: state
                 .sessions
@@ -644,6 +692,71 @@ pub fn reducer(state: State, action: Action) -> State {
                                     }
                                 } else {
                                     frames.last().map(|n| n.to_owned())
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::NextReqest => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if Some(s.id.clone()) == state.session_id {
+                        SessionState {
+                            selected_request_id: {
+                                let requests =
+                                    s.requests.iter().map(|r| r.id.clone()).collect::<Vec<_>>();
+                                if let Some(selected_request_id) = s.selected_request_id.clone() {
+                                    if let Some(index) =
+                                        requests.iter().position(|id| id == &selected_request_id)
+                                    {
+                                        let next_index = (index + 1) % requests.len();
+                                        Some(requests[next_index].clone())
+                                    } else {
+                                        requests.first().map(|id| id.to_owned())
+                                    }
+                                } else {
+                                    requests.first().map(|id| id.to_owned())
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::PreviousRequest => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if Some(s.id.clone()) == state.session_id {
+                        SessionState {
+                            selected_request_id: {
+                                let requests =
+                                    s.requests.iter().map(|r| r.id.clone()).collect::<Vec<_>>();
+                                if let Some(selected_request_id) = s.selected_request_id.clone() {
+                                    if let Some(index) =
+                                        requests.iter().position(|id| id == &selected_request_id)
+                                    {
+                                        let next_index =
+                                            (index + requests.len() - 1) % requests.len();
+                                        Some(requests[next_index].clone())
+                                    } else {
+                                        requests.last().map(|id| id.to_owned())
+                                    }
+                                } else {
+                                    requests.last().map(|id| id.to_owned())
                                 }
                             },
                             ..s

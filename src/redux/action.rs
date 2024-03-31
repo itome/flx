@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use daemon::io::{device::Device, event::AppMode};
+use devtools::protocols::io_extension::HttpProfileRequestRef;
 
 #[derive(Debug)]
 pub enum Action {
@@ -109,6 +110,11 @@ pub enum Action {
         vsync_overhead: Duration,
     },
 
+    AppendHttpProfileRequest {
+        session_id: String,
+        requests: Vec<HttpProfileRequestRef>,
+    },
+
     SetDisplayRefreshRate {
         session_id: String,
         rate: f32,
@@ -116,4 +122,7 @@ pub enum Action {
 
     NextFrame,
     PreviousFrame,
+
+    NextReqest,
+    PreviousRequest,
 }
