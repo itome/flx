@@ -307,22 +307,30 @@ impl App {
                             .split(layout[1]);
                         let horizontal_layout = Layout::default()
                             .direction(Direction::Horizontal)
-                            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                            .constraints([
+                                Constraint::Fill(1),
+                                Constraint::Fill(1),
+                                Constraint::Fill(1),
+                            ])
                             .split(vertical_layout[1]);
                         self.components.get_mut(&ComponentId::Frames).unwrap().draw(
                             f,
                             vertical_layout[0],
                             state,
                         );
-                        self.components.get_mut(&ComponentId::Logs).unwrap().draw(
-                            f,
-                            horizontal_layout[0],
-                            state,
-                        );
+                        self.components
+                            .get_mut(&ComponentId::Inspector)
+                            .unwrap()
+                            .draw(f, horizontal_layout[0], state);
                         self.components
                             .get_mut(&ComponentId::Network)
                             .unwrap()
                             .draw(f, horizontal_layout[1], state);
+                        self.components.get_mut(&ComponentId::Logs).unwrap().draw(
+                            f,
+                            horizontal_layout[2],
+                            state,
+                        );
                     }
                 }
             }
