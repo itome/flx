@@ -408,6 +408,11 @@ impl App {
                     vertical_layout[0],
                     state,
                 );
+            } else if state.focus == Focus::DevTools(DevTools::App) {
+                self.components
+                    .get_mut(&ComponentId::Logs)
+                    .unwrap()
+                    .draw(f, layout[1], state);
             }
         })?;
         Ok(())
