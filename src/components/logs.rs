@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -22,6 +23,7 @@ use super::Component;
 #[derive(Default)]
 pub struct LogsComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
+    wrapped_logs: HashMap<String, Vec<String>>,
 }
 
 impl LogsComponent {
@@ -45,19 +47,18 @@ impl LogsComponent {
         Ok(())
     }
 
-    fn chunk_string(text: &str, n: usize) -> String {
-        text.chars()
-            .enumerate()
-            .flat_map(|(i, c)| {
-                if i != 0 && i % n == 0 {
-                    Some(' ')
-                } else {
-                    None
-                }
-                .into_iter()
-                .chain(std::iter::once(c))
-            })
-            .collect::<String>()
+    fn wrap_text(&mut self, text: &str, n: usize) -> Vec<String> {
+        if self.wrapped_logs.contains_key(&format!("{}_{}", n, text)) {
+            return self.wrapped_logs[&format!("{}_{}", n, text)].clone();
+        } else {
+            let lines = textwrap::wrap(text, n)
+                .iter()
+                .map(|line| line.to_string())
+                .collect::<Vec<_>>();
+            self.wrapped_logs
+                .insert(format!("{}_{}", n, text), lines.clone());
+            return lines;
+        }
     }
 }
 
@@ -103,7 +104,8 @@ impl Component for LogsComponent {
             .map(|log| match log {
                 SessionLog::Stdout(line) => {
                     if should_wrap_text {
-                        let lines = textwrap::wrap(&line, log_width)
+                        let lines = self
+                            .wrap_text(&line, log_width)
                             .iter()
                             .map(|line| Line::raw(line.to_string()))
                             .collect::<Vec<_>>();
@@ -115,7 +117,8 @@ impl Component for LogsComponent {
                 }
                 SessionLog::Stderr(line) => {
                     if should_wrap_text {
-                        let lines = textwrap::wrap(&line, log_width)
+                        let lines = self
+                            .wrap_text(&line, log_width)
                             .iter()
                             .map(|line| Line::raw(line.to_string()))
                             .collect::<Vec<_>>();
@@ -138,7 +141,8 @@ impl Component for LogsComponent {
                                 message.clone().unwrap_or("".to_string()),
                                 end_at - start_at
                             );
-                            let lines = textwrap::wrap(&text, log_width)
+                            let lines = self
+                                .wrap_text(&text, log_width)
                                 .iter()
                                 .map(|line| Line::raw(line.to_string()))
                                 .collect::<Vec<_>>();
