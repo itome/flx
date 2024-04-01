@@ -431,12 +431,72 @@ pub fn reducer(state: State, action: Action) -> State {
                 .into_iter()
                 .map(|s| {
                     if s.id == session_id {
+                        let logs = if s.logs.iter().any(|log| {
+                            if let SessionLog::Progress { id: log_id, .. } = log {
+                                id == *log_id
+                            } else {
+                                false
+                            }
+                        }) {
+                            s.logs
+                                .into_iter()
+                                .map(|log| {
+                                    if let SessionLog::Progress {
+                                        id: log_id,
+                                        start_at,
+                                        end_at,
+                                        message,
+                                    } = log
+                                    {
+                                        if id == log_id {
+                                            SessionLog::Progress {
+                                                id: log_id,
+                                                start_at,
+                                                message,
+                                                end_at: if finished {
+                                                    Some(
+                                                        SystemTime::now()
+                                                            .duration_since(UNIX_EPOCH)
+                                                            .unwrap()
+                                                            .as_millis(),
+                                                    )
+                                                } else {
+                                                    end_at
+                                                },
+                                            }
+                                        } else {
+                                            SessionLog::Progress {
+                                                id: log_id,
+                                                start_at,
+                                                message: message.clone(),
+                                                end_at,
+                                            }
+                                        }
+                                    } else {
+                                        log
+                                    }
+                                })
+                                .collect()
+                        } else {
+                            [
+                                s.logs,
+                                vec![SessionLog::Progress {
+                                    id: id.clone(),
+                                    message: message.clone(),
+                                    start_at: SystemTime::now()
+                                        .duration_since(UNIX_EPOCH)
+                                        .unwrap()
+                                        .as_millis(),
+                                    end_at: None,
+                                }],
+                            ]
+                            .concat()
+                        };
                         SessionState {
                             // If the selected log is the last one in the previous requests or None,
                             // then select the last one in the new log.
                             // Otherwise, keep the selected log.
                             selected_log_index: {
-                                let logs = s.logs.clone();
                                 if let Some(selected_log_index) = s.selected_log_index {
                                     if selected_log_index + 1 < logs.len() as u64 {
                                         Some(selected_log_index + 1)
@@ -447,69 +507,7 @@ pub fn reducer(state: State, action: Action) -> State {
                                     Some(0)
                                 }
                             },
-                            logs: {
-                                if s.logs.iter().any(|log| {
-                                    if let SessionLog::Progress { id: log_id, .. } = log {
-                                        id == *log_id
-                                    } else {
-                                        false
-                                    }
-                                }) {
-                                    s.logs
-                                        .into_iter()
-                                        .map(|log| {
-                                            if let SessionLog::Progress {
-                                                id: log_id,
-                                                start_at,
-                                                end_at,
-                                                message,
-                                            } = log
-                                            {
-                                                if id == log_id {
-                                                    SessionLog::Progress {
-                                                        id: log_id,
-                                                        start_at,
-                                                        message,
-                                                        end_at: if finished {
-                                                            Some(
-                                                                SystemTime::now()
-                                                                    .duration_since(UNIX_EPOCH)
-                                                                    .unwrap()
-                                                                    .as_millis(),
-                                                            )
-                                                        } else {
-                                                            end_at
-                                                        },
-                                                    }
-                                                } else {
-                                                    SessionLog::Progress {
-                                                        id: log_id,
-                                                        start_at,
-                                                        message: message.clone(),
-                                                        end_at,
-                                                    }
-                                                }
-                                            } else {
-                                                log
-                                            }
-                                        })
-                                        .collect()
-                                } else {
-                                    [
-                                        s.logs,
-                                        vec![SessionLog::Progress {
-                                            id: id.clone(),
-                                            message: message.clone(),
-                                            start_at: SystemTime::now()
-                                                .duration_since(UNIX_EPOCH)
-                                                .unwrap()
-                                                .as_millis(),
-                                            end_at: None,
-                                        }],
-                                    ]
-                                    .concat()
-                                }
-                            },
+                            logs,
                             ..s
                         }
                     } else {
@@ -525,12 +523,12 @@ pub fn reducer(state: State, action: Action) -> State {
                 .into_iter()
                 .map(|s| {
                     if s.id == session_id {
+                        let logs = [s.logs, vec![SessionLog::Stdout(line.clone())]].concat();
                         SessionState {
                             // If the selected log is the last one in the previous requests or None,
                             // then select the last one in the new log.
                             // Otherwise, keep the selected log.
                             selected_log_index: {
-                                let logs = s.logs.clone();
                                 if let Some(selected_log_index) = s.selected_log_index {
                                     if selected_log_index + 1 < logs.len() as u64 {
                                         Some(selected_log_index + 1)
@@ -541,7 +539,7 @@ pub fn reducer(state: State, action: Action) -> State {
                                     Some(0)
                                 }
                             },
-                            logs: { [s.logs, vec![SessionLog::Stdout(line.clone())]].concat() },
+                            logs,
                             ..s
                         }
                     } else {
@@ -557,12 +555,12 @@ pub fn reducer(state: State, action: Action) -> State {
                 .into_iter()
                 .map(|s| {
                     if s.id == session_id {
+                        let logs = [s.logs, vec![SessionLog::Stderr(line.clone())]].concat();
                         SessionState {
                             // If the selected log is the last one in the previous requests or None,
                             // then select the last one in the new log.
                             // Otherwise, keep the selected log.
                             selected_log_index: {
-                                let logs = s.logs.clone();
                                 if let Some(selected_log_index) = s.selected_log_index {
                                     if selected_log_index + 1 < logs.len() as u64 {
                                         Some(selected_log_index + 1)
@@ -573,7 +571,7 @@ pub fn reducer(state: State, action: Action) -> State {
                                     Some(0)
                                 }
                             },
-                            logs: { [s.logs, vec![SessionLog::Stderr(line.clone())]].concat() },
+                            logs,
                             ..s
                         }
                     } else {
