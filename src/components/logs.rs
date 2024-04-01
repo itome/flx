@@ -48,7 +48,9 @@ impl LogsComponent {
     }
 
     fn wrap_text(&mut self, text: &str, n: usize) -> Vec<String> {
-        if let std::collections::hash_map::Entry::Vacant(e) = self.wrapped_logs.entry(format!("{}_{}", n, text)) {
+        if let std::collections::hash_map::Entry::Vacant(e) =
+            self.wrapped_logs.entry(format!("{}_{}", n, text))
+        {
             let lines = textwrap::wrap(text, n)
                 .iter()
                 .map(|line| line.to_string())
