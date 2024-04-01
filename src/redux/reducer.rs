@@ -432,6 +432,21 @@ pub fn reducer(state: State, action: Action) -> State {
                 .map(|s| {
                     if s.id == session_id {
                         SessionState {
+                            // If the selected log is the last one in the previous requests or None,
+                            // then select the last one in the new log.
+                            // Otherwise, keep the selected log.
+                            selected_log_index: {
+                                let logs = s.logs.clone();
+                                if let Some(selected_log_index) = s.selected_log_index {
+                                    if selected_log_index + 1 < logs.len() as u64 {
+                                        Some(selected_log_index + 1)
+                                    } else {
+                                        Some(logs.len() as u64 - 1)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                            },
                             logs: {
                                 if s.logs.iter().any(|log| {
                                     if let SessionLog::Progress { id: log_id, .. } = log {
@@ -511,6 +526,21 @@ pub fn reducer(state: State, action: Action) -> State {
                 .map(|s| {
                     if s.id == session_id {
                         SessionState {
+                            // If the selected log is the last one in the previous requests or None,
+                            // then select the last one in the new log.
+                            // Otherwise, keep the selected log.
+                            selected_log_index: {
+                                let logs = s.logs.clone();
+                                if let Some(selected_log_index) = s.selected_log_index {
+                                    if selected_log_index + 1 < logs.len() as u64 {
+                                        Some(selected_log_index + 1)
+                                    } else {
+                                        Some(logs.len() as u64 - 1)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                            },
                             logs: { [s.logs, vec![SessionLog::Stdout(line.clone())]].concat() },
                             ..s
                         }
@@ -528,6 +558,21 @@ pub fn reducer(state: State, action: Action) -> State {
                 .map(|s| {
                     if s.id == session_id {
                         SessionState {
+                            // If the selected log is the last one in the previous requests or None,
+                            // then select the last one in the new log.
+                            // Otherwise, keep the selected log.
+                            selected_log_index: {
+                                let logs = s.logs.clone();
+                                if let Some(selected_log_index) = s.selected_log_index {
+                                    if selected_log_index + 1 < logs.len() as u64 {
+                                        Some(selected_log_index + 1)
+                                    } else {
+                                        Some(logs.len() as u64 - 1)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                            },
                             logs: { [s.logs, vec![SessionLog::Stderr(line.clone())]].concat() },
                             ..s
                         }
@@ -641,6 +686,62 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::NextLog => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if Some(s.id.clone()) == state.session_id {
+                        SessionState {
+                            selected_log_index: {
+                                let logs = s.logs.clone();
+                                if let Some(selected_log_index) = s.selected_log_index {
+                                    if selected_log_index + 1 < logs.len() as u64 {
+                                        Some(selected_log_index + 1)
+                                    } else {
+                                        Some(logs.len() as u64 - 1)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::PreviousLog => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if Some(s.id.clone()) == state.session_id {
+                        SessionState {
+                            selected_log_index: {
+                                let logs = s.logs.clone();
+                                if let Some(selected_log_index) = s.selected_log_index {
+                                    if selected_log_index > 0 {
+                                        Some(selected_log_index - 1)
+                                    } else {
+                                        Some(0)
+                                    }
+                                } else {
+                                    Some(0)
+                                }
+                            },
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
         Action::NextFrame => State {
             sessions: state
                 .sessions
@@ -654,7 +755,11 @@ pub fn reducer(state: State, action: Action) -> State {
                                     if let Some(index) =
                                         frames.iter().position(|n| n == &selected_frame_number)
                                     {
-                                        let next_index = (index + 1) % frames.len();
+                                        let next_index = if index + 1 < frames.len() {
+                                            index + 1
+                                        } else {
+                                            frames.len() - 1
+                                        };
                                         Some(frames[next_index])
                                     } else {
                                         frames.first().map(|n| n.to_owned())
@@ -685,7 +790,7 @@ pub fn reducer(state: State, action: Action) -> State {
                                     if let Some(index) =
                                         frames.iter().position(|n| n == &selected_frame_number)
                                     {
-                                        let next_index = (index + frames.len() - 1) % frames.len();
+                                        let next_index = if index > 0 { index - 1 } else { 0 };
                                         Some(frames[next_index])
                                     } else {
                                         frames.last().map(|n| n.to_owned())
@@ -717,7 +822,11 @@ pub fn reducer(state: State, action: Action) -> State {
                                     if let Some(index) =
                                         requests.iter().position(|id| id == &selected_request_id)
                                     {
-                                        let next_index = (index + 1) % requests.len();
+                                        let next_index = if index + 1 < requests.len() {
+                                            index + 1
+                                        } else {
+                                            requests.len() - 1
+                                        };
                                         Some(requests[next_index].clone())
                                     } else {
                                         requests.first().map(|id| id.to_owned())
@@ -749,8 +858,7 @@ pub fn reducer(state: State, action: Action) -> State {
                                     if let Some(index) =
                                         requests.iter().position(|id| id == &selected_request_id)
                                     {
-                                        let next_index =
-                                            (index + requests.len() - 1) % requests.len();
+                                        let next_index = if index > 0 { index - 1 } else { 0 };
                                         Some(requests[next_index].clone())
                                     } else {
                                         requests.last().map(|id| id.to_owned())

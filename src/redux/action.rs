@@ -120,6 +120,9 @@ pub enum Action {
         rate: f32,
     },
 
+    NextLog,
+    PreviousLog,
+
     NextFrame,
     PreviousFrame,
 

@@ -75,6 +75,7 @@ pub struct SessionState {
     pub logs: Vec<SessionLog>,
     pub frames: Vec<FlutterFrame>,
     pub requests: Vec<HttpProfileRequestRef>,
+    pub selected_log_index: Option<u64>,
     pub selected_frame_number: Option<u64>,
     pub selected_request_id: Option<String>,
     pub display_refresh_rate: f32,
