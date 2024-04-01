@@ -100,7 +100,7 @@ impl Component for PubspecComponent {
         });
 
         let mut list_state = ListState::default().with_selected(Some(self.scroll_poition));
-        let mut scrollbar_state = ScrollbarState::new((&lines).len()).position(self.scroll_poition);
+        let mut scrollbar_state = ScrollbarState::new(lines.len()).position(self.scroll_poition);
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         let block = Block::default()
             .title("pubspec.yaml")

@@ -110,7 +110,7 @@ impl Component for PerformanceComponent {
         });
 
         let mut scrollbar_state =
-            ScrollbarState::new((&lines).len()).position(selected_index.unwrap_or(0));
+            ScrollbarState::new(lines.len()).position(selected_index.unwrap_or(0));
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
 
         let text = List::new(lines)

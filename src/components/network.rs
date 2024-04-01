@@ -106,19 +106,19 @@ impl Component for NetworkComponent {
         ];
         let rows = session.requests.iter().map(|request| {
             let statu_code = match &request.response {
-                Some(response) => response.status_code.clone(),
+                Some(response) => response.status_code,
                 None => None,
             };
             let status_color = match statu_code {
-                Some(code) if code >= 200 && code < 300 => Color::Blue,
-                Some(code) if code >= 300 && code < 400 => Color::Yellow,
-                Some(code) if code >= 400 && code < 600 => Color::Red,
+                Some(code) if (200..300).contains(&code) => Color::Blue,
+                Some(code) if (300..400).contains(&code) => Color::Yellow,
+                Some(code) if (400..600).contains(&code) => Color::Red,
                 _ => Color::White,
             };
             let last_uri_path_and_query_string = match Url::parse(&request.uri) {
                 Ok(url) => match url.path_segments() {
                     Some(path) => [
-                        path.last().unwrap_or(&"-").to_string(),
+                        path.last().unwrap_or("-").to_string(),
                         url.query().map(|q| format!("?{}", q)).unwrap_or_default(),
                     ]
                     .join(""),
@@ -134,7 +134,7 @@ impl Component for NetworkComponent {
                 _ => Color::White,
             };
             let time = match request.end_time {
-                Some(end) => Duration::from_micros((end - request.start_time).abs() as u64),
+                Some(end) => Duration::from_micros((end - request.start_time).unsigned_abs()),
                 _ => std::time::Duration::default(),
             };
             let cells = vec![
@@ -158,7 +158,7 @@ impl Component for NetworkComponent {
         });
 
         let mut scrollbar_state =
-            ScrollbarState::new((&rows).len()).position(selected_index.unwrap_or(0));
+            ScrollbarState::new(rows.len()).position(selected_index.unwrap_or(0));
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
 
         let table = Table::new(rows, widths)

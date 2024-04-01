@@ -30,7 +30,6 @@ pub fn reducer(state: State, action: Action) -> State {
                         state.select_device_popup.selected_device
                     }
                 },
-                ..state.select_device_popup
             },
             ..state
         },
@@ -175,7 +174,6 @@ pub fn reducer(state: State, action: Action) -> State {
                         }
                     }
                 },
-                ..state.select_device_popup
             },
             ..state
         },
@@ -205,7 +203,6 @@ pub fn reducer(state: State, action: Action) -> State {
                         }
                     }
                 },
-                ..state.select_device_popup
             },
             ..state
         },
@@ -241,7 +238,6 @@ pub fn reducer(state: State, action: Action) -> State {
                         }
                     }
                 },
-                ..state.select_flavor_popup
             },
             ..state
         },
@@ -277,7 +273,6 @@ pub fn reducer(state: State, action: Action) -> State {
                         }
                     }
                 },
-                ..state.select_flavor_popup
             },
             ..state
         },
@@ -633,7 +628,7 @@ pub fn reducer(state: State, action: Action) -> State {
                             s.requests
                                 .iter()
                                 .filter(|r| requests.iter().all(|next_r| next_r.id != r.id))
-                                .map(|r| r.clone())
+                                .cloned()
                                 .collect::<Vec<_>>(),
                             requests.clone(),
                         ]

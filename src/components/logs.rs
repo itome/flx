@@ -48,16 +48,15 @@ impl LogsComponent {
     }
 
     fn wrap_text(&mut self, text: &str, n: usize) -> Vec<String> {
-        if self.wrapped_logs.contains_key(&format!("{}_{}", n, text)) {
-            return self.wrapped_logs[&format!("{}_{}", n, text)].clone();
-        } else {
+        if let std::collections::hash_map::Entry::Vacant(e) = self.wrapped_logs.entry(format!("{}_{}", n, text)) {
             let lines = textwrap::wrap(text, n)
                 .iter()
                 .map(|line| line.to_string())
                 .collect::<Vec<_>>();
-            self.wrapped_logs
-                .insert(format!("{}_{}", n, text), lines.clone());
-            return lines;
+            e.insert(lines.clone());
+            lines
+        } else {
+            self.wrapped_logs[&format!("{}_{}", n, text)].clone()
         }
     }
 }
@@ -105,7 +104,7 @@ impl Component for LogsComponent {
                 SessionLog::Stdout(line) => {
                     if should_wrap_text {
                         let lines = self
-                            .wrap_text(&line, log_width)
+                            .wrap_text(line, log_width)
                             .iter()
                             .map(|line| Line::raw(line.to_string()))
                             .collect::<Vec<_>>();
@@ -118,7 +117,7 @@ impl Component for LogsComponent {
                 SessionLog::Stderr(line) => {
                     if should_wrap_text {
                         let lines = self
-                            .wrap_text(&line, log_width)
+                            .wrap_text(line, log_width)
                             .iter()
                             .map(|line| Line::raw(line.to_string()))
                             .collect::<Vec<_>>();
@@ -158,7 +157,7 @@ impl Component for LogsComponent {
             })
             .collect::<Vec<_>>();
 
-        let mut scrollbar_state = ScrollbarState::new((&lines).len()).position(selected_index);
+        let mut scrollbar_state = ScrollbarState::new(lines.len()).position(selected_index);
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
 
         let list = List::new(lines)

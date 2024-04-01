@@ -63,16 +63,13 @@ where
                 if isolate_ids.contains(&isolate.id) {
                     continue;
                 }
-                match vm_service
+                if let Ok(status) = vm_service
                     .http_enable_timeline_logging(isolate.id.clone(), true)
                     .await
                 {
-                    Ok(status) => {
-                        if status.enabled {
-                            isolate_ids.push(isolate.id.clone());
-                        }
+                    if status.enabled {
+                        isolate_ids.push(isolate.id.clone());
                     }
-                    Err(_) => {}
                 }
             }
 
