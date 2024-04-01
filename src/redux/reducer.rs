@@ -493,13 +493,13 @@ pub fn reducer(state: State, action: Action) -> State {
                             // Otherwise, keep the selected log.
                             selected_log_index: {
                                 if let Some(selected_log_index) = s.selected_log_index {
-                                    if selected_log_index + 1 < logs.len() as u64 {
-                                        Some(selected_log_index + 1)
-                                    } else {
+                                    if selected_log_index == logs.len() as u64 - 2 {
                                         Some(logs.len() as u64 - 1)
+                                    } else {
+                                        s.selected_log_index
                                     }
                                 } else {
-                                    Some(0)
+                                    Some(logs.len() as u64 - 1)
                                 }
                             },
                             logs,
@@ -525,13 +525,13 @@ pub fn reducer(state: State, action: Action) -> State {
                             // Otherwise, keep the selected log.
                             selected_log_index: {
                                 if let Some(selected_log_index) = s.selected_log_index {
-                                    if selected_log_index + 1 < logs.len() as u64 {
-                                        Some(selected_log_index + 1)
-                                    } else {
+                                    if selected_log_index == logs.len() as u64 - 2 {
                                         Some(logs.len() as u64 - 1)
+                                    } else {
+                                        s.selected_log_index
                                     }
                                 } else {
-                                    Some(0)
+                                    Some(logs.len() as u64 - 1)
                                 }
                             },
                             logs,
@@ -557,13 +557,13 @@ pub fn reducer(state: State, action: Action) -> State {
                             // Otherwise, keep the selected log.
                             selected_log_index: {
                                 if let Some(selected_log_index) = s.selected_log_index {
-                                    if selected_log_index + 1 < logs.len() as u64 {
-                                        Some(selected_log_index + 1)
-                                    } else {
+                                    if selected_log_index == logs.len() as u64 - 2 {
                                         Some(logs.len() as u64 - 1)
+                                    } else {
+                                        s.selected_log_index
                                     }
                                 } else {
-                                    Some(0)
+                                    Some(logs.len() as u64 - 1)
                                 }
                             },
                             logs,
