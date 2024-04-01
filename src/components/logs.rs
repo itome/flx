@@ -2,28 +2,84 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use color_eyre::owo_colors::OwoColorize;
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 use redux_rs::Selector;
+use tokio::sync::mpsc::UnboundedSender;
 
+use crate::redux::action::Action;
+use crate::redux::selector::current_session::CurrentSessionSelector;
 use crate::redux::selector::current_session_logs::CurrentSessionLogsSelector;
 use crate::redux::state::{DevTools, Focus, Home, SessionLog, State};
+use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{eyre, Result};
 use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 
 #[derive(Default)]
-pub struct LogsComponent {}
+pub struct LogsComponent {
+    action_tx: Option<UnboundedSender<ActionOrThunk>>,
+}
 
 impl LogsComponent {
     pub fn new() -> Self {
         Self::default()
     }
+
+    fn next(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::NextLog.into())?;
+        Ok(())
+    }
+
+    fn previous(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::PreviousLog.into())?;
+        Ok(())
+    }
+
+    fn chunk_string(text: &str, n: usize) -> String {
+        text.chars()
+            .enumerate()
+            .flat_map(|(i, c)| {
+                if i != 0 && i % n == 0 {
+                    Some(' ')
+                } else {
+                    None
+                }
+                .into_iter()
+                .chain(std::iter::once(c))
+            })
+            .collect::<String>()
+    }
 }
 
 impl Component for LogsComponent {
+    fn register_action_handler(&mut self, tx: UnboundedSender<ActionOrThunk>) -> Result<()> {
+        self.action_tx = Some(tx);
+        Ok(())
+    }
+
+    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+        if state.focus != Focus::DevTools(DevTools::App) || state.popup.is_some() {
+            return Ok(());
+        }
+
+        match key.code {
+            KeyCode::Up | KeyCode::Char('k') => self.previous()?,
+            KeyCode::Down | KeyCode::Char('j') => self.next()?,
+            _ => {}
+        }
+        Ok(())
+    }
+
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let block = Block::default()
             .title("Logs")
@@ -32,13 +88,42 @@ impl Component for LogsComponent {
             .border_type(BorderType::Rounded)
             .border_style(Style::default());
 
-        let items = CurrentSessionLogsSelector
+        let Some(session) = CurrentSessionSelector.select(state) else {
+            f.render_widget(block, area);
+            return;
+        };
+        let selected_index = session.selected_log_index.unwrap_or(0) as usize;
+        let mut list_state = ListState::default().with_selected(Some(selected_index));
+        let should_wrap_text = state.focus == Focus::DevTools(DevTools::App);
+        let log_width = area.width as usize - 4;
+
+        let lines = CurrentSessionLogsSelector
             .select(state)
             .iter()
             .map(|log| match log {
-                SessionLog::Stdout(line) => ListItem::new(line.clone()),
+                SessionLog::Stdout(line) => {
+                    if should_wrap_text {
+                        let lines = textwrap::wrap(&line, log_width)
+                            .iter()
+                            .map(|line| Line::raw(line.to_string()))
+                            .collect::<Vec<_>>();
+                        let text = Text::from(lines);
+                        ListItem::new(text)
+                    } else {
+                        ListItem::new(line.clone())
+                    }
+                }
                 SessionLog::Stderr(line) => {
-                    ListItem::new(line.clone()).style(Style::default().fg(Color::Red))
+                    if should_wrap_text {
+                        let lines = textwrap::wrap(&line, log_width)
+                            .iter()
+                            .map(|line| Line::raw(line.to_string()))
+                            .collect::<Vec<_>>();
+                        let text = Text::from(lines);
+                        ListItem::new(text)
+                    } else {
+                        ListItem::new(line.clone())
+                    }
                 }
                 SessionLog::Progress {
                     id,
@@ -47,11 +132,21 @@ impl Component for LogsComponent {
                     end_at,
                 } => {
                     if let Some(end_at) = end_at {
-                        ListItem::new(format!(
-                            "{} ({}ms)",
-                            message.clone().unwrap_or("".to_string()),
-                            end_at - start_at
-                        ))
+                        if should_wrap_text {
+                            let text = format!(
+                                "{} ({}ms)",
+                                message.clone().unwrap_or("".to_string()),
+                                end_at - start_at
+                            );
+                            let lines = textwrap::wrap(&text, log_width)
+                                .iter()
+                                .map(|line| Line::raw(line.to_string()))
+                                .collect::<Vec<_>>();
+                            let text = Text::from(lines);
+                            ListItem::new(text)
+                        } else {
+                            ListItem::new(message.clone().unwrap_or("".to_string()))
+                        }
                     } else {
                         ListItem::new(message.clone().unwrap_or("".to_string()))
                     }
@@ -59,8 +154,26 @@ impl Component for LogsComponent {
             })
             .collect::<Vec<_>>();
 
-        let list = List::new(items).block(block);
+        let mut scrollbar_state = ScrollbarState::new((&lines).len()).position(selected_index);
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
 
-        f.render_widget(list, area);
+        let list = List::new(lines)
+            .block(block)
+            .highlight_style(if state.focus == Focus::DevTools(DevTools::App) {
+                Style::default().bg(Color::DarkGray)
+            } else {
+                Style::default()
+            })
+            .highlight_spacing(HighlightSpacing::Never);
+
+        f.render_stateful_widget(list, area, &mut list_state);
+        f.render_stateful_widget(
+            scrollbar,
+            area.inner(&Margin {
+                vertical: 1,
+                horizontal: 0,
+            }),
+            &mut scrollbar_state,
+        );
     }
 }
