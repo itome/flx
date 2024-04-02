@@ -111,6 +111,13 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::UnregisterSession { session_id } => State {
             session_id: None,
+            focus: {
+                if Some(session_id.clone()) == state.session_id {
+                    Focus::Home(Home::Runners)
+                } else {
+                    state.focus
+                }
+            },
             sessions: state
                 .sessions
                 .into_iter()
