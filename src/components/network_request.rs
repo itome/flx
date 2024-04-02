@@ -368,7 +368,14 @@ impl NetworkRequestComponent {
             .highlight_style(Style::default().bg(Color::DarkGray))
             .highlight_spacing(HighlightSpacing::Never);
 
-        f.render_stateful_widget(list, area, &mut self.payload_list_state);
+        f.render_stateful_widget(
+            list,
+            area.inner(&Margin {
+                vertical: 0,
+                horizontal: 1,
+            }),
+            &mut self.payload_list_state,
+        );
         f.render_stateful_widget(scrollbar, scrollbar_area, &mut scrollbar_state);
     }
 
@@ -403,7 +410,14 @@ impl NetworkRequestComponent {
         let list = List::new(items)
             .highlight_style(Style::default().bg(Color::DarkGray))
             .highlight_spacing(HighlightSpacing::Never);
-        f.render_stateful_widget(list, area, &mut self.response_list_state);
+        f.render_stateful_widget(
+            list,
+            area.inner(&Margin {
+                vertical: 0,
+                horizontal: 1,
+            }),
+            &mut self.response_list_state,
+        );
         f.render_stateful_widget(scrollbar, scrollbar_area, &mut scrollbar_state);
     }
 
@@ -425,9 +439,10 @@ impl NetworkRequestComponent {
         for event in events {
             rows.push(Row::new(vec![
                 Cell::new(format!("  {}", event.event)),
-                Cell::new(Self::format_duration(Duration::from_micros(
-                    (event.timestamp - start) as u64,
-                ))),
+                Cell::new(format!(
+                    "{: >7}",
+                    Self::format_duration(Duration::from_micros((event.timestamp - start) as u64,))
+                )),
             ]));
             start = event.timestamp;
         }
