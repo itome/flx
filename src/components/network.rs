@@ -142,8 +142,16 @@ impl Component for NetworkComponent {
                 "DELETE" => Color::Red,
                 _ => Color::White,
             };
-            let time = match request.end_time {
-                Some(end) => Duration::from_micros((end - request.start_time).unsigned_abs()),
+            let time = match request
+                .request
+                .clone()
+                .map(|r| r.events)
+                .unwrap_or_default()
+                .last()
+            {
+                Some(last_event) => Duration::from_micros(
+                    (last_event.timestamp - request.start_time).unsigned_abs(),
+                ),
                 _ => std::time::Duration::default(),
             };
             let cells = vec![

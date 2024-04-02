@@ -267,13 +267,23 @@ impl NetworkRequestComponent {
             .collect::<Vec<(String, String)>>()
     }
 
+    fn format_duration(duration: Duration) -> String {
+        if duration.as_millis() < 1000 {
+            format!("{}ms", duration.as_millis())
+        } else {
+            format!(
+                "{:.1}s",
+                duration.as_secs() as f64 + duration.as_millis() as f64 / 1000.0
+            )
+        }
+    }
+
     fn draw_headers(
         &mut self,
         f: &mut Frame<'_>,
         area: Rect,
         scrollbar_area: Rect,
         request: &HttpProfileRequestRef,
-        selected: bool,
     ) {
         let general = Self::format_general(request);
         let request_headers = Self::format_headers(
@@ -332,7 +342,6 @@ impl NetworkRequestComponent {
         area: Rect,
         scrollbar_area: Rect,
         request: &Option<&HttpProfileRequest>,
-        selected: bool,
     ) {
         let Some(request) = request else {
             return;
@@ -369,7 +378,6 @@ impl NetworkRequestComponent {
         area: Rect,
         scrollbar_area: Rect,
         request: &Option<&HttpProfileRequest>,
-        selected: bool,
     ) {
         let Some(request) = request else {
             return;
@@ -404,9 +412,40 @@ impl NetworkRequestComponent {
         f: &mut Frame<'_>,
         area: Rect,
         scrollbar_area: Rect,
-        state: &HttpProfileRequestRef,
-        selected: bool,
+        request: &HttpProfileRequestRef,
     ) {
+        let events = request
+            .request
+            .clone()
+            .map(|r| r.events)
+            .unwrap_or_default();
+
+        let mut rows: Vec<Row> = vec![];
+        let mut start = request.start_time;
+        for event in events {
+            rows.push(Row::new(vec![
+                Cell::new(format!("  {}", event.event)),
+                Cell::new(Self::format_duration(Duration::from_micros(
+                    (event.timestamp - start) as u64,
+                ))),
+            ]));
+            start = event.timestamp;
+        }
+        if let Some(end_time) = request.end_time {
+            rows.push(Row::new(vec![
+                Cell::new("  Total"),
+                Cell::new(format!(
+                    "{: >7}",
+                    Self::format_duration(Duration::from_micros(
+                        (end_time - request.start_time) as u64,
+                    ))
+                )),
+            ]));
+        }
+        let widths = [Constraint::Fill(1), Constraint::Fill(3)];
+        let list = Table::new(rows, widths);
+
+        f.render_widget(list, area);
     }
 }
 
@@ -524,7 +563,6 @@ impl Component for NetworkRequestComponent {
                     horizontal: 0,
                 }),
                 &network_request,
-                state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
             Tab::Payload => self.draw_payload(
                 f,
@@ -534,7 +572,6 @@ impl Component for NetworkRequestComponent {
                     horizontal: 0,
                 }),
                 &full_request,
-                state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
             Tab::Response => self.draw_response(
                 f,
@@ -544,7 +581,6 @@ impl Component for NetworkRequestComponent {
                     horizontal: 0,
                 }),
                 &full_request,
-                state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
             Tab::Timing => self.draw_timing(
                 f,
@@ -554,7 +590,6 @@ impl Component for NetworkRequestComponent {
                     horizontal: 0,
                 }),
                 &network_request,
-                state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
         }
     }
