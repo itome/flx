@@ -42,6 +42,14 @@ impl NetworkComponent {
         Ok(())
     }
 
+    fn enter_network_request(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::EnterNetworkRequest.into())?;
+        Ok(())
+    }
+
     fn format_duration(duration: Duration) -> String {
         if duration.as_millis() < 1000 {
             format!("{}ms", duration.as_millis())
@@ -68,6 +76,7 @@ impl Component for NetworkComponent {
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
+            KeyCode::Enter => self.enter_network_request()?,
             _ => {}
         }
         Ok(())
@@ -163,11 +172,15 @@ impl Component for NetworkComponent {
 
         let table = Table::new(rows, widths)
             .block(block)
-            .highlight_style(if state.focus == Focus::DevTools(DevTools::Network) {
-                Style::default().bg(Color::DarkGray)
-            } else {
-                Style::default()
-            })
+            .highlight_style(
+                if state.focus == Focus::DevTools(DevTools::Network)
+                    || state.focus == Focus::DevTools(DevTools::NetworkRequest)
+                {
+                    Style::default().bg(Color::DarkGray)
+                } else {
+                    Style::default()
+                },
+            )
             .highlight_spacing(HighlightSpacing::Never);
 
         f.render_stateful_widget(table, area, &mut table_state);

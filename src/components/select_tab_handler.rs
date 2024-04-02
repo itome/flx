@@ -86,7 +86,15 @@ impl Component for SelectTabControllerComponent {
             Focus::DevTools(_) => match key.code {
                 KeyCode::Left | KeyCode::Char('h') => self.previous_devtools_tab()?,
                 KeyCode::Right | KeyCode::Char('l') => self.next_devtools_tab()?,
-                KeyCode::Esc => self.exit_devtools()?,
+                KeyCode::Esc => match state.focus {
+                    Focus::DevTools(state::DevTools::App)
+                    | Focus::DevTools(state::DevTools::Inspector)
+                    | Focus::DevTools(state::DevTools::Performance)
+                    | Focus::DevTools(state::DevTools::Network) => {
+                        self.exit_devtools()?;
+                    }
+                    _ => {}
+                },
                 _ => {}
             },
         }

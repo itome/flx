@@ -22,6 +22,7 @@ use crate::components::frames::FramesComponent;
 use crate::components::inspector::InspectorComponent;
 use crate::components::logs::LogsComponent;
 use crate::components::network::NetworkComponent;
+use crate::components::network_request::NetworkRequestComponent;
 use crate::components::performance::PerformanceComponent;
 use crate::components::project::ProjectComponent;
 use crate::components::pubspec::PubspecComponent;
@@ -56,6 +57,7 @@ pub enum ComponentId {
     Frames,
     Logs,
     Network,
+    NetworkRequest,
     SelectTabController,
     SelectFlavorPopup,
     Pubspec,
@@ -135,6 +137,10 @@ impl App {
                 (
                     ComponentId::Inspector,
                     Box::new(InspectorComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::NetworkRequest,
+                    Box::new(NetworkRequestComponent::new()) as Box<dyn Component>,
                 ),
             ]),
             should_quit: false,
@@ -366,7 +372,8 @@ impl App {
                         Constraint::Fill(1),
                         Constraint::Length(2),
                     ],
-                    Focus::DevTools(DevTools::Network) => vec![
+                    Focus::DevTools(DevTools::Network)
+                    | Focus::DevTools(DevTools::NetworkRequest) => vec![
                         Constraint::Length(3),
                         Constraint::Length(2),
                         Constraint::Length(2),
@@ -411,6 +418,13 @@ impl App {
             } else if state.focus == Focus::DevTools(DevTools::App) {
                 self.components
                     .get_mut(&ComponentId::Logs)
+                    .unwrap()
+                    .draw(f, layout[1], state);
+            } else if state.focus == Focus::DevTools(DevTools::Network)
+                || state.focus == Focus::DevTools(DevTools::NetworkRequest)
+            {
+                self.components
+                    .get_mut(&ComponentId::NetworkRequest)
                     .unwrap()
                     .draw(f, layout[1], state);
             }

@@ -2,7 +2,7 @@ use std::time::Duration;
 use std::{collections::HashMap, time::SystemTime};
 
 use daemon::io::{device::Device, event::AppMode};
-use devtools::protocols::io_extension::HttpProfileRequestRef;
+use devtools::protocols::io_extension::{HttpProfileRequest, HttpProfileRequestRef};
 
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum Home {
@@ -26,6 +26,7 @@ pub enum DevTools {
     Performance,
     Inspector,
     Network,
+    NetworkRequest,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -75,6 +76,7 @@ pub struct SessionState {
     pub logs: Vec<SessionLog>,
     pub frames: Vec<FlutterFrame>,
     pub requests: Vec<HttpProfileRequestRef>,
+    pub full_requests: HashMap<String, HttpProfileRequest>,
     pub selected_log_index: Option<u64>,
     pub selected_frame_number: Option<u64>,
     pub selected_request_id: Option<String>,

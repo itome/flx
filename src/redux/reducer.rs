@@ -644,6 +644,8 @@ pub fn reducer(state: State, action: Action) -> State {
                                     Some(selected_request_id) => {
                                         if s.requests.last().map(|r| r.id.clone())
                                             == Some(selected_request_id.clone())
+                                            && state.focus
+                                                != Focus::DevTools(DevTools::NetworkRequest)
                                         {
                                             requests.last().map(|r| r.id.clone())
                                         } else {
@@ -867,6 +869,14 @@ pub fn reducer(state: State, action: Action) -> State {
                     }
                 })
                 .collect(),
+            ..state
+        },
+        Action::EnterNetworkRequest => State {
+            focus: Focus::DevTools(DevTools::NetworkRequest),
+            ..state
+        },
+        Action::ExitNetworkRequest => State {
+            focus: Focus::DevTools(DevTools::Network),
             ..state
         },
     }

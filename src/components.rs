@@ -15,6 +15,7 @@ pub mod frames;
 pub mod inspector;
 pub mod logs;
 pub mod network;
+pub mod network_request;
 pub mod performance;
 pub mod project;
 pub mod pubspec;

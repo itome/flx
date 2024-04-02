@@ -128,4 +128,7 @@ pub enum Action {
 
     NextReqest,
     PreviousRequest,
+
+    EnterNetworkRequest,
+    ExitNetworkRequest,
 }
