@@ -23,18 +23,15 @@ use url::Url;
 use super::Component;
 
 #[derive(PartialEq)]
+#[derive(Default)]
 enum Tab {
+    #[default]
     Headers,
     Payload,
     Response,
     Timing,
 }
 
-impl Default for Tab {
-    fn default() -> Self {
-        Tab::Headers
-    }
-}
 
 #[derive(Default)]
 pub struct NetworkRequestComponent {
@@ -129,7 +126,7 @@ impl NetworkRequestComponent {
         let Ok(body) = String::from_utf8(body) else {
             return;
         };
-        let length = body.split("\n").collect::<Vec<_>>().len();
+        let length = body.split('\n').collect::<Vec<_>>().len();
         self.payload_list_state.select(Some(
             self.payload_list_state
                 .selected()
@@ -163,7 +160,7 @@ impl NetworkRequestComponent {
         let Ok(body) = String::from_utf8(body) else {
             return;
         };
-        let length = body.split("\n").collect::<Vec<_>>().len();
+        let length = body.split('\n').collect::<Vec<_>>().len();
         self.response_list_state.select(Some(
             self.response_list_state
                 .selected()
@@ -358,8 +355,8 @@ impl NetworkRequestComponent {
             return;
         };
         let items = body
-            .split("\n")
-            .map(|l| ListItem::new(l))
+            .split('\n')
+            .map(ListItem::new)
             .collect::<Vec<_>>();
         let mut scrollbar_state = ScrollbarState::new(items.len())
             .position(self.payload_list_state.selected().unwrap_or(0));
@@ -401,8 +398,8 @@ impl NetworkRequestComponent {
             return;
         };
         let items = body
-            .split("\n")
-            .map(|l| ListItem::new(l))
+            .split('\n')
+            .map(ListItem::new)
             .collect::<Vec<_>>();
         let mut scrollbar_state = ScrollbarState::new(items.len())
             .position(self.response_list_state.selected().unwrap_or(0));
@@ -577,7 +574,7 @@ impl Component for NetworkRequestComponent {
                     vertical: 1,
                     horizontal: 0,
                 }),
-                &network_request,
+                network_request,
             ),
             Tab::Payload => self.draw_payload(
                 f,
@@ -604,7 +601,7 @@ impl Component for NetworkRequestComponent {
                     vertical: 1,
                     horizontal: 0,
                 }),
-                &network_request,
+                network_request,
             ),
         }
     }
