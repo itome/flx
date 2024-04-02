@@ -192,6 +192,8 @@ impl NetworkRequestComponent {
     fn exit_network_request(&mut self) -> Result<()> {
         self.selected_tab = Tab::Headers;
         self.headers_table_state.select(None);
+        self.payload_list_state.select(None);
+        self.response_list_state.select(None);
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
