@@ -22,8 +22,7 @@ use url::Url;
 
 use super::Component;
 
-#[derive(PartialEq)]
-#[derive(Default)]
+#[derive(PartialEq, Default)]
 enum Tab {
     #[default]
     Headers,
@@ -31,7 +30,6 @@ enum Tab {
     Response,
     Timing,
 }
-
 
 #[derive(Default)]
 pub struct NetworkRequestComponent {
@@ -354,10 +352,7 @@ impl NetworkRequestComponent {
         let Ok(body) = String::from_utf8(body) else {
             return;
         };
-        let items = body
-            .split('\n')
-            .map(ListItem::new)
-            .collect::<Vec<_>>();
+        let items = body.split('\n').map(ListItem::new).collect::<Vec<_>>();
         let mut scrollbar_state = ScrollbarState::new(items.len())
             .position(self.payload_list_state.selected().unwrap_or(0));
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
@@ -397,10 +392,7 @@ impl NetworkRequestComponent {
         let Ok(body) = String::from_utf8(body) else {
             return;
         };
-        let items = body
-            .split('\n')
-            .map(ListItem::new)
-            .collect::<Vec<_>>();
+        let items = body.split('\n').map(ListItem::new).collect::<Vec<_>>();
         let mut scrollbar_state = ScrollbarState::new(items.len())
             .position(self.response_list_state.selected().unwrap_or(0));
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
@@ -443,13 +435,19 @@ impl NetworkRequestComponent {
             ]));
             start = event.timestamp;
         }
-        if let Some(end_time) = request.end_time {
+        if let Some(last_event) = request
+            .request
+            .clone()
+            .map(|r| r.events)
+            .unwrap_or_default()
+            .last()
+        {
             rows.push(Row::new(vec![
                 Cell::new("  Total"),
                 Cell::new(format!(
                     "{: >7}",
                     Self::format_duration(Duration::from_micros(
-                        (end_time - request.start_time) as u64,
+                        (last_event.timestamp - request.start_time) as u64,
                     ))
                 )),
             ]));
