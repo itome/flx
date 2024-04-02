@@ -141,8 +141,8 @@ pub struct HttpProfileRequest {
     pub end_time: Option<i64>,
     pub request: Option<HttpProfileRequestData>,
     pub response: Option<HttpProfileResponseData>,
-    pub request_body: Option<Vec<i64>>,
-    pub response_body: Option<Vec<i64>>,
+    pub request_body: Option<Vec<u8>>,
+    pub response_body: Option<Vec<u8>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
