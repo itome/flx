@@ -664,6 +664,27 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::AppendHttpProfileFullRequest {
+            session_id,
+            request,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|mut s| {
+                    if s.id == session_id {
+                        s.full_requests.insert(request.id.clone(), request.clone());
+                        SessionState {
+                            full_requests: s.full_requests,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
         Action::SetDisplayRefreshRate { session_id, rate } => State {
             sessions: state
                 .sessions

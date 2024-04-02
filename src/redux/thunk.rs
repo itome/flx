@@ -9,6 +9,7 @@ use super::{action::Action, state::State};
 pub mod context;
 pub mod hot_reload;
 pub mod hot_restart;
+pub mod load_full_request;
 pub mod load_supported_platforms;
 pub mod run_new_app;
 pub mod run_new_vm_service;
@@ -21,6 +22,7 @@ pub mod watch_requests;
 pub enum ThunkAction {
     WatchDevices,
     LoadSupportedPlatforms,
+    LoadFullRequest,
     RunNewApp { use_fvm: bool },
     HotReload,
     HotRestart,
@@ -38,6 +40,9 @@ where
         ThunkAction::WatchDevices => Box::new(watch_devices::WatchDevicesThunk::new(context)),
         ThunkAction::RunNewApp { use_fvm } => {
             Box::new(run_new_app::RunNewAppThunk::new(context, use_fvm))
+        }
+        ThunkAction::LoadFullRequest => {
+            Box::new(load_full_request::LoadFullRequestThunk::new(context))
         }
         ThunkAction::HotReload => Box::new(hot_reload::HotReloadThunk::new(context)),
         ThunkAction::HotRestart => Box::new(hot_restart::HotRestartThunk::new(context)),

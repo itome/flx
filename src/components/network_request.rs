@@ -1,6 +1,7 @@
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::CurrentSessionSelector;
 use crate::redux::state::{DevTools, Focus, Home, State};
+use crate::redux::thunk::ThunkAction;
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
 use color_eyre::eyre::{eyre, Result};
@@ -21,6 +22,7 @@ use url::Url;
 
 use super::Component;
 
+#[derive(PartialEq)]
 enum Tab {
     Headers,
     Payload,
@@ -38,6 +40,8 @@ impl Default for Tab {
 pub struct NetworkRequestComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
     headers_table_state: TableState,
+    payload_list_state: ListState,
+    response_list_state: ListState,
     selected_tab: Tab,
 }
 
@@ -107,6 +111,82 @@ impl NetworkRequestComponent {
                 .map(|i| i.saturating_sub(1))
                 .unwrap_or_default(),
         ));
+    }
+
+    fn next_payload(&mut self, state: &State) {
+        let Some(session) = CurrentSessionSelector.select(state) else {
+            return;
+        };
+        let Some(selected_request_id) = session.selected_request_id.clone() else {
+            return;
+        };
+        let Some(request) = session.full_requests.get(&selected_request_id) else {
+            return;
+        };
+        let Some(body) = request.request_body.clone() else {
+            return;
+        };
+        let Ok(body) = String::from_utf8(body) else {
+            return;
+        };
+        let length = body.split("\n").collect::<Vec<_>>().len();
+        self.payload_list_state.select(Some(
+            self.payload_list_state
+                .selected()
+                .map(|i| if i + 1 < length { i + 1 } else { i })
+                .unwrap_or_default(),
+        ));
+    }
+
+    fn previous_payload(&mut self) {
+        self.payload_list_state.select(Some(
+            self.payload_list_state
+                .selected()
+                .map(|i| i.saturating_sub(1))
+                .unwrap_or_default(),
+        ));
+    }
+
+    fn next_response(&mut self, state: &State) {
+        let Some(session) = CurrentSessionSelector.select(state) else {
+            return;
+        };
+        let Some(selected_request_id) = session.selected_request_id.clone() else {
+            return;
+        };
+        let Some(request) = session.full_requests.get(&selected_request_id) else {
+            return;
+        };
+        let Some(body) = request.response_body.clone() else {
+            return;
+        };
+        let Ok(body) = String::from_utf8(body) else {
+            return;
+        };
+        let length = body.split("\n").collect::<Vec<_>>().len();
+        self.response_list_state.select(Some(
+            self.response_list_state
+                .selected()
+                .map(|i| if i + 1 < length { i + 1 } else { i })
+                .unwrap_or_default(),
+        ));
+    }
+
+    fn previous_response(&mut self) {
+        self.response_list_state.select(Some(
+            self.response_list_state
+                .selected()
+                .map(|i| i.saturating_sub(1))
+                .unwrap_or_default(),
+        ));
+    }
+
+    fn load_full_request(&mut self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::LoadFullRequest.into())?;
+        Ok(())
     }
 
     fn exit_network_request(&mut self) -> Result<()> {
@@ -189,6 +269,7 @@ impl NetworkRequestComponent {
         &mut self,
         f: &mut Frame<'_>,
         area: Rect,
+        scrollbar_area: Rect,
         request: &HttpProfileRequestRef,
         selected: bool,
     ) {
@@ -230,36 +311,97 @@ impl NetworkRequestComponent {
                 rows.push(Row::new(vec![Cell::new(format!("   {}", k)), Cell::new(v)]));
             }
         }
+
+        let mut scrollbar_state = ScrollbarState::new(rows.len())
+            .position(self.headers_table_state.selected().unwrap_or(0));
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         let widths = [Constraint::Fill(1), Constraint::Fill(3)];
         let list = Table::new(rows, widths)
             .highlight_spacing(HighlightSpacing::Never)
             .highlight_style(Style::default().bg(Color::DarkGray));
 
         f.render_stateful_widget(list, area, &mut self.headers_table_state);
+        f.render_stateful_widget(scrollbar, scrollbar_area, &mut scrollbar_state);
     }
 
     fn draw_payload(
         &mut self,
         f: &mut Frame<'_>,
         area: Rect,
-        state: &Option<&HttpProfileRequest>,
+        scrollbar_area: Rect,
+        request: &Option<&HttpProfileRequest>,
         selected: bool,
     ) {
+        let Some(request) = request else {
+            return;
+        };
+        let Some(body) = request.request_body.clone() else {
+            f.render_widget(Text::raw(" No request body "), area);
+            return;
+        };
+        if body.is_empty() {
+            f.render_widget(Text::raw(" No request body "), area);
+            return;
+        }
+        let Ok(body) = String::from_utf8(body) else {
+            return;
+        };
+        let items = body
+            .split("\n")
+            .map(|l| ListItem::new(l))
+            .collect::<Vec<_>>();
+        let mut scrollbar_state = ScrollbarState::new(items.len())
+            .position(self.payload_list_state.selected().unwrap_or(0));
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
+        let list = List::new(items)
+            .highlight_style(Style::default().bg(Color::DarkGray))
+            .highlight_spacing(HighlightSpacing::Never);
+
+        f.render_stateful_widget(list, area, &mut self.payload_list_state);
+        f.render_stateful_widget(scrollbar, scrollbar_area, &mut scrollbar_state);
     }
 
     fn draw_response(
         &mut self,
         f: &mut Frame<'_>,
         area: Rect,
-        state: &Option<&HttpProfileRequest>,
+        scrollbar_area: Rect,
+        request: &Option<&HttpProfileRequest>,
         selected: bool,
     ) {
+        let Some(request) = request else {
+            return;
+        };
+        let Some(body) = request.response_body.clone() else {
+            f.render_widget(Text::raw(" No response body "), area);
+            return;
+        };
+        if body.is_empty() {
+            f.render_widget(Text::raw(" No response body "), area);
+            return;
+        }
+        let Ok(body) = String::from_utf8(body) else {
+            return;
+        };
+        let items = body
+            .split("\n")
+            .map(|l| ListItem::new(l))
+            .collect::<Vec<_>>();
+        let mut scrollbar_state = ScrollbarState::new(items.len())
+            .position(self.response_list_state.selected().unwrap_or(0));
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
+        let list = List::new(items)
+            .highlight_style(Style::default().bg(Color::DarkGray))
+            .highlight_spacing(HighlightSpacing::Never);
+        f.render_stateful_widget(list, area, &mut self.response_list_state);
+        f.render_stateful_widget(scrollbar, scrollbar_area, &mut scrollbar_state);
     }
 
     fn draw_timing(
         &mut self,
         f: &mut Frame<'_>,
         area: Rect,
+        scrollbar_area: Rect,
         state: &HttpProfileRequestRef,
         selected: bool,
     ) {
@@ -288,7 +430,20 @@ impl Component for NetworkRequestComponent {
                 KeyCode::Down | KeyCode::Char('j') => self.next_headers(state),
                 _ => {}
             },
+            Tab::Payload => match key.code {
+                KeyCode::Up | KeyCode::Char('k') => self.previous_payload(),
+                KeyCode::Down | KeyCode::Char('j') => self.next_payload(state),
+                _ => {}
+            },
+            Tab::Response => match key.code {
+                KeyCode::Up | KeyCode::Char('k') => self.previous_response(),
+                KeyCode::Down | KeyCode::Char('j') => self.next_response(state),
+                _ => {}
+            },
             _ => {}
+        }
+        if self.selected_tab == Tab::Payload || self.selected_tab == Tab::Response {
+            self.load_full_request()?;
         }
         Ok(())
     }
@@ -362,24 +517,40 @@ impl Component for NetworkRequestComponent {
             Tab::Headers => self.draw_headers(
                 f,
                 layout[2],
+                area.inner(&Margin {
+                    vertical: 1,
+                    horizontal: 0,
+                }),
                 &network_request,
                 state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
             Tab::Payload => self.draw_payload(
                 f,
                 layout[2],
+                area.inner(&Margin {
+                    vertical: 1,
+                    horizontal: 0,
+                }),
                 &full_request,
                 state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
             Tab::Response => self.draw_response(
                 f,
                 layout[2],
+                area.inner(&Margin {
+                    vertical: 1,
+                    horizontal: 0,
+                }),
                 &full_request,
                 state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
             Tab::Timing => self.draw_timing(
                 f,
                 layout[2],
+                area.inner(&Margin {
+                    vertical: 1,
+                    horizontal: 0,
+                }),
                 &network_request,
                 state.focus == Focus::DevTools(DevTools::NetworkRequest) && state.popup.is_none(),
             ),
