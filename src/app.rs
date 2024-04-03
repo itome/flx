@@ -287,18 +287,6 @@ impl App {
                 .unwrap()
                 .draw(f, tab_layout[2], state);
 
-            let popup_area = centered_rect(60, 20, f.size());
-            self.components
-                .get_mut(&ComponentId::SelectDevicePopup)
-                .unwrap()
-                .draw(f, popup_area, state);
-
-            let popup_area = centered_rect(60, 40, f.size());
-            self.components
-                .get_mut(&ComponentId::SelectFlavorPopup)
-                .unwrap()
-                .draw(f, popup_area, state);
-
             if state.focus == Focus::Home(Home::Runners) {
                 if let Some(session) = current_session_selector(state) {
                     if !session.started {
@@ -347,6 +335,18 @@ impl App {
                     .unwrap()
                     .draw(f, layout[1], state);
             }
+
+            let popup_area = centered_rect(60, 20, f.size());
+            self.components
+                .get_mut(&ComponentId::SelectDevicePopup)
+                .unwrap()
+                .draw(f, popup_area, state);
+
+            let popup_area = centered_rect(60, 40, f.size());
+            self.components
+                .get_mut(&ComponentId::SelectFlavorPopup)
+                .unwrap()
+                .draw(f, popup_area, state);
         })?;
         Ok(())
     }

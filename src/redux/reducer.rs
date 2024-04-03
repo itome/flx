@@ -295,13 +295,19 @@ pub fn reducer(state: State, action: Action) -> State {
             popup: None,
             ..state
         },
-        Action::ShowSelectFlavorPopUp => State {
-            popup: Some(PopUp::SelectDevice),
-            select_flavor_popup: SelectFlavorPopupState {
-                selected_flavor: None,
-            },
-            ..state
-        },
+        Action::ShowSelectFlavorPopUp => {
+            let Some(selected_device) = selected_device_selector(&state) else {
+                return state;
+            };
+            let flavors = state.flavors.get(&selected_device.platform);
+            State {
+                popup: Some(PopUp::SelectFlavor),
+                select_flavor_popup: SelectFlavorPopupState {
+                    selected_flavor: flavors.map(|f| f.first().cloned()).flatten(),
+                },
+                ..state
+            }
+        }
         Action::HideSelectFlavorPopUp => State {
             focus: Focus::Home(Home::Runners),
             ..state
