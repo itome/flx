@@ -137,7 +137,7 @@ impl Component for SelectDevicePopupComponent {
                             .add_modifier(Modifier::BOLD);
                     }
                 }
-                return item;
+                item
             })
             .collect::<Vec<_>>();
 

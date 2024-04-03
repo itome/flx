@@ -19,7 +19,7 @@ pub fn reducer(state: State, action: Action) -> State {
                 devices: [state.devices, vec![device.clone()]].concat(),
                 ..state
             };
-            let first_device = available_devices_selector(&new_state).nth(0);
+            let first_device = available_devices_selector(&new_state).next();
 
             if new_state.popup == Some(PopUp::SelectDevice)
                 && new_state.select_device_popup.selected_device_id.is_none()
@@ -282,7 +282,7 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::ShowSelectDevicePopUp => {
-            let first_available_device = available_devices_selector(&state).nth(0);
+            let first_available_device = available_devices_selector(&state).next();
             State {
                 popup: Some(PopUp::SelectDevice),
                 select_device_popup: SelectDevicePopupState {
@@ -303,7 +303,7 @@ pub fn reducer(state: State, action: Action) -> State {
             State {
                 popup: Some(PopUp::SelectFlavor),
                 select_flavor_popup: SelectFlavorPopupState {
-                    selected_flavor: flavors.map(|f| f.first().cloned()).flatten(),
+                    selected_flavor: flavors.and_then(|f| f.first().cloned()),
                 },
                 ..state
             }
