@@ -7,7 +7,6 @@ use redux_rs::Selector;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::redux::action::Action;
-use crate::redux::selector::current_session::CurrentSessionSelector;
 use crate::redux::state::{DevTools, Focus, Home, State};
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;

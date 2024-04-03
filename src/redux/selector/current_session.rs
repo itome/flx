@@ -1,20 +1,13 @@
-use redux_rs::Selector;
-
 use crate::redux::state::{SessionLog, SessionState, State};
 
-use daemon::io::device::Device;
-
-pub struct CurrentSessionSelector;
-
-impl Selector<State> for CurrentSessionSelector {
-    type Result = Option<SessionState>;
-
-    fn select(&self, state: &State) -> Self::Result {
-        let session_id = state.session_id.clone()?;
-        state
-            .sessions
-            .clone()
-            .into_iter()
-            .find(|session| session.id == session_id)
+pub fn current_session_selector(state: &State) -> Option<&SessionState> {
+    if let Some(session_id) = &state.session_id {
+        state.sessions.iter().find(|s| &s.id == session_id)
+    } else {
+        None
     }
+}
+
+pub fn current_session_selector_cloned(state: &State) -> Option<SessionState> {
+    current_session_selector(state).cloned()
 }

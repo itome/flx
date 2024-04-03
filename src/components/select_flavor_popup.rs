@@ -8,7 +8,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::action::TuiAction;
 use crate::redux::action::Action;
-use crate::redux::selector::availale_devices::AvailableDevicesSelector;
+use crate::redux::selector::selected_device::selected_device_selector;
 use crate::redux::state::{Home, PopUp, State};
 use crate::redux::thunk::ThunkAction;
 use crate::redux::ActionOrThunk;
@@ -85,7 +85,7 @@ impl Component for SelectFlavorPopupComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         if state.popup != Some(PopUp::SelectFlavor) {
             return Ok(());
         }
@@ -113,11 +113,10 @@ impl Component for SelectFlavorPopupComponent {
 
         f.render_widget(Clear, area);
 
-        let selected_device_platform = &state
-            .select_device_popup
-            .selected_device_platform()
+        let selected_device_platform = selected_device_selector(state)
+            .map(|d| d.platform.clone())
             .unwrap_or("".to_string());
-        let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+        let Some(flavors) = &state.flavors.get(&selected_device_platform) else {
             return;
         };
 

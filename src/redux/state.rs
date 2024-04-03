@@ -85,13 +85,7 @@ pub struct SessionState {
 
 #[derive(Default, Clone, PartialEq, Eq)]
 pub struct SelectDevicePopupState {
-    pub selected_device: Option<Device>,
-}
-
-impl SelectDevicePopupState {
-    pub fn selected_device_platform(&self) -> Option<String> {
-        Some(self.selected_device.clone()?.platform)
-    }
+    pub selected_device_id: Option<String>,
 }
 
 #[derive(Default, Clone, PartialEq)]

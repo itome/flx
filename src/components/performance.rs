@@ -7,7 +7,7 @@ use redux_rs::Selector;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::redux::action::Action;
-use crate::redux::selector::current_session::CurrentSessionSelector;
+use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{DevTools, Focus, Home, State};
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
@@ -59,7 +59,7 @@ impl Component for PerformanceComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         if state.focus != Focus::DevTools(DevTools::Performance) || state.popup.is_some() {
             return Ok(());
         }
@@ -86,7 +86,7 @@ impl Component for PerformanceComponent {
             .border_type(BorderType::Rounded)
             .borders(Borders::ALL);
 
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             f.render_widget(block, area);
             return;
         };

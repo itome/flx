@@ -35,10 +35,7 @@ where
 {
     async fn execute(&self, store: Arc<Api>) {
         let device_id = store
-            .select(|state: &State| {
-                let selected_device = state.select_device_popup.selected_device.clone()?;
-                Some(selected_device.id)
-            })
+            .select(|state: &State| state.select_device_popup.selected_device_id.clone())
             .await;
 
         let flavor = store

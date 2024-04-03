@@ -62,10 +62,10 @@ pub trait Component {
     /// # Returns
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
-    fn handle_events(&mut self, event: Option<Event>, state: &State) -> Result<()> {
+    fn handle_events(&mut self, event: &Event, state: &State) -> Result<()> {
         match event {
-            Some(Event::Key(key_event)) => self.handle_key_events(key_event, state)?,
-            Some(Event::Mouse(mouse_event)) => self.handle_mouse_events(mouse_event, state)?,
+            Event::Key(key_event) => self.handle_key_events(key_event, state)?,
+            Event::Mouse(mouse_event) => self.handle_mouse_events(mouse_event, state)?,
             _ => {}
         };
         Ok(())
@@ -80,7 +80,7 @@ pub trait Component {
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
     #[allow(unused_variables)]
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         Ok(())
     }
     /// Handle mouse events and produce actions if necessary.
@@ -93,7 +93,7 @@ pub trait Component {
     ///
     /// * `Result<Option<Action>>` - An action to be processed or none.
     #[allow(unused_variables)]
-    fn handle_mouse_events(&mut self, mouse: MouseEvent, state: &State) -> Result<()> {
+    fn handle_mouse_events(&mut self, mouse: &MouseEvent, state: &State) -> Result<()> {
         Ok(())
     }
     /// Update the state of the component based on a received action. (REQUIRED)

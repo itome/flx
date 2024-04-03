@@ -31,7 +31,7 @@ use crate::components::select_device_popup::SelectDevicePopupComponent;
 use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::redux::action::Action;
-use crate::redux::selector::current_session::CurrentSessionSelector;
+use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{
     DevTools, Focus, Home, SelectDevicePopupState, SelectFlavorPopupState, State,
 };
@@ -195,7 +195,7 @@ impl App {
                     _ => {}
                 }
                 for (_, component) in self.components.iter_mut() {
-                    component.handle_events(Some(e.clone()), &state)?;
+                    component.handle_events(&e, &state)?;
                 }
             }
 
@@ -300,7 +300,7 @@ impl App {
                 .draw(f, popup_area, state);
 
             if state.focus == Focus::Home(Home::Runners) {
-                if let Some(session) = CurrentSessionSelector.select(state) {
+                if let Some(session) = current_session_selector(state) {
                     if !session.started {
                         self.components
                             .get_mut(&ComponentId::Logs)

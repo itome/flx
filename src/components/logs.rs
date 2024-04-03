@@ -10,8 +10,8 @@ use redux_rs::Selector;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::redux::action::Action;
-use crate::redux::selector::current_session::CurrentSessionSelector;
-use crate::redux::selector::current_session_logs::CurrentSessionLogsSelector;
+use crate::redux::selector::current_session::current_session_selector;
+use crate::redux::selector::current_session_logs::current_session_logs_selector;
 use crate::redux::state::{DevTools, Focus, Home, SessionLog, State};
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
@@ -69,7 +69,7 @@ impl Component for LogsComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         if state.focus != Focus::DevTools(DevTools::App) || state.popup.is_some() {
             return Ok(());
         }
@@ -90,7 +90,7 @@ impl Component for LogsComponent {
             .border_type(BorderType::Rounded)
             .border_style(Style::default());
 
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             f.render_widget(block, area);
             return;
         };
@@ -99,65 +99,67 @@ impl Component for LogsComponent {
         let should_wrap_text = state.focus == Focus::DevTools(DevTools::App);
         let log_width = area.width as usize - 4;
 
-        let lines = CurrentSessionLogsSelector
-            .select(state)
-            .iter()
-            .map(|log| match log {
-                SessionLog::Stdout(line) => {
-                    if should_wrap_text {
-                        let lines = self
-                            .wrap_text(line, log_width)
-                            .iter()
-                            .map(|line| Line::raw(line.to_string()))
-                            .collect::<Vec<_>>();
-                        let text = Text::from(lines);
-                        ListItem::new(text)
-                    } else {
-                        ListItem::new(line.clone())
-                    }
-                }
-                SessionLog::Stderr(line) => {
-                    if should_wrap_text {
-                        let lines = self
-                            .wrap_text(line, log_width)
-                            .iter()
-                            .map(|line| Line::raw(line.to_string()))
-                            .collect::<Vec<_>>();
-                        let text = Text::from(lines);
-                        ListItem::new(text)
-                    } else {
-                        ListItem::new(line.clone())
-                    }
-                }
-                SessionLog::Progress {
-                    id,
-                    message,
-                    start_at,
-                    end_at,
-                } => {
-                    if let Some(end_at) = end_at {
+        let lines = match current_session_logs_selector(state) {
+            None => vec![],
+            Some(logs) => logs
+                .iter()
+                .map(|log| match log {
+                    SessionLog::Stdout(line) => {
                         if should_wrap_text {
-                            let text = format!(
-                                "{} ({}ms)",
-                                message.clone().unwrap_or("".to_string()),
-                                end_at - start_at
-                            );
                             let lines = self
-                                .wrap_text(&text, log_width)
+                                .wrap_text(line, log_width)
                                 .iter()
                                 .map(|line| Line::raw(line.to_string()))
                                 .collect::<Vec<_>>();
                             let text = Text::from(lines);
                             ListItem::new(text)
                         } else {
+                            ListItem::new(line.clone())
+                        }
+                    }
+                    SessionLog::Stderr(line) => {
+                        if should_wrap_text {
+                            let lines = self
+                                .wrap_text(line, log_width)
+                                .iter()
+                                .map(|line| Line::raw(line.to_string()))
+                                .collect::<Vec<_>>();
+                            let text = Text::from(lines);
+                            ListItem::new(text)
+                        } else {
+                            ListItem::new(line.clone())
+                        }
+                    }
+                    SessionLog::Progress {
+                        id,
+                        message,
+                        start_at,
+                        end_at,
+                    } => {
+                        if let Some(end_at) = end_at {
+                            if should_wrap_text {
+                                let text = format!(
+                                    "{} ({}ms)",
+                                    message.clone().unwrap_or("".to_string()),
+                                    end_at - start_at
+                                );
+                                let lines = self
+                                    .wrap_text(&text, log_width)
+                                    .iter()
+                                    .map(|line| Line::raw(line.to_string()))
+                                    .collect::<Vec<_>>();
+                                let text = Text::from(lines);
+                                ListItem::new(text)
+                            } else {
+                                ListItem::new(message.clone().unwrap_or("".to_string()))
+                            }
+                        } else {
                             ListItem::new(message.clone().unwrap_or("".to_string()))
                         }
-                    } else {
-                        ListItem::new(message.clone().unwrap_or("".to_string()))
                     }
-                }
-            })
-            .collect::<Vec<_>>();
+                })
+                .collect::<Vec<_>>(),
+        };
 
         let mut scrollbar_state = ScrollbarState::new(lines.len()).position(selected_index);
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);

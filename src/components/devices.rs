@@ -29,7 +29,6 @@ impl DevicesComponent {
 
 impl Component for DevicesComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let devices = state.devices.clone();
         let border_color = if state.focus == Focus::Home(Home::Devices) && state.popup.is_none() {
             Color::Green
         } else {
@@ -43,7 +42,8 @@ impl Component for DevicesComponent {
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(border_color));
 
-        let items: Vec<ListItem> = devices
+        let items: Vec<ListItem> = state
+            .devices
             .iter()
             .map(|d| ListItem::new(format!("{} ({})", d.name, d.platform)))
             .collect();

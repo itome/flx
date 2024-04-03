@@ -2,37 +2,37 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use redux_rs::Selector;
 
-use crate::redux::{
-    selector::availale_devices::AvailableDevicesSelector,
-    state::{Focus, PopUp, SelectDevicePopupState, SessionLog},
-};
+use crate::redux::state::{Focus, PopUp, SelectDevicePopupState, SessionLog};
 
 use super::{
     action::Action,
+    selector::{
+        availale_devices::available_devices_selector, selected_device::selected_device_selector,
+    },
     state::{DevTools, FlutterFrame, Home, SelectFlavorPopupState, SessionState, State},
 };
 
 pub fn reducer(state: State, action: Action) -> State {
     match action {
-        Action::AddDevice { device } => State {
-            devices: [state.devices, vec![device.clone()]].concat(),
-            select_device_popup: SelectDevicePopupState {
-                selected_device: {
-                    let is_supported = state.supported_platforms.contains(&device.platform_type)
-                        && state
-                            .sessions
-                            .iter()
-                            .all(|s| s.device_id != Some(device.id.clone()));
+        Action::AddDevice { device } => {
+            let mut new_state = State {
+                devices: [state.devices, vec![device.clone()]].concat(),
+                ..state
+            };
+            let first_device = available_devices_selector(&new_state).nth(0);
 
-                    if state.select_device_popup.selected_device.is_none() && is_supported {
-                        Some(device.to_owned())
-                    } else {
-                        state.select_device_popup.selected_device
-                    }
-                },
-            },
-            ..state
-        },
+            if new_state.popup == Some(PopUp::SelectDevice)
+                && new_state.select_device_popup.selected_device_id.is_none()
+            {
+                new_state = State {
+                    select_device_popup: SelectDevicePopupState {
+                        selected_device_id: first_device.map(|d| d.id.clone()),
+                    },
+                    ..new_state
+                };
+            }
+            new_state
+        }
         Action::RemoveDevice { device } => State {
             devices: state.devices.into_iter().filter(|d| d != &device).collect(),
             ..state
@@ -157,26 +157,26 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::NextDeviceForRunning => State {
             select_device_popup: SelectDevicePopupState {
-                selected_device: {
-                    let devices = AvailableDevicesSelector.select(&state);
-                    match state.select_device_popup.selected_device {
-                        Some(selected_device) => {
+                selected_device_id: {
+                    let devices = available_devices_selector(&state).collect::<Vec<_>>();
+                    match &state.select_device_popup.selected_device_id {
+                        Some(selected_device_id) => {
                             if let Some(index) =
-                                devices.iter().position(|d| d.id == selected_device.id)
+                                devices.iter().position(|d| &d.id == selected_device_id)
                             {
                                 let next_index = (index + 1) % devices.len();
-                                devices.get(next_index).map(|d| d.to_owned())
+                                devices.get(next_index).map(|d| d.id.clone())
                             } else if devices.is_empty() {
                                 None
                             } else {
-                                devices.first().map(|d| d.to_owned())
+                                devices.first().map(|d| d.id.clone())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.first().map(|d| d.to_owned())
+                                devices.first().map(|d| d.id.clone())
                             }
                         }
                     }
@@ -186,26 +186,26 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::PreviousDeviceForRunning => State {
             select_device_popup: SelectDevicePopupState {
-                selected_device: {
-                    let devices = AvailableDevicesSelector.select(&state);
-                    match state.select_device_popup.selected_device {
-                        Some(selected_device) => {
+                selected_device_id: {
+                    let devices = available_devices_selector(&state).collect::<Vec<_>>();
+                    match &state.select_device_popup.selected_device_id {
+                        Some(selected_device_id) => {
                             if let Some(index) =
-                                devices.iter().position(|d| d.id == selected_device.id)
+                                devices.iter().position(|d| &d.id == selected_device_id)
                             {
                                 let next_index = (index + devices.len() - 1) % devices.len();
-                                devices.get(next_index).map(|d| d.to_owned())
+                                devices.get(next_index).map(|d| d.id.clone())
                             } else if devices.is_empty() {
                                 None
                             } else {
-                                devices.last().map(|d| d.to_owned())
+                                devices.last().map(|d| d.id.clone())
                             }
                         }
                         None => {
                             if devices.is_empty() {
                                 None
                             } else {
-                                devices.last().map(|d| d.to_owned())
+                                devices.last().map(|d| d.id.clone())
                             }
                         }
                     }
@@ -216,11 +216,10 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::NextFlavorForRunning => State {
             select_flavor_popup: SelectFlavorPopupState {
                 selected_flavor: {
-                    let selected_device_platform = &state
-                        .select_device_popup
-                        .selected_device_platform()
+                    let selected_device_platform = selected_device_selector(&state)
+                        .map(|d| d.platform.clone())
                         .unwrap_or("".to_string());
-                    let Some(flavors) = &state.flavors.get(selected_device_platform) else {
+                    let Some(flavors) = &state.flavors.get(&selected_device_platform) else {
                         return state;
                     };
 
@@ -251,9 +250,8 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::PreviousFlavorForRunning => State {
             select_flavor_popup: SelectFlavorPopupState {
                 selected_flavor: {
-                    let selected_device_platform = &state
-                        .select_device_popup
-                        .selected_device_platform()
+                    let selected_device_platform = &selected_device_selector(&state)
+                        .map(|d| d.platform.clone())
                         .unwrap_or("".to_string());
                     let Some(flavors) = &state.flavors.get(selected_device_platform) else {
                         return state;
@@ -283,16 +281,16 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
-        Action::ShowSelectDevicePopUp => State {
-            popup: Some(PopUp::SelectDevice),
-            select_device_popup: SelectDevicePopupState {
-                selected_device: AvailableDevicesSelector
-                    .select(&state)
-                    .first()
-                    .map(|d| d.to_owned()),
-            },
-            ..state
-        },
+        Action::ShowSelectDevicePopUp => {
+            let first_available_device = available_devices_selector(&state).nth(0);
+            State {
+                popup: Some(PopUp::SelectDevice),
+                select_device_popup: SelectDevicePopupState {
+                    selected_device_id: first_available_device.map(|d| d.id.clone()),
+                },
+                ..state
+            }
+        }
         Action::HideSelectDevicePopUp => State {
             popup: None,
             ..state

@@ -1,5 +1,5 @@
 use crate::redux::action::Action;
-use crate::redux::selector::current_session::CurrentSessionSelector;
+use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{DevTools, Focus, Home, State};
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
@@ -68,7 +68,7 @@ impl Component for NetworkComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         if state.focus != Focus::DevTools(DevTools::Network) || state.popup.is_some() {
             return Ok(());
         }
@@ -96,15 +96,19 @@ impl Component for NetworkComponent {
             .border_style(Style::default().fg(border_color))
             .borders(Borders::ALL);
 
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             f.render_widget(block, area);
             return;
         };
 
-        let selected_index = session
-            .requests
-            .iter()
-            .position(|r| Some(r.id.clone()) == session.selected_request_id);
+        let selected_index = if let Some(selected_request_id) = &session.selected_request_id {
+            session
+                .requests
+                .iter()
+                .position(|r| &r.id == selected_request_id)
+        } else {
+            None
+        };
         let mut table_state = TableState::default().with_selected(selected_index);
 
         let widths = [
@@ -142,16 +146,13 @@ impl Component for NetworkComponent {
                 "DELETE" => Color::Red,
                 _ => Color::White,
             };
-            let time = match request
-                .request
-                .clone()
-                .map(|r| r.events)
-                .unwrap_or_default()
-                .last()
-            {
-                Some(last_event) => Duration::from_micros(
-                    (last_event.timestamp - request.start_time).unsigned_abs(),
-                ),
+            let time = match &request.request {
+                Some(req) => match req.events.last() {
+                    Some(last_event) => Duration::from_micros(
+                        (last_event.timestamp - request.start_time).unsigned_abs(),
+                    ),
+                    _ => std::time::Duration::default(),
+                },
                 _ => std::time::Duration::default(),
             };
             let cells = vec![

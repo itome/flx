@@ -4,7 +4,7 @@ use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 use redux_rs::Selector;
 
-use crate::redux::selector::current_session::CurrentSessionSelector;
+use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{Focus, Home, State};
 use crate::tui::Frame;
 use color_eyre::eyre::Result;
@@ -45,7 +45,7 @@ impl Component for FramesComponent {
             x: area.right() - ledgend_width,
         };
 
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             f.render_widget(block, area);
             return;
         };

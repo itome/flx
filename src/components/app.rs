@@ -4,7 +4,7 @@ use ratatui::prelude::Rect;
 use ratatui::{prelude::*, widgets::*};
 use redux_rs::Selector;
 
-use crate::redux::selector::current_session::CurrentSessionSelector;
+use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{DevTools, Focus, State};
 use crate::tui::Frame;
 use color_eyre::eyre::Result;
@@ -23,7 +23,7 @@ impl AppComponent {
 
 impl Component for AppComponent {
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             return;
         };
 
@@ -34,11 +34,11 @@ impl Component for AppComponent {
             Color::White
         };
 
-        let device = state
-            .devices
-            .iter()
-            .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
-        let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
+        let device = if let Some(device_id) = &session.device_id {
+            state.devices.iter().find(|d| &d.id == device_id)
+        } else {
+            None
+        };
         let flavor = &session.flavor;
         let status_color = if session.hot_reloading {
             Color::Yellow
@@ -49,7 +49,14 @@ impl Component for AppComponent {
         } else {
             Color::White
         };
-        let mut name = format!(" {} ", device_name);
+        let mut name = format!(
+            " {} ",
+            if let Some(device) = device {
+                device.name.clone()
+            } else {
+                "".to_string()
+            }
+        );
         if let Some(flavor) = flavor {
             name.push_str(&format!("({})", flavor))
         }

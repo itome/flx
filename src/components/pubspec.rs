@@ -63,7 +63,7 @@ impl Component for PubspecComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         if state.focus != Focus::Home(Home::Project) || state.popup.is_some() {
             return Ok(());
         }

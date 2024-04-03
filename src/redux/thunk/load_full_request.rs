@@ -7,7 +7,7 @@ use redux_rs::{middlewares::thunk::Thunk, StoreApi};
 
 use crate::redux::{
     action::Action,
-    selector::current_session::{self, CurrentSessionSelector},
+    selector::current_session::{current_session_selector, current_session_selector_cloned},
     state::State,
 };
 
@@ -40,7 +40,7 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        let Some(current_session) = store.select(CurrentSessionSelector).await else {
+        let Some(current_session) = store.select(current_session_selector_cloned).await else {
             return;
         };
 
@@ -78,7 +78,7 @@ where
 
         store
             .dispatch(Action::AppendHttpProfileFullRequest {
-                session_id: current_session.id,
+                session_id: current_session.id.clone(),
                 request: full_request,
             })
             .await;

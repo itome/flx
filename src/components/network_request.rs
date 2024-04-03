@@ -1,5 +1,5 @@
 use crate::redux::action::Action;
-use crate::redux::selector::current_session::CurrentSessionSelector;
+use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{DevTools, Focus, Home, State};
 use crate::redux::thunk::ThunkAction;
 use crate::redux::ActionOrThunk;
@@ -64,7 +64,7 @@ impl NetworkRequestComponent {
     }
 
     fn next_headers(&mut self, state: &State) {
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             return;
         };
         let Some(request) = session
@@ -109,7 +109,7 @@ impl NetworkRequestComponent {
     }
 
     fn next_payload(&mut self, state: &State) {
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             return;
         };
         let Some(selected_request_id) = session.selected_request_id.clone() else {
@@ -143,7 +143,7 @@ impl NetworkRequestComponent {
     }
 
     fn next_response(&mut self, state: &State) {
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             return;
         };
         let Some(selected_request_id) = session.selected_request_id.clone() else {
@@ -465,7 +465,7 @@ impl Component for NetworkRequestComponent {
         Ok(())
     }
 
-    fn handle_key_events(&mut self, key: KeyEvent, state: &State) -> Result<()> {
+    fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
         if state.focus != Focus::DevTools(DevTools::NetworkRequest) || state.popup.is_some() {
             return Ok(());
         }
@@ -515,15 +515,20 @@ impl Component for NetworkRequestComponent {
                     .border_type(BorderType::Rounded)
                     .borders(Borders::ALL),
             );
-        let Some(session) = CurrentSessionSelector.select(state) else {
+        let Some(session) = current_session_selector(state) else {
             f.render_widget(empty, area);
             return;
         };
-        let Some(network_request) = session
-            .requests
-            .iter()
-            .find(|r| Some(r.id.clone()) == session.selected_request_id)
-        else {
+        let network_request = if let Some(selected_request_id) = &session.selected_request_id {
+            session
+                .requests
+                .iter()
+                .find(|r| &r.id == selected_request_id)
+        } else {
+            f.render_widget(empty, area);
+            return;
+        };
+        let Some(network_request) = network_request else {
             f.render_widget(empty, area);
             return;
         };
