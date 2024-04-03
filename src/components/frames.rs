@@ -50,18 +50,42 @@ impl Component for FramesComponent {
             return;
         };
 
-        let max_frame_count =
-            ((area.width - ledgend_width - 2) / (BAR_WIDTH * 2 + GROUP_GAP)) as usize;
-        let skip = if session.frames.len() > max_frame_count {
-            session.frames.len() - max_frame_count
+        let window_size = ((area.width - ledgend_width - 2) / (BAR_WIDTH * 2 + GROUP_GAP)) as usize;
+        let hightlighted_frame_index_in_window = window_size / 2;
+        let mut window_end = match session.selected_frame_number {
+            Some(selected_frame_number) => {
+                match session
+                    .frames
+                    .iter()
+                    .position(|frame| frame.number == selected_frame_number)
+                {
+                    Some(selected_frame_index) => {
+                        let window_end = selected_frame_index + hightlighted_frame_index_in_window;
+                        if window_end >= session.frames.len() {
+                            session.frames.len()
+                        } else {
+                            window_end
+                        }
+                    }
+                    None => window_size,
+                }
+            }
+            None => window_size,
+        };
+        let window_start = if window_end >= window_size {
+            window_end - window_size
         } else {
             0
         };
+        if window_end - window_start < window_size {
+            window_end = window_size;
+        }
 
         let frame_groups = session
             .frames
             .iter()
-            .skip(skip)
+            .skip(window_start)
+            .take(window_end - window_start)
             .enumerate()
             .map(|(index, frame)| {
                 let target_ms_per_frame = 1000 / session.display_refresh_rate as u128;
@@ -80,11 +104,19 @@ impl Component for FramesComponent {
                         RASTER_COLOR
                     }));
                 BarGroup::default().bars(&[ui_bar, raster_bar]).label(
-                    Line::from(if index % 2 == 1 {
-                        frame.number.to_string()
-                    } else {
-                        " ".to_string()
+                    Line::from(match session.selected_frame_number {
+                        Some(selected_frame_number) if selected_frame_number == frame.number => {
+                            frame.number.to_string()
+                        }
+                        _ if index % 2 == 1 => frame.number.to_string(),
+                        _ => "".to_string(),
                     })
+                    .style(Style::default().fg(match session.selected_frame_number {
+                        Some(selected_frame_number) if selected_frame_number == frame.number => {
+                            Color::Yellow
+                        }
+                        _ => Color::White,
+                    }))
                     .centered(),
                 )
             });

@@ -602,6 +602,13 @@ pub fn reducer(state: State, action: Action) -> State {
                 .map(|s| {
                     if s.id == session_id {
                         SessionState {
+                            selected_frame_number: {
+                                if s.selected_frame_number == s.frames.last().map(|f| f.number) {
+                                    Some(number)
+                                } else {
+                                    s.selected_frame_number
+                                }
+                            },
                             frames: {
                                 [
                                     s.frames,
