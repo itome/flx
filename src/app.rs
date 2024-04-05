@@ -252,6 +252,10 @@ impl App {
         Ok(())
     }
 
+    fn component(&mut self, id: &ComponentId) -> &mut Box<dyn Component> {
+        self.components.get_mut(id).unwrap()
+    }
+
     fn draw(&mut self, tui: &mut Tui, state: &State) -> Result<()> {
         match state.focus {
             Focus::Home(_) => self.draw_home(tui, state),
@@ -274,26 +278,17 @@ impl App {
                 ])
                 .split(layout[0]);
 
-            self.components
-                .get_mut(&ComponentId::Project)
-                .unwrap()
+            self.component(&ComponentId::Project)
                 .draw(f, tab_layout[0], state);
-            self.components
-                .get_mut(&ComponentId::Runners)
-                .unwrap()
+            self.component(&ComponentId::Runners)
                 .draw(f, tab_layout[1], state);
-            self.components
-                .get_mut(&ComponentId::Devices)
-                .unwrap()
+            self.component(&ComponentId::Devices)
                 .draw(f, tab_layout[2], state);
 
             if state.focus == Focus::Home(Home::Runners) {
                 if let Some(session) = current_session_selector(state) {
                     if !session.started {
-                        self.components
-                            .get_mut(&ComponentId::Logs)
-                            .unwrap()
-                            .draw(f, layout[1], state);
+                        self.component(&ComponentId::Logs).draw(f, layout[1], state);
                     } else {
                         let vertical_layout = Layout::default()
                             .direction(Direction::Vertical)
@@ -307,45 +302,32 @@ impl App {
                                 Constraint::Fill(1),
                             ])
                             .split(vertical_layout[1]);
-                        self.components.get_mut(&ComponentId::Frames).unwrap().draw(
+                        self.component(&ComponentId::Frames)
+                            .draw(f, vertical_layout[0], state);
+                        self.component(&ComponentId::Inspector).draw(
                             f,
-                            vertical_layout[0],
+                            horizontal_layout[0],
                             state,
                         );
-                        self.components
-                            .get_mut(&ComponentId::Inspector)
-                            .unwrap()
-                            .draw(f, horizontal_layout[0], state);
-                        self.components
-                            .get_mut(&ComponentId::Network)
-                            .unwrap()
+                        self.component(&ComponentId::Network)
                             .draw(f, horizontal_layout[1], state);
-                        self.components.get_mut(&ComponentId::Logs).unwrap().draw(
-                            f,
-                            horizontal_layout[2],
-                            state,
-                        );
+                        self.component(&ComponentId::Logs)
+                            .draw(f, horizontal_layout[2], state);
                     }
                 }
             }
 
             if state.focus == Focus::Home(Home::Project) {
-                self.components
-                    .get_mut(&ComponentId::Pubspec)
-                    .unwrap()
+                self.component(&ComponentId::Pubspec)
                     .draw(f, layout[1], state);
             }
 
             let popup_area = centered_rect(60, 20, f.size());
-            self.components
-                .get_mut(&ComponentId::SelectDevicePopup)
-                .unwrap()
+            self.component(&ComponentId::SelectDevicePopup)
                 .draw(f, popup_area, state);
 
             let popup_area = centered_rect(60, 40, f.size());
-            self.components
-                .get_mut(&ComponentId::SelectFlavorPopup)
-                .unwrap()
+            self.component(&ComponentId::SelectFlavorPopup)
                 .draw(f, popup_area, state);
         })?;
         Ok(())
@@ -388,21 +370,13 @@ impl App {
                 })
                 .split(layout[0]);
 
-            self.components
-                .get_mut(&ComponentId::App)
-                .unwrap()
+            self.component(&ComponentId::App)
                 .draw(f, tab_layout[0], state);
-            self.components
-                .get_mut(&ComponentId::Inspector)
-                .unwrap()
+            self.component(&ComponentId::Inspector)
                 .draw(f, tab_layout[1], state);
-            self.components
-                .get_mut(&ComponentId::Performance)
-                .unwrap()
+            self.component(&ComponentId::Performance)
                 .draw(f, tab_layout[2], state);
-            self.components
-                .get_mut(&ComponentId::Network)
-                .unwrap()
+            self.component(&ComponentId::Network)
                 .draw(f, tab_layout[3], state);
 
             if state.focus == Focus::DevTools(DevTools::Performance) {
@@ -410,22 +384,14 @@ impl App {
                     .direction(Direction::Vertical)
                     .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
                     .split(layout[1]);
-                self.components.get_mut(&ComponentId::Frames).unwrap().draw(
-                    f,
-                    vertical_layout[0],
-                    state,
-                );
+                self.component(&ComponentId::Frames)
+                    .draw(f, vertical_layout[0], state);
             } else if state.focus == Focus::DevTools(DevTools::App) {
-                self.components
-                    .get_mut(&ComponentId::Logs)
-                    .unwrap()
-                    .draw(f, layout[1], state);
+                self.component(&ComponentId::Logs).draw(f, layout[1], state);
             } else if state.focus == Focus::DevTools(DevTools::Network)
                 || state.focus == Focus::DevTools(DevTools::NetworkRequest)
             {
-                self.components
-                    .get_mut(&ComponentId::NetworkRequest)
-                    .unwrap()
+                self.component(&ComponentId::NetworkRequest)
                     .draw(f, layout[1], state);
             }
         })?;
