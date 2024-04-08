@@ -8,6 +8,7 @@ use super::{
     action::Action,
     selector::{
         availale_devices::available_devices_selector,
+        device_or_emulators::{self, device_or_emulators_selector, DeviceOrEmulator},
         selected_device::{self, selected_device_selector},
     },
     state::{DevTools, FlutterFrame, Home, SelectFlavorPopupState, SessionState, State},
@@ -18,7 +19,7 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::AddDevice { device } => {
             let mut new_state = State {
                 devices: [state.devices, vec![device.clone()]].concat(),
-                selected_device_id: match state.selected_device_id {
+                selected_device_or_emulator_id: match state.selected_device_or_emulator_id {
                     Some(id) => Some(id),
                     None => Some(device.id.clone()),
                 },
@@ -42,6 +43,7 @@ pub fn reducer(state: State, action: Action) -> State {
             devices: state.devices.into_iter().filter(|d| d != &device).collect(),
             ..state
         },
+        Action::SetEmultors { emulators } => State { emulators, ..state },
         Action::SetFlavors { flavors } => State { flavors, ..state },
         Action::NextHomeTab => State {
             focus: match state.focus {
@@ -161,35 +163,66 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::NextDevice => State {
-            selected_device_id: match state.selected_device_id {
-                Some(selected_device_id) => {
-                    if let Some(index) = state
-                        .devices
-                        .iter()
-                        .position(|s| s.id == selected_device_id)
-                    {
-                        let next_index = (index + 1) % state.devices.len();
-                        Some(state.devices[next_index].id.clone())
+            selected_device_or_emulator_id: match state.selected_device_or_emulator_id {
+                Some(ref selected_device_id) => {
+                    let device_or_emulators = device_or_emulators_selector(&state);
+                    let index = device_or_emulators.iter().position(|device_or_emulator| {
+                        match device_or_emulator {
+                            DeviceOrEmulator::Device(device) => &device.id == selected_device_id,
+                            DeviceOrEmulator::Emulator(emulator) => {
+                                &emulator.id == selected_device_id
+                            }
+                        }
+                    });
+
+                    let next_index = if let Some(index) = index {
+                        (index + 1) % device_or_emulators.len()
                     } else {
-                        state.devices.first().map(|s| s.id.clone())
+                        0
+                    };
+
+                    match device_or_emulators.get(next_index) {
+                        Some(DeviceOrEmulator::Device(device)) => Some(device.id.clone()),
+                        Some(DeviceOrEmulator::Emulator(emulator)) => Some(emulator.id.clone()),
+                        None => None,
                     }
                 }
-                None => state.devices.first().map(|s| s.id.clone()),
+                None => match device_or_emulators_selector(&state).first() {
+                    Some(DeviceOrEmulator::Device(device)) => Some(device.id.clone()),
+                    Some(DeviceOrEmulator::Emulator(emulator)) => Some(emulator.id.clone()),
+                    None => None,
+                },
             },
             ..state
         },
         Action::PreviousDevice => State {
-            selected_device_id: match state.selected_device_id {
-                Some(selected_device_id) => {
-                    let index = state
-                        .devices
-                        .iter()
-                        .position(|s| s.id == selected_device_id)
-                        .unwrap();
-                    let next_index = (index + state.devices.len() - 1) % state.devices.len();
-                    Some(state.devices[next_index].id.clone())
+            selected_device_or_emulator_id: match state.selected_device_or_emulator_id {
+                Some(ref selected_device_id) => {
+                    let device_or_emulators = device_or_emulators_selector(&state);
+                    let index = device_or_emulators.iter().position(|device_or_emulator| {
+                        match device_or_emulator {
+                            DeviceOrEmulator::Device(device) => &device.id == selected_device_id,
+                            DeviceOrEmulator::Emulator(emulator) => {
+                                &emulator.id == selected_device_id
+                            }
+                        }
+                    });
+                    let next_index = if let Some(index) = index {
+                        (index + device_or_emulators.len() - 1) % device_or_emulators.len()
+                    } else {
+                        (device_or_emulators.len() - 1).max(0)
+                    };
+                    match device_or_emulators.get(next_index) {
+                        Some(DeviceOrEmulator::Device(device)) => Some(device.id.clone()),
+                        Some(DeviceOrEmulator::Emulator(emulator)) => Some(emulator.id.clone()),
+                        None => None,
+                    }
                 }
-                None => state.devices.last().map(|s| s.id.clone()),
+                None => match device_or_emulators_selector(&state).last() {
+                    Some(DeviceOrEmulator::Device(device)) => Some(device.id.clone()),
+                    Some(DeviceOrEmulator::Emulator(emulator)) => Some(emulator.id.clone()),
+                    None => None,
+                },
             },
             ..state
         },

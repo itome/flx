@@ -1,6 +1,7 @@
 use std::time::Duration;
 use std::{collections::HashMap, time::SystemTime};
 
+use daemon::io::emulator::Emulator;
 use daemon::io::{device::Device, event::AppMode};
 use devtools::protocols::io_extension::{HttpProfileRequest, HttpProfileRequestRef};
 
@@ -100,7 +101,8 @@ pub struct State {
 
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
-    pub selected_device_id: Option<String>,
+    pub emulators: Vec<Emulator>,
+    pub selected_device_or_emulator_id: Option<String>,
 
     pub flavors: HashMap<String, Vec<String>>,
 

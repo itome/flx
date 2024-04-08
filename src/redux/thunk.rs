@@ -9,6 +9,8 @@ use super::{action::Action, state::State};
 pub mod context;
 pub mod hot_reload;
 pub mod hot_restart;
+pub mod launch_emulator;
+pub mod load_emulators;
 pub mod load_full_request;
 pub mod load_supported_platforms;
 pub mod run_new_app;
@@ -23,8 +25,10 @@ pub mod watch_timeline_event;
 pub enum ThunkAction {
     WatchDevices,
     LoadSupportedPlatforms,
+    LoadEmulators,
     LoadFullRequest,
     RunNewApp { use_fvm: bool },
+    LaunchEmulator,
     HotReload,
     HotRestart,
     StopApp,
@@ -39,12 +43,14 @@ where
 {
     match action {
         ThunkAction::WatchDevices => Box::new(watch_devices::WatchDevicesThunk::new(context)),
+        ThunkAction::LoadEmulators => Box::new(load_emulators::LoadEmulatorsThunk::new(context)),
         ThunkAction::RunNewApp { use_fvm } => {
             Box::new(run_new_app::RunNewAppThunk::new(context, use_fvm))
         }
         ThunkAction::LoadFullRequest => {
             Box::new(load_full_request::LoadFullRequestThunk::new(context))
         }
+        ThunkAction::LaunchEmulator => Box::new(launch_emulator::LaunchEmulatorThunk::new(context)),
         ThunkAction::HotReload => Box::new(hot_reload::HotReloadThunk::new(context)),
         ThunkAction::HotRestart => Box::new(hot_restart::HotRestartThunk::new(context)),
         ThunkAction::StopApp => Box::new(stop_app::StopAppThunk::new(context)),

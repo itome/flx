@@ -175,6 +175,7 @@ impl App {
             .into(),
         )?;
         redux_action_tx.send(ThunkAction::WatchDevices.into())?;
+        redux_action_tx.send(ThunkAction::LoadEmulators.into())?;
         redux_action_tx.send(ThunkAction::LoadSupportedPlatforms.into())?;
 
         let mut tui = tui::Tui::new()?

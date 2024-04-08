@@ -8,6 +8,7 @@ use tokio::sync::{mpsc::UnboundedSender, Mutex};
 use crate::{
     redux::{
         action::Action,
+        selector::device_or_emulators::{self, device_or_emulators_selector, DeviceOrEmulator},
         state::{Focus, Home, State},
         ActionOrThunk,
     },
@@ -41,49 +42,73 @@ impl Component for DeviceComponent {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
-        let device = if let Some(device_id) = &state.selected_device_id {
-            state.devices.iter().find(|d| d.id == *device_id)
+        let device_or_emulators = device_or_emulators_selector(&state);
+        let device_or_emulator = if let Some(device_id) = &state.selected_device_or_emulator_id {
+            device_or_emulators.iter().find(|d| match d {
+                DeviceOrEmulator::Device(device) => &device.id == device_id,
+                DeviceOrEmulator::Emulator(emulator) => &emulator.id == device_id,
+            })
         } else {
             None
         };
 
-        let Some(device) = device else {
+        let Some(device_or_emulator) = device_or_emulator else {
             f.render_widget(Paragraph::new("No device selected").block(block), area);
             return;
         };
 
         let widths = [Constraint::Length(16), Constraint::Fill(1)];
         let table = Table::new(
-            vec![
-                Row::new([
-                    Cell::from("ID").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.id.clone()),
-                ]),
-                Row::new([
-                    Cell::from("Name").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.name.clone()),
-                ]),
-                Row::new([
-                    Cell::from("Platform").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.platform.clone()),
-                ]),
-                Row::new([
-                    Cell::from("Category").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.category.clone()),
-                ]),
-                Row::new([
-                    Cell::from("Is emulator").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.emulator.to_string()),
-                ]),
-                Row::new([
-                    Cell::from("Is ephemeral").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.ephemeral.to_string()),
-                ]),
-                Row::new([
-                    Cell::from("SDK").style(Style::default().fg(Color::Yellow).bold()),
-                    Cell::from(device.sdk.to_string()),
-                ]),
-            ],
+            match device_or_emulator {
+                DeviceOrEmulator::Device(device) => vec![
+                    Row::new([
+                        Cell::from("ID").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.id.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Name").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.name.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Platform").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.platform.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Category").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.category.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Is emulator").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.emulator.to_string()),
+                    ]),
+                    Row::new([
+                        Cell::from("Is ephemeral").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.ephemeral.to_string()),
+                    ]),
+                    Row::new([
+                        Cell::from("SDK").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(device.sdk.to_string()),
+                    ]),
+                ],
+                DeviceOrEmulator::Emulator(emulator) => vec![
+                    Row::new([
+                        Cell::from("ID").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(emulator.id.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Name").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(emulator.name.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Platform").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(emulator.platform_type.clone()),
+                    ]),
+                    Row::new([
+                        Cell::from("Category").style(Style::default().fg(Color::Yellow).bold()),
+                        Cell::from(emulator.category.clone()),
+                    ]),
+                ],
+            },
             widths,
         )
         .block(block);

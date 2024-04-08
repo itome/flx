@@ -8,7 +8,9 @@ use tokio::sync::{mpsc::UnboundedSender, Mutex};
 use crate::{
     redux::{
         action::Action,
+        selector::device_or_emulators::{self, device_or_emulators_selector, DeviceOrEmulator},
         state::{Focus, Home, State},
+        thunk::ThunkAction,
         ActionOrThunk,
     },
     tui::Frame,
@@ -48,6 +50,14 @@ impl DevicesComponent {
             .send(Action::PreviousDevice.into())?;
         Ok(())
     }
+
+    fn launch_emulator(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::LaunchEmulator.into())?;
+        Ok(())
+    }
 }
 
 impl Component for DevicesComponent {
@@ -64,6 +74,7 @@ impl Component for DevicesComponent {
         match key.code {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
+            KeyCode::Enter => self.launch_emulator()?,
             _ => {}
         }
         Ok(())
@@ -76,11 +87,16 @@ impl Component for DevicesComponent {
             Color::White
         };
 
-        let selected_index = if let Some(selected_device_id) = &state.selected_device_id {
-            state
-                .devices
+        let device_or_emulators = device_or_emulators_selector(&state);
+
+        let selected_index = if let Some(selected_device_id) = &state.selected_device_or_emulator_id
+        {
+            device_or_emulators
                 .iter()
-                .position(|d| d.id == *selected_device_id)
+                .position(|device_or_emulator| match device_or_emulator {
+                    DeviceOrEmulator::Device(device) => &device.id == selected_device_id,
+                    DeviceOrEmulator::Emulator(emulator) => &emulator.id == selected_device_id,
+                })
         } else {
             None
         };
@@ -93,10 +109,14 @@ impl Component for DevicesComponent {
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(border_color));
 
-        let items: Vec<ListItem> = state
-            .devices
+        let items: Vec<ListItem> = device_or_emulators
             .iter()
-            .map(|d| ListItem::new(d.name.clone()))
+            .map(|device_or_emulator| match device_or_emulator {
+                DeviceOrEmulator::Device(device) => ListItem::new(device.name.clone()),
+                DeviceOrEmulator::Emulator(emulator) => {
+                    ListItem::new(format!("▶ Start {}", emulator.name.clone()))
+                }
+            })
             .collect();
 
         let mut scrollbar_state =

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use daemon::io::{device::Device, event::AppMode};
+use daemon::io::{device::Device, emulator::Emulator, event::AppMode};
 use devtools::protocols::io_extension::{HttpProfileRequest, HttpProfileRequestRef};
 
 #[derive(Debug)]
@@ -11,6 +11,9 @@ pub enum Action {
     },
     RemoveDevice {
         device: Device,
+    },
+    SetEmultors {
+        emulators: Vec<Emulator>,
     },
 
     SetFlavors {
