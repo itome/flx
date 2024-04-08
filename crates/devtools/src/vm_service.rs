@@ -213,7 +213,7 @@ impl VmServiceProtocol for VmService {
     }
 
     async fn clear_vm_timeline(&self) -> Result<Success> {
-        self.call("clearVmTimeline", Map::new()).await
+        self.call("clearVMTimeline", Map::new()).await
     }
 
     async fn invoke(
@@ -461,7 +461,7 @@ impl VmServiceProtocol for VmService {
             "timeOriginMicros".to_owned() => time_origin_micros.into(),
             "timeExtentMicros".to_owned() => time_extent_micros.into(),
         };
-        self.call("getPerfettoVmTimeline", params).await
+        self.call("getPerfettoVMTimeline", params).await
     }
 
     async fn get_ports(&self, isolate_id: &str) -> Result<PortList> {
@@ -544,15 +544,15 @@ impl VmServiceProtocol for VmService {
             "timeOriginMicros".to_owned() => time_origin_micros.into(),
             "timeExtentMicros".to_owned() => time_extent_micros.into(),
         };
-        self.call("getVmTimeline", params).await
+        self.call("getVMTimeline", params).await
     }
 
     async fn get_vm_timeline_flags(&self) -> Result<TimelineFlags> {
-        self.call("getVmTimelineFlags", Map::new()).await
+        self.call("getVMTimelineFlags", Map::new()).await
     }
 
     async fn get_vm_timeline_micros(&self) -> Result<Timestamp> {
-        self.call("getVmTimelineMicros", Map::new()).await
+        self.call("getVMTimelineMicros", Map::new()).await
     }
 
     async fn pause(&self, isolate_id: &str) -> Result<SuccessOrSentinel> {
@@ -745,7 +745,7 @@ impl VmServiceProtocol for VmService {
         let params = params! {
             "recordedStreams".to_owned() => recorded_streams.into(),
         };
-        self.call("setVmTimelineFlags", params).await
+        self.call("setVMTimelineFlags", params).await
     }
 
     async fn stream_cancel(&self, stream_id: StreamId) -> Result<Success> {
