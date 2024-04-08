@@ -18,6 +18,7 @@ use tokio::sync::{Mutex, RwLock};
 use crate::components;
 use crate::components::app::AppComponent;
 use crate::components::devices::DevicesComponent;
+use crate::components::frame_analysis::FrameAnalysisComponent;
 use crate::components::frames::FramesComponent;
 use crate::components::inspector::InspectorComponent;
 use crate::components::logs::LogsComponent;
@@ -55,6 +56,7 @@ pub enum ComponentId {
     Devices,
     SelectDevicePopup,
     Frames,
+    FrameAnalysis,
     Logs,
     Network,
     NetworkRequest,
@@ -141,6 +143,10 @@ impl App {
                 (
                     ComponentId::NetworkRequest,
                     Box::new(NetworkRequestComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::FrameAnalysis,
+                    Box::new(FrameAnalysisComponent::new()) as Box<dyn Component>,
                 ),
             ]),
             should_quit: false,
@@ -386,6 +392,8 @@ impl App {
                     .split(layout[1]);
                 self.component(&ComponentId::Frames)
                     .draw(f, vertical_layout[0], state);
+                self.component(&ComponentId::FrameAnalysis)
+                    .draw(f, vertical_layout[1], state)
             } else if state.focus == Focus::DevTools(DevTools::App) {
                 self.component(&ComponentId::Logs).draw(f, layout[1], state);
             } else if state.focus == Focus::DevTools(DevTools::Network)

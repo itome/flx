@@ -11,6 +11,7 @@ use crate::{
 
 pub mod app;
 pub mod devices;
+pub mod frame_analysis;
 pub mod frames;
 pub mod inspector;
 pub mod logs;
