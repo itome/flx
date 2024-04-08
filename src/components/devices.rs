@@ -87,7 +87,7 @@ impl Component for DevicesComponent {
             Color::White
         };
 
-        let device_or_emulators = device_or_emulators_selector(&state);
+        let device_or_emulators = device_or_emulators_selector(state);
 
         let selected_index = if let Some(selected_device_id) = &state.selected_device_or_emulator_id
         {

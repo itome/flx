@@ -42,7 +42,7 @@ impl Component for DeviceComponent {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
-        let device_or_emulators = device_or_emulators_selector(&state);
+        let device_or_emulators = device_or_emulators_selector(state);
         let device_or_emulator = if let Some(device_id) = &state.selected_device_or_emulator_id {
             device_or_emulators.iter().find(|d| match d {
                 DeviceOrEmulator::Device(device) => &device.id == device_id,

@@ -34,12 +34,9 @@ impl Component for ProjectComponent {
         let file = File::open(&self.pubspec_path)?;
         let reader = BufReader::new(file);
         let pubspec: serde_yaml::Value = serde_yaml::from_reader(reader)?;
-        match pubspec {
-            serde_yaml::Value::Mapping(map) => {
-                self.project_name = map.get("name").map(|v| v.as_str().unwrap().to_string());
-                self.version = map.get("version").map(|v| v.as_str().unwrap().to_string());
-            }
-            _ => {}
+        if let serde_yaml::Value::Mapping(map) = pubspec {
+            self.project_name = map.get("name").map(|v| v.as_str().unwrap().to_string());
+            self.version = map.get("version").map(|v| v.as_str().unwrap().to_string());
         };
         Ok(())
     }

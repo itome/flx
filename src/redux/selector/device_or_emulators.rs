@@ -38,5 +38,5 @@ pub fn device_or_emulators_selector(state: &State) -> Vec<DeviceOrEmulator> {
 
         devices.push(DeviceOrEmulator::Emulator(emulator.clone()));
     }
-    return devices;
+    devices
 }
