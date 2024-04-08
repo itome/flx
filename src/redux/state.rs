@@ -100,6 +100,7 @@ pub struct State {
 
     pub project_root: Option<String>,
     pub devices: Vec<Device>,
+    pub selected_device_id: Option<String>,
 
     pub flavors: HashMap<String, Vec<String>>,
 

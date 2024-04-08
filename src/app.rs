@@ -17,6 +17,7 @@ use tokio::sync::{Mutex, RwLock};
 
 use crate::components;
 use crate::components::app::AppComponent;
+use crate::components::device::DeviceComponent;
 use crate::components::devices::DevicesComponent;
 use crate::components::frame_analysis::FrameAnalysisComponent;
 use crate::components::frames::FramesComponent;
@@ -54,6 +55,7 @@ pub enum ComponentId {
     Project,
     Runners,
     Devices,
+    Device,
     SelectDevicePopup,
     Frames,
     FrameAnalysis,
@@ -99,6 +101,10 @@ impl App {
                 (
                     ComponentId::Devices,
                     Box::new(DevicesComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::Device,
+                    Box::new(DeviceComponent::new()) as Box<dyn Component>,
                 ),
                 (
                     ComponentId::SelectDevicePopup,
@@ -325,6 +331,11 @@ impl App {
 
             if state.focus == Focus::Home(Home::Project) {
                 self.component(&ComponentId::Pubspec)
+                    .draw(f, layout[1], state);
+            }
+
+            if state.focus == Focus::Home(Home::Devices) {
+                self.component(&ComponentId::Device)
                     .draw(f, layout[1], state);
             }
 

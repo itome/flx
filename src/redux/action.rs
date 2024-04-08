@@ -45,6 +45,9 @@ pub enum Action {
     NextSession,
     PreviousSession,
 
+    NextDevice,
+    PreviousDevice,
+
     NextDeviceForRunning,
     PreviousDeviceForRunning,
 

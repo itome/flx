@@ -7,7 +7,8 @@ use crate::redux::state::{Focus, PopUp, SelectDevicePopupState, SessionLog};
 use super::{
     action::Action,
     selector::{
-        availale_devices::available_devices_selector, selected_device::selected_device_selector,
+        availale_devices::available_devices_selector,
+        selected_device::{self, selected_device_selector},
     },
     state::{DevTools, FlutterFrame, Home, SelectFlavorPopupState, SessionState, State},
 };
@@ -17,6 +18,10 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::AddDevice { device } => {
             let mut new_state = State {
                 devices: [state.devices, vec![device.clone()]].concat(),
+                selected_device_id: match state.selected_device_id {
+                    Some(id) => Some(id),
+                    None => Some(device.id.clone()),
+                },
                 ..state
             };
             let first_device = available_devices_selector(&new_state).next();
@@ -152,6 +157,39 @@ pub fn reducer(state: State, action: Action) -> State {
                     Some(state.sessions[next_index].id.clone())
                 }
                 None => state.sessions.first().map(|s| s.id.clone()),
+            },
+            ..state
+        },
+        Action::NextDevice => State {
+            selected_device_id: match state.selected_device_id {
+                Some(selected_device_id) => {
+                    if let Some(index) = state
+                        .devices
+                        .iter()
+                        .position(|s| s.id == selected_device_id)
+                    {
+                        let next_index = (index + 1) % state.devices.len();
+                        Some(state.devices[next_index].id.clone())
+                    } else {
+                        state.devices.first().map(|s| s.id.clone())
+                    }
+                }
+                None => state.devices.first().map(|s| s.id.clone()),
+            },
+            ..state
+        },
+        Action::PreviousDevice => State {
+            selected_device_id: match state.selected_device_id {
+                Some(selected_device_id) => {
+                    let index = state
+                        .devices
+                        .iter()
+                        .position(|s| s.id == selected_device_id)
+                        .unwrap();
+                    let next_index = (index + state.devices.len() - 1) % state.devices.len();
+                    Some(state.devices[next_index].id.clone())
+                }
+                None => state.devices.last().map(|s| s.id.clone()),
             },
             ..state
         },

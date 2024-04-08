@@ -17,6 +17,7 @@ pub mod stop_app;
 pub mod watch_devices;
 pub mod watch_frames;
 pub mod watch_requests;
+pub mod watch_timeline_event;
 
 #[derive(Debug)]
 pub enum ThunkAction {

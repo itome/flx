@@ -10,6 +10,7 @@ use crate::{
 };
 
 pub mod app;
+pub mod device;
 pub mod devices;
 pub mod frame_analysis;
 pub mod frames;
