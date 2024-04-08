@@ -90,7 +90,7 @@ impl App {
             components: HashMap::from([
                 (
                     ComponentId::Project,
-                    Box::new(ProjectComponent::new()) as Box<dyn Component>,
+                    Box::new(ProjectComponent::new(pubspec_path.clone())) as Box<dyn Component>,
                 ),
                 (
                     ComponentId::Runners,
