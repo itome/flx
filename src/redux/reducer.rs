@@ -989,5 +989,22 @@ pub fn reducer(state: State, action: Action) -> State {
             focus: Focus::DevTools(DevTools::Network),
             ..state
         },
+        Action::SetWidgetSummaryTree { session_id, tree } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            widget_summary_tree: Some(tree.clone()),
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
     }
 }

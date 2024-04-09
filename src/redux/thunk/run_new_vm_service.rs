@@ -12,7 +12,10 @@ use devtools::{
     vm_service::VmService,
 };
 
-use super::{context::Context, watch_frames::WatchFramesThunk, watch_requests::WatchRequestsThunk};
+use super::{
+    context::Context, load_root_widget_summary_tree::LoadRootWidgetWithSummaryTreeThunk,
+    watch_frames::WatchFramesThunk, watch_requests::WatchRequestsThunk,
+};
 
 pub struct RunNewVmServiceThunk {
     uri: String,
@@ -82,6 +85,15 @@ where
         let session_id = self.session_id.clone();
         tokio::spawn(async move {
             WatchRequestsThunk::new(context, session_id)
+                .execute(_store)
+                .await;
+        });
+
+        let _store = store.clone();
+        let context = self.context.clone();
+        let session_id = self.session_id.clone();
+        tokio::spawn(async move {
+            LoadRootWidgetWithSummaryTreeThunk::new(context, session_id)
                 .execute(_store)
                 .await;
         });

@@ -2,7 +2,10 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use daemon::io::{device::Device, emulator::Emulator, event::AppMode};
-use devtools::protocols::io_extension::{HttpProfileRequest, HttpProfileRequestRef};
+use devtools::protocols::{
+    flutter_extension::DiagnosticNode,
+    io_extension::{HttpProfileRequest, HttpProfileRequestRef},
+};
 
 #[derive(Debug)]
 pub enum Action {
@@ -129,6 +132,11 @@ pub enum Action {
     SetDisplayRefreshRate {
         session_id: String,
         rate: f32,
+    },
+
+    SetWidgetSummaryTree {
+        session_id: String,
+        tree: DiagnosticNode,
     },
 
     NextLog,

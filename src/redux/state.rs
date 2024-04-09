@@ -3,6 +3,7 @@ use std::{collections::HashMap, time::SystemTime};
 
 use daemon::io::emulator::Emulator;
 use daemon::io::{device::Device, event::AppMode};
+use devtools::protocols::flutter_extension::DiagnosticNode;
 use devtools::protocols::io_extension::{HttpProfileRequest, HttpProfileRequestRef};
 
 #[derive(Clone, PartialEq, Eq, Default)]
@@ -82,6 +83,7 @@ pub struct SessionState {
     pub selected_frame_number: Option<u64>,
     pub selected_request_id: Option<String>,
     pub display_refresh_rate: f32,
+    pub widget_summary_tree: Option<DiagnosticNode>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

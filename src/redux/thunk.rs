@@ -12,6 +12,7 @@ pub mod hot_restart;
 pub mod launch_emulator;
 pub mod load_emulators;
 pub mod load_full_request;
+pub mod load_root_widget_summary_tree;
 pub mod load_supported_platforms;
 pub mod run_new_app;
 pub mod run_new_vm_service;
@@ -26,6 +27,7 @@ pub enum ThunkAction {
     LoadSupportedPlatforms,
     LoadEmulators,
     LoadFullRequest,
+    LoadRootWidgetSummaryTree { session_id: String },
     RunNewApp { use_fvm: bool },
     LaunchEmulator,
     HotReload,
@@ -43,6 +45,11 @@ where
     match action {
         ThunkAction::WatchDevices => Box::new(watch_devices::WatchDevicesThunk::new(context)),
         ThunkAction::LoadEmulators => Box::new(load_emulators::LoadEmulatorsThunk::new(context)),
+        ThunkAction::LoadRootWidgetSummaryTree { session_id } => Box::new(
+            load_root_widget_summary_tree::LoadRootWidgetWithSummaryTreeThunk::new(
+                context, session_id,
+            ),
+        ),
         ThunkAction::RunNewApp { use_fvm } => {
             Box::new(run_new_app::RunNewAppThunk::new(context, use_fvm))
         }
