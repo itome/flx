@@ -58,6 +58,7 @@ syntect-tui = "3.0.2"
 url = "2.5.0"
 textwrap = "0.16.1"
 serde_yaml = "0.9.34"
+tui-tree-widget = "0.19.0"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = ["build", "git", "gitoxide", "cargo"] }
