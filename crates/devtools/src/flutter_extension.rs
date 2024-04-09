@@ -590,7 +590,7 @@ impl FlutterExtensionProtocol for VmService {
     ) -> Result<ResultResponse<DiagnosticNode>> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
-            "objectGroup".to_owned() => object_group.into(),
+            "groupName".to_owned() => object_group.into(),
         };
         self.call(
             "ext.flutter.inspector.getRootWidgetSummaryTreeWithPreviews",
