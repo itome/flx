@@ -10,7 +10,7 @@ use crate::protocols::vm_service::*;
 
 use std::collections::HashMap;
 
-use serde_json::Map;
+use serde_json::{Map, Value};
 
 pub struct VmService {
     pub incoming_tx: broadcast::Sender<String>,
@@ -96,9 +96,7 @@ impl VmService {
         };
         self.send_request(&request).await?;
         let result: VmServiceResponse<T> = self.receive_response(request_id).await?;
-        result
-            .result
-            .ok_or(eyre!("Could not receive vm service response"))
+        Ok(result.result)
     }
 
     async fn request_id(&self) -> u32 {
@@ -119,14 +117,20 @@ impl VmService {
     {
         let mut rx = self.incoming_tx.subscribe();
         while let Ok(line) = rx.recv().await {
-            let response = serde_json::from_str::<VmServiceResponse<T>>(&line);
-            if let Ok(res) = response {
-                if res.id == request_id {
-                    return Ok(res);
+            let json = serde_json::from_str::<Map<String, Value>>(&line);
+            if let Ok(json) = json {
+                if json.get("id") != Some(&Value::Number(serde_json::Number::from(request_id))) {
+                    continue;
                 }
             }
+
+            let mut deserializer = serde_json::Deserializer::from_str(&line);
+            deserializer.disable_recursion_limit();
+            let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
+            let response = VmServiceResponse::<T>::deserialize(deserializer)?;
+            return Ok(response);
         }
-        Err(eyre!("Could not receive daemon response"))
+        Err(eyre!("Could not receive vm service response"))
     }
 }
 
@@ -142,8 +146,7 @@ struct VmServiceRequest {
 pub struct VmServiceResponse<R> {
     pub id: u32,
     pub jsonrpc: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<R>,
+    pub result: R,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
