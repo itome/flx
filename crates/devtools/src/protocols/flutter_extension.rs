@@ -466,7 +466,7 @@ pub struct DiagnosticPathNode {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DiagnosticNode {
-    pub description: String,
+    pub description: Option<String>,
     pub r#type: String,
     pub name: Option<String>,
     #[serde(rename = "showSeparator")]
