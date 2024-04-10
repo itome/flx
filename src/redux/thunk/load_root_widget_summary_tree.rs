@@ -63,14 +63,18 @@ where
             return;
         };
 
-        let Ok(response) = vm_service
+        let response = match vm_service
             .get_root_widget_summary_tree_with_previews(
                 &main_isolate.id,
                 Some("get_root_widget_summary_tree_with_previews"),
             )
             .await
-        else {
-            return;
+        {
+            Ok(response) => response,
+            Err(err) => {
+                log::error!("Failed to get root widget summary tree: {:?}", err);
+                return;
+            }
         };
 
         store
