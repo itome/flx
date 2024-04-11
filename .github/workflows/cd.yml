@@ -3,13 +3,14 @@ name: CD # Continuous Deployment
 on:
   push:
     tags:
-      - '[v]?[0-9]+.[0-9]+.[0-9]+'
+      - "[v]?[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   publish:
-
     name: Publishing for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
 
     strategy:
       matrix:
@@ -81,7 +82,6 @@ jobs:
 
           args: --release --target ${{ matrix.target }}
 
-
       - name: install strip command
         shell: bash
         run: |
@@ -132,21 +132,4 @@ jobs:
             target/${{ matrix.target }}/release/${{ matrix.binary-name }}-*.sha256
 
         env:
-
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-  publish-cargo:
-    name: Publishing to Cargo
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo publish
-        env:
-
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
