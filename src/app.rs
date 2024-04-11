@@ -30,12 +30,12 @@ use crate::components::project::ProjectComponent;
 use crate::components::pubspec::PubspecComponent;
 use crate::components::runners::RunnersComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
-use crate::components::select_flavor_popup::SelectFlavorPopupComponent;
+use crate::components::select_launch_configuration_popup::SelectLaunchConfigurationPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{
-    DevTools, Focus, Home, SelectDevicePopupState, SelectFlavorPopupState, State,
+    DevTools, Focus, Home, SelectDevicePopupState, SelectLaunchConfigurationPopupState, State,
 };
 use crate::redux::thunk::context::Context;
 use crate::redux::thunk::watch_devices::WatchDevicesThunk;
@@ -128,7 +128,8 @@ impl App {
                 ),
                 (
                     ComponentId::SelectFlavorPopup,
-                    Box::new(SelectFlavorPopupComponent::new(use_fvm)) as Box<dyn Component>,
+                    Box::new(SelectLaunchConfigurationPopupComponent::new(use_fvm))
+                        as Box<dyn Component>,
                 ),
                 (
                     ComponentId::Pubspec,
@@ -177,6 +178,7 @@ impl App {
         redux_action_tx.send(ThunkAction::WatchDevices.into())?;
         redux_action_tx.send(ThunkAction::LoadEmulators.into())?;
         redux_action_tx.send(ThunkAction::LoadSupportedPlatforms.into())?;
+        redux_action_tx.send(ThunkAction::LoadVSCodeLaunchSetting.into())?;
 
         let mut tui = tui::Tui::new()?
             .tick_rate(self.tick_rate)

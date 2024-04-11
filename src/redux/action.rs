@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use std::time::Duration;
-
+use super::state::LaunchConfiguration;
 use daemon::io::{device::Device, emulator::Emulator, event::AppMode};
 use devtools::protocols::{
     flutter_extension::DiagnosticNode,
     io_extension::{HttpProfileRequest, HttpProfileRequestRef},
 };
+use std::collections::HashMap;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub enum Action {
@@ -23,6 +23,10 @@ pub enum Action {
         flavors: HashMap<String, Vec<String>>,
     },
 
+    SetLaunchConfigurations {
+        configurations: Vec<LaunchConfiguration>,
+    },
+
     NextHomeTab,
     PreviousHomeTab,
     NextDevToolsTab,
@@ -34,7 +38,7 @@ pub enum Action {
     RegisterSession {
         session_id: String,
         device_id: Option<String>,
-        flavor: Option<String>,
+        configuration: Option<LaunchConfiguration>,
     },
     UnregisterSession {
         session_id: String,
@@ -60,11 +64,11 @@ pub enum Action {
     ShowSelectDevicePopUp,
     HideSelectDevicePopUp,
 
-    ShowSelectFlavorPopUp,
-    HideSelectFlavorPopUp,
+    ShowSelectLaunchConfigurationPopup,
+    HideSelectLaunchConfigurationPopuup,
 
-    NextFlavorForRunning,
-    PreviousFlavorForRunning,
+    NextLaunchConfiguration,
+    PreviousLaunchConfiguration,
 
     StartApp {
         session_id: String,

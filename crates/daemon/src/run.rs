@@ -41,17 +41,26 @@ impl FlutterRun {
     pub fn new(
         project_root: Option<String>,
         device_id: Option<String>,
-        flavor: Option<String>,
+        program: Option<String>,
+        flutter_mode: Option<String>,
+        cwd: Option<String>,
+        args: Option<Vec<String>>,
         use_fvm: bool,
     ) -> Result<Self> {
-        let mut args = vec!["run".to_string(), "--machine".to_string()];
-        if let Some(flavor) = flavor {
-            args.push("--flavor".to_string());
-            args.push(flavor);
-        }
+        let mut arguments = vec!["run".to_string(), "--machine".to_string()];
         if let Some(device_id) = device_id {
-            args.push("-d".to_string());
-            args.push(device_id);
+            arguments.push("-d".to_string());
+            arguments.push(device_id);
+        }
+        if let Some(program) = program {
+            arguments.push("-t".to_string());
+            arguments.push(program);
+        }
+        if let Some(flutter_mode) = flutter_mode {
+            arguments.push(format!("--{}", flutter_mode));
+        }
+        if let Some(args) = args {
+            arguments.extend(args);
         }
         let mut command = if use_fvm {
             Command::new("fvm")
@@ -62,9 +71,9 @@ impl FlutterRun {
             command.arg("flutter");
         }
         let mut process = command
-            .args(args)
+            .args(arguments)
             .kill_on_drop(true)
-            .current_dir(project_root.unwrap_or(".".to_string()))
+            .current_dir(cwd.unwrap_or(project_root.unwrap_or(".".to_string())))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

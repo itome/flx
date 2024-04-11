@@ -38,20 +38,32 @@ where
             .select(|state: &State| state.select_device_popup.selected_device_id.clone())
             .await;
 
-        let flavor = store
+        let configuration = store
             .select(|state: &State| {
-                let selected_flavor = state.select_flavor_popup.selected_flavor.clone()?;
-                if selected_flavor == *"Undefined" {
+                let Some(index) = state.select_launch_configuration_poopup.selected_index else {
+                    return None;
+                };
+                if index >= state.launch_configurations.len() {
                     return None;
                 }
-                Some(selected_flavor.clone())
+                state.launch_configurations.get(index).cloned()
             })
             .await;
 
         let Ok(id) = self
             .context
             .session_manager
-            .run_new_app(device_id.clone(), flavor.clone(), self.use_fvm)
+            .run_new_app(
+                device_id.clone(),
+                configuration.clone().map(|c| c.program.clone()).flatten(),
+                configuration
+                    .clone()
+                    .map(|c| c.flutter_mode.clone())
+                    .flatten(),
+                configuration.clone().map(|c| c.cwd.clone()).flatten(),
+                configuration.clone().map(|c| c.args.clone()).flatten(),
+                self.use_fvm,
+            )
             .await
         else {
             return;
@@ -61,7 +73,7 @@ where
             .dispatch(Action::RegisterSession {
                 session_id: id.clone(),
                 device_id,
-                flavor,
+                configuration,
             })
             .await;
 

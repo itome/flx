@@ -11,7 +11,9 @@ use super::{
         device_or_emulators::{self, device_or_emulators_selector, DeviceOrEmulator},
         selected_device::{self, selected_device_selector},
     },
-    state::{DevTools, FlutterFrame, Home, SelectFlavorPopupState, SessionState, State},
+    state::{
+        DevTools, FlutterFrame, Home, SelectLaunchConfigurationPopupState, SessionState, State,
+    },
 };
 
 pub fn reducer(state: State, action: Action) -> State {
@@ -45,6 +47,10 @@ pub fn reducer(state: State, action: Action) -> State {
         },
         Action::SetEmultors { emulators } => State { emulators, ..state },
         Action::SetFlavors { flavors } => State { flavors, ..state },
+        Action::SetLaunchConfigurations { configurations } => State {
+            launch_configurations: configurations,
+            ..state
+        },
         Action::NextHomeTab => State {
             focus: match state.focus {
                 Focus::Home(Home::Project) => Focus::Home(Home::Runners),
@@ -100,7 +106,7 @@ pub fn reducer(state: State, action: Action) -> State {
         Action::RegisterSession {
             session_id,
             device_id,
-            flavor,
+            configuration,
         } => State {
             session_id: Some(session_id.clone()),
             sessions: [
@@ -108,7 +114,7 @@ pub fn reducer(state: State, action: Action) -> State {
                 vec![SessionState {
                     id: session_id,
                     device_id,
-                    flavor,
+                    configuration,
                     display_refresh_rate: 60.0,
                     ..SessionState::default()
                 }],
@@ -284,33 +290,18 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
-        Action::NextFlavorForRunning => State {
-            select_flavor_popup: SelectFlavorPopupState {
-                selected_flavor: {
-                    let selected_device_platform = selected_device_selector(&state)
-                        .map(|d| d.platform.clone())
-                        .unwrap_or("".to_string());
-                    let Some(flavors) = &state.flavors.get(&selected_device_platform) else {
-                        return state;
-                    };
-
-                    match state.select_flavor_popup.selected_flavor {
-                        Some(selected_flavor) => {
-                            if let Some(index) = flavors.iter().position(|f| f == &selected_flavor)
-                            {
-                                let next_index = (index + 1) % flavors.len();
-                                flavors.get(next_index).map(|d| d.to_owned())
-                            } else if flavors.is_empty() {
-                                None
-                            } else {
-                                flavors.first().map(|d| d.to_owned())
-                            }
+        Action::NextLaunchConfiguration => State {
+            select_launch_configuration_poopup: SelectLaunchConfigurationPopupState {
+                selected_index: {
+                    match state.select_launch_configuration_poopup.selected_index {
+                        Some(selected_index) => {
+                            Some((selected_index + 1) % state.launch_configurations.len())
                         }
                         None => {
-                            if flavors.is_empty() {
+                            if state.launch_configurations.is_empty() {
                                 None
                             } else {
-                                flavors.first().map(|f| f.to_owned())
+                                Some(0)
                             }
                         }
                     }
@@ -318,33 +309,22 @@ pub fn reducer(state: State, action: Action) -> State {
             },
             ..state
         },
-        Action::PreviousFlavorForRunning => State {
-            select_flavor_popup: SelectFlavorPopupState {
-                selected_flavor: {
-                    let selected_device_platform = &selected_device_selector(&state)
-                        .map(|d| d.platform.clone())
-                        .unwrap_or("".to_string());
-                    let Some(flavors) = &state.flavors.get(selected_device_platform) else {
-                        return state;
-                    };
-
-                    match state.select_flavor_popup.selected_flavor {
-                        Some(selected_flavor) => {
-                            if let Some(index) = flavors.iter().position(|f| f == &selected_flavor)
-                            {
-                                let next_index = (index + flavors.len() - 1) % flavors.len();
-                                flavors.get(next_index).map(|d| d.to_owned())
-                            } else if flavors.is_empty() {
-                                None
+        Action::PreviousLaunchConfiguration => State {
+            select_launch_configuration_poopup: SelectLaunchConfigurationPopupState {
+                selected_index: {
+                    match state.select_launch_configuration_poopup.selected_index {
+                        Some(selected_index) => {
+                            if selected_index > 0 {
+                                Some(selected_index - 1)
                             } else {
-                                flavors.last().map(|d| d.to_owned())
+                                Some(0)
                             }
                         }
                         None => {
-                            if flavors.is_empty() {
+                            if state.launch_configurations.is_empty() {
                                 None
                             } else {
-                                flavors.last().map(|d| d.to_owned())
+                                Some(state.launch_configurations.len() - 1)
                             }
                         }
                     }
@@ -366,21 +346,19 @@ pub fn reducer(state: State, action: Action) -> State {
             popup: None,
             ..state
         },
-        Action::ShowSelectFlavorPopUp => {
-            let Some(selected_device) = selected_device_selector(&state) else {
-                return state;
-            };
-            let flavors = state.flavors.get(&selected_device.platform);
-            State {
-                popup: Some(PopUp::SelectFlavor),
-                select_flavor_popup: SelectFlavorPopupState {
-                    selected_flavor: flavors.and_then(|f| f.first().cloned()),
+        Action::ShowSelectLaunchConfigurationPopup => State {
+            popup: Some(PopUp::SelectLaunchConfiguration),
+            select_launch_configuration_poopup: SelectLaunchConfigurationPopupState {
+                selected_index: if state.launch_configurations.is_empty() {
+                    None
+                } else {
+                    Some(0)
                 },
-                ..state
-            }
-        }
-        Action::HideSelectFlavorPopUp => State {
-            focus: Focus::Home(Home::Runners),
+            },
+            ..state
+        },
+        Action::HideSelectLaunchConfigurationPopuup => State {
+            popup: None,
             ..state
         },
         Action::StartApp {

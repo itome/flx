@@ -79,7 +79,6 @@ impl Component for AppComponent {
         } else {
             None
         };
-        let flavor = &session.flavor;
         let status_color = if session.hot_reloading {
             Color::Yellow
         } else if session.hot_restarting {
@@ -89,7 +88,7 @@ impl Component for AppComponent {
         } else {
             Color::White
         };
-        let mut name = format!(
+        let name = format!(
             " {} ",
             if let Some(device) = device {
                 device.name.clone()
@@ -97,9 +96,6 @@ impl Component for AppComponent {
                 "".to_string()
             }
         );
-        if let Some(flavor) = flavor {
-            name.push_str(&format!("({})", flavor))
-        }
 
         let block = Block::default()
             .title("App")

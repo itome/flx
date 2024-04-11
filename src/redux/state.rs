@@ -18,7 +18,7 @@ pub enum Home {
 pub enum PopUp {
     #[default]
     SelectDevice,
-    SelectFlavor,
+    SelectLaunchConfiguration,
 }
 
 #[derive(Clone, PartialEq, Eq, Default)]
@@ -41,6 +41,15 @@ impl Default for Focus {
     fn default() -> Self {
         Focus::Home(Home::Runners)
     }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct LaunchConfiguration {
+    pub name: String,
+    pub program: Option<String>,
+    pub args: Option<Vec<String>>,
+    pub cwd: Option<String>,
+    pub flutter_mode: Option<String>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -70,7 +79,7 @@ pub struct SessionState {
     pub id: String,
     pub app_id: Option<String>,
     pub device_id: Option<String>,
-    pub flavor: Option<String>,
+    pub configuration: Option<LaunchConfiguration>,
     pub started: bool,
     pub mode: Option<AppMode>,
     pub hot_reloading: bool,
@@ -92,8 +101,8 @@ pub struct SelectDevicePopupState {
 }
 
 #[derive(Default, Clone, PartialEq)]
-pub struct SelectFlavorPopupState {
-    pub selected_flavor: Option<String>,
+pub struct SelectLaunchConfigurationPopupState {
+    pub selected_index: Option<usize>,
 }
 
 #[derive(Default, Clone, PartialEq)]
@@ -105,6 +114,7 @@ pub struct State {
     pub devices: Vec<Device>,
     pub emulators: Vec<Emulator>,
     pub selected_device_or_emulator_id: Option<String>,
+    pub launch_configurations: Vec<LaunchConfiguration>,
 
     pub flavors: HashMap<String, Vec<String>>,
 
@@ -114,5 +124,5 @@ pub struct State {
     pub supported_platforms: Vec<String>,
 
     pub select_device_popup: SelectDevicePopupState,
-    pub select_flavor_popup: SelectFlavorPopupState,
+    pub select_launch_configuration_poopup: SelectLaunchConfigurationPopupState,
 }

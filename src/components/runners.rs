@@ -140,7 +140,6 @@ impl Component for RunnersComponent {
                     .iter()
                     .find(|d| d.id == session.device_id.clone().unwrap_or("".to_string()));
                 let device_name = device.map(|d| d.name.clone()).unwrap_or("".to_string());
-                let flavor = &session.flavor;
                 let status_color = if session.hot_reloading {
                     Color::Yellow
                 } else if session.hot_restarting {
@@ -150,10 +149,7 @@ impl Component for RunnersComponent {
                 } else {
                     Color::White
                 };
-                let mut name = format!(" {} ", device_name);
-                if let Some(flavor) = flavor {
-                    name.push_str(&format!("({})", flavor))
-                }
+                let name = format!(" {} ", device_name);
                 let item = ListItem::new(name).style(Style::default().fg(status_color));
                 if state.focus == Focus::Home(Home::Runners)
                     && state.session_id == Some(session.id.clone())

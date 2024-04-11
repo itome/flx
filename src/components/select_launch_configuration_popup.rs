@@ -19,12 +19,12 @@ use daemon::flutter::FlutterDaemon;
 use super::Component;
 
 #[derive(Default)]
-pub struct SelectFlavorPopupComponent {
+pub struct SelectLaunchConfigurationPopupComponent {
     use_fvm: bool,
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
-impl SelectFlavorPopupComponent {
+impl SelectLaunchConfigurationPopupComponent {
     pub fn new(use_fvm: bool) -> Self {
         Self {
             use_fvm,
@@ -36,7 +36,7 @@ impl SelectFlavorPopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::NextFlavorForRunning.into())?;
+            .send(Action::NextLaunchConfiguration.into())?;
         Ok(())
     }
 
@@ -44,7 +44,7 @@ impl SelectFlavorPopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::PreviousFlavorForRunning.into())?;
+            .send(Action::PreviousLaunchConfiguration.into())?;
         Ok(())
     }
 
@@ -58,7 +58,6 @@ impl SelectFlavorPopupComponent {
                 }
                 .into(),
             )?;
-        self.hide_popup()?;
         Ok(())
     }
 
@@ -66,27 +65,19 @@ impl SelectFlavorPopupComponent {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::HideSelectFlavorPopUp.into())?;
-        Ok(())
-    }
-
-    fn hide_device_popup(&self) -> Result<()> {
-        self.action_tx
-            .as_ref()
-            .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::HideSelectDevicePopUp.into())?;
+            .send(Action::HideSelectLaunchConfigurationPopuup.into())?;
         Ok(())
     }
 }
 
-impl Component for SelectFlavorPopupComponent {
+impl Component for SelectLaunchConfigurationPopupComponent {
     fn register_action_handler(&mut self, tx: UnboundedSender<ActionOrThunk>) -> Result<()> {
         self.action_tx = Some(tx);
         Ok(())
     }
 
     fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
-        if state.popup != Some(PopUp::SelectFlavor) {
+        if state.popup != Some(PopUp::SelectLaunchConfiguration) {
             return Ok(());
         }
 
@@ -94,37 +85,29 @@ impl Component for SelectFlavorPopupComponent {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             KeyCode::Enter => {
-                self.run_new_app()?;
-                self.hide_device_popup()?;
-            }
-            KeyCode::Esc => {
-                self.hide_device_popup()?;
                 self.hide_popup()?;
+                self.run_new_app()?;
             }
+            KeyCode::Esc => self.hide_popup()?,
             _ => {}
         }
         Ok(())
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
-        if state.popup != Some(PopUp::SelectFlavor) {
+        if state.popup != Some(PopUp::SelectLaunchConfiguration) {
             return;
         }
 
         f.render_widget(Clear, area);
 
-        let selected_device_platform = selected_device_selector(state)
-            .map(|d| d.platform.clone())
-            .unwrap_or("".to_string());
-        let Some(flavors) = &state.flavors.get(&selected_device_platform) else {
-            return;
-        };
-
-        let items = flavors
+        let items = state
+            .launch_configurations
             .iter()
-            .map(|flavor| {
-                let item = ListItem::new(format!(" {} ", flavor.clone()));
-                if state.select_flavor_popup.selected_flavor == Some(flavor.clone()) {
+            .enumerate()
+            .map(|(index, config)| {
+                let item = ListItem::new(format!(" {} ", config.name.clone()));
+                if state.select_launch_configuration_poopup.selected_index == Some(index) {
                     item.add_modifier(Modifier::REVERSED)
                         .add_modifier(Modifier::BOLD)
                 } else {
@@ -134,7 +117,7 @@ impl Component for SelectFlavorPopupComponent {
             .collect::<Vec<_>>();
 
         let block = Block::default()
-            .title("Which flavor do you want to use?")
+            .title("Select launch configuration")
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(Color::Green));

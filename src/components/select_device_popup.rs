@@ -59,7 +59,6 @@ impl SelectDevicePopupComponent {
                 }
                 .into(),
             )?;
-        self.hide_popup()?;
         Ok(())
     }
 
@@ -71,11 +70,11 @@ impl SelectDevicePopupComponent {
         Ok(())
     }
 
-    fn show_select_flavor(&self) -> Result<()> {
+    fn show_select_launch_configuration(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::ShowSelectFlavorPopUp.into())?;
+            .send(Action::ShowSelectLaunchConfigurationPopup.into())?;
         Ok(())
     }
 }
@@ -95,21 +94,14 @@ impl Component for SelectDevicePopupComponent {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             KeyCode::Enter => {
-                let selected_device_platform = selected_device_selector(state)
-                    .map(|d| d.platform.clone())
-                    .unwrap_or("".to_string());
-
-                let Some(flavors) = &state.flavors.get(&selected_device_platform) else {
+                if state.launch_configurations.is_empty() {
+                    self.hide_popup()?;
                     self.run_new_app()?;
                     return Ok(());
                 };
 
-                if flavors.is_empty() {
-                    self.run_new_app()?;
-                    return Ok(());
-                }
-
-                self.show_select_flavor()?
+                self.hide_popup()?;
+                self.show_select_launch_configuration()?
             }
             KeyCode::Esc => self.hide_popup()?,
 
