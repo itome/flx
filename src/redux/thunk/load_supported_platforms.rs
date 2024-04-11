@@ -60,21 +60,30 @@ where
                     if let Ok(Some(schemes)) =
                         ios::get_schemes(project_root.clone().unwrap_or(".".to_string()))
                     {
-                        flavors.insert("ios".to_string(), schemes);
+                        flavors.insert(
+                            "ios".to_string(),
+                            schemes.iter().map(|s| s.to_lowercase()).collect(),
+                        );
                     }
                 }
                 "macos" => {
                     if let Ok(Some(schemes)) =
                         ios::get_schemes(project_root.clone().unwrap_or(".".to_string()))
                     {
-                        flavors.insert("darwin".to_string(), schemes);
+                        flavors.insert(
+                            "darwin".to_string(),
+                            schemes.iter().map(|s| s.to_lowercase()).collect(),
+                        );
                     }
                 }
                 "android" => {
                     if let Ok(Some(schemes)) =
                         android::get_schemes(project_root.clone().unwrap_or(".".to_string()))
                     {
-                        flavors.insert("android".to_string(), schemes);
+                        flavors.insert(
+                            "android".to_string(),
+                            schemes.iter().map(|s| s.to_lowercase()).collect(),
+                        );
                     }
                 }
                 _ => {}
