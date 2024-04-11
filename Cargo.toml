@@ -9,7 +9,7 @@ build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
-members = ["crates/android", "crates/daemon", "crates/devtools", "crates/ios"]
+members = ["crates/android", "crates/daemon", "crates/devtools", "crates/ios", "crates/vscode"]
 
 [dependencies]
 daemon = { path = "crates/daemon" }
