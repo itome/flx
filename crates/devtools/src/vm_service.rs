@@ -1,23 +1,20 @@
 use crate::params;
+use crate::protocols::vm_service::*;
 use color_eyre::{eyre::eyre, Result};
 use futures::{SinkExt, StreamExt};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde_json::Map;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, Mutex};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
-
-use crate::protocols::vm_service::*;
-
-use std::collections::HashMap;
-
-use serde_json::{Map, Value};
+use uuid::Uuid;
 
 pub struct VmService {
     pub incoming_tx: broadcast::Sender<String>,
     _incoming_rx: broadcast::Receiver<String>,
     outgoing_tx: mpsc::Sender<String>,
     outgoing_rx: Arc<Mutex<mpsc::Receiver<String>>>,
-    request_count: Arc<Mutex<u32>>,
 }
 
 impl Default for VmService {
@@ -36,7 +33,6 @@ impl VmService {
             _incoming_rx,
             outgoing_tx,
             outgoing_rx: Arc::new(Mutex::new(outgoing_rx)),
-            request_count: Arc::new(Mutex::new(0)),
         }
     }
 
@@ -87,22 +83,16 @@ impl VmService {
     where
         T: DeserializeOwned,
     {
-        let request_id = self.request_id().await;
+        let request_id = Uuid::new_v4().to_string();
         let request = VmServiceRequest {
             jsonrpc: "2.0".to_string(),
-            id: request_id,
+            id: request_id.clone(),
             method: method.to_string(),
             params,
         };
         self.send_request(&request).await?;
-        let result: VmServiceResponse<T> = self.receive_response(request_id).await?;
+        let result: VmServiceResponse<T> = self.receive_response(&request_id).await?;
         Ok(result.result)
-    }
-
-    async fn request_id(&self) -> u32 {
-        let mut request_count = self.request_count.lock().await;
-        *request_count += 1;
-        *request_count
     }
 
     async fn send_request(&self, request: &VmServiceRequest) -> Result<()> {
@@ -111,24 +101,21 @@ impl VmService {
         Ok(())
     }
 
-    async fn receive_response<T>(&self, request_id: u32) -> Result<VmServiceResponse<T>>
+    async fn receive_response<T>(&self, request_id: &str) -> Result<VmServiceResponse<T>>
     where
         T: DeserializeOwned,
     {
         let mut rx = self.incoming_tx.subscribe();
         while let Ok(line) = rx.recv().await {
-            let json = serde_json::from_str::<Map<String, Value>>(&line);
-            if let Ok(json) = json {
-                if json.get("id") != Some(&Value::Number(serde_json::Number::from(request_id))) {
-                    continue;
-                }
-            }
-
             let mut deserializer = serde_json::Deserializer::from_str(&line);
             deserializer.disable_recursion_limit();
             let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
-            let response = VmServiceResponse::<T>::deserialize(deserializer)?;
-            return Ok(response);
+            let Ok(response) = VmServiceResponse::<T>::deserialize(deserializer) else {
+                continue;
+            };
+            if response.id == request_id {
+                return Ok(response);
+            }
         }
         Err(eyre!("Could not receive vm service response"))
     }
@@ -137,14 +124,14 @@ impl VmService {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 struct VmServiceRequest {
     jsonrpc: String,
-    id: u32,
+    id: String,
     method: String,
     params: serde_json::Map<String, serde_json::Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct VmServiceResponse<R> {
-    pub id: u32,
+    pub id: String,
     pub jsonrpc: String,
     pub result: R,
 }
