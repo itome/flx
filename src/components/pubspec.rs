@@ -38,7 +38,7 @@ impl PubspecComponent {
 
 impl Component for PubspecComponent {
     fn init(&mut self, area: Rect) -> Result<()> {
-        let pubspec_content = fs::read_to_string(&self.project_root.join("pubspec.yaml"))?;
+        let pubspec_content = fs::read_to_string(self.project_root.join("pubspec.yaml"))?;
         self.lines = vec![];
         let ps = SyntaxSet::load_defaults_newlines();
         let ts = ThemeSet::load_defaults();

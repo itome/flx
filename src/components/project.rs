@@ -32,7 +32,7 @@ impl ProjectComponent {
 
 impl Component for ProjectComponent {
     fn init(&mut self, area: Rect) -> Result<()> {
-        let file = File::open(&self.project_root.join("pubspec.yaml"))?;
+        let file = File::open(self.project_root.join("pubspec.yaml"))?;
         let reader = BufReader::new(file);
         let pubspec: serde_yaml::Value = serde_yaml::from_reader(reader)?;
         if let serde_yaml::Value::Mapping(map) = pubspec {
