@@ -40,9 +40,7 @@ where
 
         let configuration = store
             .select(|state: &State| {
-                let Some(index) = state.select_launch_configuration_poopup.selected_index else {
-                    return None;
-                };
+                let index = state.select_launch_configuration_poopup.selected_index?;
                 if index >= state.launch_configurations.len() {
                     return None;
                 }
@@ -55,13 +53,10 @@ where
             .session_manager
             .run_new_app(
                 device_id.clone(),
-                configuration.clone().map(|c| c.program.clone()).flatten(),
-                configuration
-                    .clone()
-                    .map(|c| c.flutter_mode.clone())
-                    .flatten(),
-                configuration.clone().map(|c| c.cwd.clone()).flatten(),
-                configuration.clone().map(|c| c.args.clone()).flatten(),
+                configuration.clone().and_then(|c| c.program.clone()),
+                configuration.clone().and_then(|c| c.flutter_mode.clone()),
+                configuration.clone().and_then(|c| c.cwd.clone()),
+                configuration.clone().and_then(|c| c.args.clone()),
                 self.use_fvm,
             )
             .await
