@@ -115,7 +115,11 @@ impl Component for PerformanceComponent {
 
         let text = List::new(lines)
             .block(block)
-            .highlight_style(Style::default().bg(Color::DarkGray))
+            .highlight_style(if state.focus == Focus::DevTools(DevTools::Performance) {
+                Style::default().bg(Color::DarkGray)
+            } else {
+                Style::default()
+            })
             .highlight_spacing(HighlightSpacing::Never);
 
         f.render_stateful_widget(text, area, &mut list_state);
