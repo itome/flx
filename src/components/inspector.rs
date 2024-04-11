@@ -32,10 +32,7 @@ impl<'a> InspectorComponent<'a> {
 
     fn item_builder(item: &DiagnosticNode) -> TreeItem<'a, String> {
         if let Some(children) = item.children.as_ref() {
-            let children = children
-                .iter()
-                .map(|child| Self::item_builder(child))
-                .collect();
+            let children = children.iter().map(Self::item_builder).collect();
             TreeItem::new(
                 item.value_id.clone().unwrap_or_default(),
                 item.description.clone().unwrap_or_default(),
@@ -111,7 +108,7 @@ impl<'a> Component for InspectorComponent<'a> {
         self.items = session
             .widget_summary_tree
             .iter()
-            .map(|node| Self::item_builder(node))
+            .map(Self::item_builder)
             .collect::<Vec<_>>();
 
         let tree = Tree::new(self.items.clone())
