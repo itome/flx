@@ -651,7 +651,6 @@ mod test {
         let response = include_str!("../../test/get_root_widget_response.txt");
         let node =
             serde_json::from_str::<VmServiceResponse<ResultResponse<DiagnosticNode>>>(response);
-        println!("{:?}", node);
         assert!(node.is_ok());
     }
 }

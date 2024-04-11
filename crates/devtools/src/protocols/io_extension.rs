@@ -280,7 +280,6 @@ mod test {
     fn parse_http_profile() {
         let response = include_str!("../../test/get_http_profile_response.txt");
         let node = serde_json::from_str::<VmServiceResponse<HttpProfile>>(response);
-        println!("{:?}", node);
         assert!(node.is_ok());
     }
 }

@@ -155,5 +155,5 @@
         "type": "_extensionType",
         "method": "ext.flutter.inspector.getRootWidget"
     },
-    "id": 2
+    "id": "2"
 }
