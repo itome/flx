@@ -67,7 +67,7 @@ where
 
         for stream_id in stream_ids {
             if let Err(e) = vm_service.stream_listen(stream_id.clone()).await {
-                log::error!("Failed to cancel stream {:?}: {:?}", stream_id, e);
+                log::error!("Failed to listen stream {:?}: {:?}", stream_id, e);
             }
         }
 
