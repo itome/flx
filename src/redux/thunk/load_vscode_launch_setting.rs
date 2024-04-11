@@ -33,15 +33,12 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        let Some(project_root) = store
+        let project_root = store
             .select(|state: &State| state.project_root.clone())
-            .await
-        else {
-            return;
-        };
+            .await;
 
-        let launch_json_path = format!("{}/.vscode/launch.json", project_root);
-        if !Path::new(&launch_json_path).exists() {
+        let launch_json_path = project_root.join(".vscode/launch.json");
+        if !launch_json_path.exists() {
             return;
         }
         let Ok(json) = fs::read_to_string(launch_json_path).await else {

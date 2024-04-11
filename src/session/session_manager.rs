@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use color_eyre::eyre::{eyre, Result};
 use daemon::run::FlutterRun;
@@ -14,7 +14,7 @@ pub struct Session {
 
 impl Session {
     pub fn new(
-        project_root: Option<String>,
+        project_root: PathBuf,
         device_id: Option<String>,
         program: Option<String>,
         flutter_mode: Option<String>,
@@ -42,7 +42,7 @@ impl Session {
 }
 
 pub struct SessionManager {
-    project_root: Option<String>,
+    project_root: PathBuf,
     pub session0: Arc<RwLock<Option<Session>>>,
     pub session1: Arc<RwLock<Option<Session>>>,
     pub session2: Arc<RwLock<Option<Session>>>,
@@ -56,7 +56,7 @@ pub struct SessionManager {
 }
 
 impl SessionManager {
-    pub fn new(project_root: Option<String>) -> Self {
+    pub fn new(project_root: PathBuf) -> Self {
         Self {
             project_root,
             session0: Arc::new(RwLock::new(None)),

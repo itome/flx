@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use color_eyre::owo_colors::OwoColorize;
@@ -20,15 +21,15 @@ use super::Component;
 
 #[derive(Default)]
 pub struct PubspecComponent {
-    pub pubspec_path: String,
+    pub project_root: PathBuf,
     pub lines: Vec<Vec<(String, Style)>>,
     scroll_poition: usize,
 }
 
 impl PubspecComponent {
-    pub fn new(pubspec_path: String) -> Self {
+    pub fn new(project_root: PathBuf) -> Self {
         Self {
-            pubspec_path,
+            project_root,
             lines: vec![],
             scroll_poition: 0,
         }
@@ -37,7 +38,7 @@ impl PubspecComponent {
 
 impl Component for PubspecComponent {
     fn init(&mut self, area: Rect) -> Result<()> {
-        let pubspec_content = fs::read_to_string(&self.pubspec_path)?;
+        let pubspec_content = fs::read_to_string(&self.project_root.join("pubspec.yaml"))?;
         self.lines = vec![];
         let ps = SyntaxSet::load_defaults_newlines();
         let ts = ThemeSet::load_defaults();

@@ -1,4 +1,4 @@
-use std::{process::Stdio, sync::Arc};
+use std::{path::PathBuf, process::Stdio, sync::Arc};
 
 use color_eyre::{eyre::eyre, Result};
 use serde::de::DeserializeOwned;
@@ -39,7 +39,7 @@ pub struct FlutterRun {
 
 impl FlutterRun {
     pub fn new(
-        project_root: Option<String>,
+        project_root: PathBuf,
         device_id: Option<String>,
         program: Option<String>,
         flutter_mode: Option<String>,
@@ -73,7 +73,7 @@ impl FlutterRun {
         let mut process = command
             .args(arguments)
             .kill_on_drop(true)
-            .current_dir(cwd.unwrap_or(project_root.unwrap_or(".".to_string())))
+            .current_dir(project_root.join(cwd.unwrap_or_default()))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

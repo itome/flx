@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::time::Duration;
 use std::{collections::HashMap, time::SystemTime};
 
@@ -110,7 +111,7 @@ pub struct State {
     pub focus: Focus,
     pub popup: Option<PopUp>,
 
-    pub project_root: Option<String>,
+    pub project_root: PathBuf,
     pub devices: Vec<Device>,
     pub emulators: Vec<Emulator>,
     pub selected_device_or_emulator_id: Option<String>,
@@ -125,4 +126,13 @@ pub struct State {
 
     pub select_device_popup: SelectDevicePopupState,
     pub select_launch_configuration_poopup: SelectLaunchConfigurationPopupState,
+}
+
+impl State {
+    pub fn new(project_root: PathBuf) -> Self {
+        Self {
+            project_root,
+            ..Default::default()
+        }
+    }
 }

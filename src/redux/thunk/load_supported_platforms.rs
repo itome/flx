@@ -33,10 +33,14 @@ where
             .select(|state: &State| state.project_root.clone())
             .await;
 
+        let Ok(project_root) = project_root.into_os_string().into_string() else {
+            return;
+        };
+
         let Ok(supprted_platforms) = self
             .context
             .daemon
-            .get_supported_platforms(project_root.clone().unwrap_or(".".to_string()))
+            .get_supported_platforms(project_root.clone())
             .await
         else {
             return;
@@ -57,9 +61,7 @@ where
         for supported_platform in supported_platforms {
             match supported_platform.as_str() {
                 "ios" => {
-                    if let Ok(Some(schemes)) =
-                        ios::get_schemes(project_root.clone().unwrap_or(".".to_string()))
-                    {
+                    if let Ok(Some(schemes)) = ios::get_schemes(project_root.clone()) {
                         flavors.insert(
                             "ios".to_string(),
                             schemes.iter().map(|s| s.to_lowercase()).collect(),
@@ -67,9 +69,7 @@ where
                     }
                 }
                 "macos" => {
-                    if let Ok(Some(schemes)) =
-                        ios::get_schemes(project_root.clone().unwrap_or(".".to_string()))
-                    {
+                    if let Ok(Some(schemes)) = ios::get_schemes(project_root.clone()) {
                         flavors.insert(
                             "darwin".to_string(),
                             schemes.iter().map(|s| s.to_lowercase()).collect(),
@@ -77,9 +77,7 @@ where
                     }
                 }
                 "android" => {
-                    if let Ok(Some(schemes)) =
-                        android::get_schemes(project_root.clone().unwrap_or(".".to_string()))
-                    {
+                    if let Ok(Some(schemes)) = android::get_schemes(project_root.clone()) {
                         flavors.insert(
                             "android".to_string(),
                             schemes.iter().map(|s| s.to_lowercase()).collect(),

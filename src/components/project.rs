@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::BufReader;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use ratatui::prelude::Rect;
@@ -14,15 +15,15 @@ use super::Component;
 
 #[derive(Default)]
 pub struct ProjectComponent {
-    pubspec_path: String,
+    project_root: PathBuf,
     project_name: Option<String>,
     version: Option<String>,
 }
 
 impl ProjectComponent {
-    pub fn new(pubspec_path: String) -> Self {
+    pub fn new(project_root: PathBuf) -> Self {
         Self {
-            pubspec_path,
+            project_root,
             project_name: None,
             version: None,
         }
@@ -31,7 +32,7 @@ impl ProjectComponent {
 
 impl Component for ProjectComponent {
     fn init(&mut self, area: Rect) -> Result<()> {
-        let file = File::open(&self.pubspec_path)?;
+        let file = File::open(&self.project_root.join("pubspec.yaml"))?;
         let reader = BufReader::new(file);
         let pubspec: serde_yaml::Value = serde_yaml::from_reader(reader)?;
         if let serde_yaml::Value::Mapping(map) = pubspec {

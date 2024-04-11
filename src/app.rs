@@ -11,6 +11,8 @@ use redux_rs::{
 use redux_rs::{Selector, Store};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedSender};
 use tokio::sync::{Mutex, RwLock};
@@ -73,7 +75,7 @@ pub enum ComponentId {
 pub struct App {
     pub tick_rate: f64,
     pub frame_rate: f64,
-    pub project_root: Option<String>,
+    pub project_root: PathBuf,
     pub use_fvm: bool,
     pub components: HashMap<ComponentId, Box<dyn Component>>,
     pub should_quit: bool,
@@ -82,17 +84,25 @@ pub struct App {
 
 impl App {
     pub fn new(project_root: Option<String>, use_fvm: bool) -> Result<Self> {
-        let pubspec_path = project_root.clone().unwrap_or(".".to_string()) + "/pubspec.yaml";
+        let project_root = if let Some(project_root) = project_root.clone() {
+            let path = Path::new(&project_root).to_path_buf();
+            if !path.exists() {
+                return Err(eyre!("Invalid project root"));
+            }
+            path
+        } else {
+            env::current_dir()?
+        };
 
         Ok(Self {
             tick_rate: 4.0,
             frame_rate: 60.0,
-            project_root,
+            project_root: project_root.clone(),
             use_fvm,
             components: HashMap::from([
                 (
                     ComponentId::Project,
-                    Box::new(ProjectComponent::new(pubspec_path.clone())) as Box<dyn Component>,
+                    Box::new(ProjectComponent::new(project_root.clone())) as Box<dyn Component>,
                 ),
                 (
                     ComponentId::Runners,
@@ -133,7 +143,7 @@ impl App {
                 ),
                 (
                     ComponentId::Pubspec,
-                    Box::new(PubspecComponent::new(pubspec_path)) as Box<dyn Component>,
+                    Box::new(PubspecComponent::new(project_root)) as Box<dyn Component>,
                 ),
                 (
                     ComponentId::App,
@@ -162,19 +172,16 @@ impl App {
     }
 
     pub async fn run(&mut self) -> Result<()> {
-        let store = Store::new(reducer).wrap(ThunkMiddleware).await;
+        let initial_state = State::new(self.project_root.clone());
+        let store = Store::new_with_state(reducer, initial_state)
+            .wrap(ThunkMiddleware)
+            .await;
         let daemon = Arc::new(FlutterDaemon::new(self.use_fvm)?);
         let session_manager = Arc::new(SessionManager::new(self.project_root.clone()));
         let context = Arc::new(Context::new(daemon.clone(), session_manager.clone()));
         let (tui_action_tx, mut tui_action_rx) = mpsc::unbounded_channel::<TuiAction>();
         let (redux_action_tx, mut redux_action_rx) = mpsc::unbounded_channel::<ActionOrThunk>();
 
-        redux_action_tx.send(
-            Action::SetProjectRoot {
-                project_root: self.project_root.clone(),
-            }
-            .into(),
-        )?;
         redux_action_tx.send(ThunkAction::WatchDevices.into())?;
         redux_action_tx.send(ThunkAction::LoadEmulators.into())?;
         redux_action_tx.send(ThunkAction::LoadSupportedPlatforms.into())?;

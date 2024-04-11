@@ -44,10 +44,6 @@ pub enum Action {
         session_id: String,
     },
 
-    SetProjectRoot {
-        project_root: Option<String>,
-    },
-
     SetSupportedPlatforms {
         platforms: Vec<String>,
     },

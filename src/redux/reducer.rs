@@ -467,10 +467,6 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
-        Action::SetProjectRoot { project_root } => State {
-            project_root,
-            ..state
-        },
         Action::SetSupportedPlatforms { platforms } => State {
             supported_platforms: platforms,
             ..state
