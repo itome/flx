@@ -22,6 +22,9 @@
   </a>
 </h4>
 
+> [!WARNING]
+> This project is in the early phases of development. Please use it at your own risk.
+
 
 <p align="center">
   <img src="./.github/assets/screenshot_home.png"/>
