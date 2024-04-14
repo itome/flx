@@ -12,12 +12,39 @@ use super::{
         selected_device::{self, selected_device_selector},
     },
     state::{
-        DevTools, FlutterFrame, Home, SelectLaunchConfigurationPopupState, SessionState, State,
+        DevTools, FlutterFrame, Home, SdkVersion, SelectLaunchConfigurationPopupState,
+        SessionState, State,
     },
 };
 
 pub fn reducer(state: State, action: Action) -> State {
     match action {
+        Action::SetSdkVersion {
+            framework_version,
+            channel,
+            repository_url,
+            framework_revision,
+            framework_commit_date,
+            engine_revision,
+            dart_sdk_version,
+            dev_tools_version,
+            flutter_version,
+            flutter_root,
+        } => State {
+            sdk_version: Some(SdkVersion {
+                framework_version,
+                channel,
+                repository_url,
+                framework_revision,
+                framework_commit_date,
+                engine_revision,
+                dart_sdk_version,
+                dev_tools_version,
+                flutter_version,
+                flutter_root,
+            }),
+            ..state
+        },
         Action::AddDevice { device } => {
             let mut new_state = State {
                 devices: [state.devices, vec![device.clone()]].concat(),

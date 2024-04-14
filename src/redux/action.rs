@@ -9,6 +9,19 @@ use std::time::Duration;
 
 #[derive(Debug)]
 pub enum Action {
+    SetSdkVersion {
+        framework_version: String,
+        channel: String,
+        repository_url: String,
+        framework_revision: String,
+        framework_commit_date: String,
+        engine_revision: String,
+        dart_sdk_version: String,
+        dev_tools_version: String,
+        flutter_version: String,
+        flutter_root: String,
+    },
+
     AddDevice {
         device: Device,
     },

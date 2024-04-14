@@ -13,6 +13,7 @@ pub mod launch_emulator;
 pub mod load_emulators;
 pub mod load_full_request;
 pub mod load_root_widget_summary_tree;
+pub mod load_sdk_versions;
 pub mod load_supported_platforms;
 pub mod load_vscode_launch_setting;
 pub mod run_new_app;
@@ -25,6 +26,7 @@ pub mod watch_requests;
 #[derive(Debug)]
 pub enum ThunkAction {
     WatchDevices,
+    LoadSdkVersions { use_fvm: bool },
     LoadSupportedPlatforms,
     LoadEmulators,
     LoadFullRequest,
@@ -47,6 +49,9 @@ where
     match action {
         ThunkAction::WatchDevices => Box::new(watch_devices::WatchDevicesThunk::new(context)),
         ThunkAction::LoadEmulators => Box::new(load_emulators::LoadEmulatorsThunk::new(context)),
+        ThunkAction::LoadSdkVersions { use_fvm } => Box::new(
+            load_sdk_versions::LoadSdkVersionsThunk::new(context, use_fvm),
+        ),
         ThunkAction::LoadVSCodeLaunchSetting => {
             Box::new(load_vscode_launch_setting::LoadVSCodeLaunchSettingThunk::new(context))
         }

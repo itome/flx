@@ -45,6 +45,20 @@ impl Default for Focus {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SdkVersion {
+    pub framework_version: String,
+    pub channel: String,
+    pub repository_url: String,
+    pub framework_revision: String,
+    pub framework_commit_date: String,
+    pub engine_revision: String,
+    pub dart_sdk_version: String,
+    pub dev_tools_version: String,
+    pub flutter_version: String,
+    pub flutter_root: String,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct LaunchConfiguration {
     pub name: String,
     pub program: Option<String>,
@@ -110,6 +124,8 @@ pub struct SelectLaunchConfigurationPopupState {
 pub struct State {
     pub focus: Focus,
     pub popup: Option<PopUp>,
+
+    pub sdk_version: Option<SdkVersion>,
 
     pub project_root: PathBuf,
     pub devices: Vec<Device>,

@@ -24,6 +24,7 @@ use crate::components::devices::DevicesComponent;
 use crate::components::frame_analysis::FrameAnalysisComponent;
 use crate::components::frames::FramesComponent;
 use crate::components::inspector::InspectorComponent;
+use crate::components::launch_configurations::LaunchConfigurationsComponent;
 use crate::components::logs::LogsComponent;
 use crate::components::network::NetworkComponent;
 use crate::components::network_request::NetworkRequestComponent;
@@ -31,6 +32,7 @@ use crate::components::performance::PerformanceComponent;
 use crate::components::project::ProjectComponent;
 use crate::components::pubspec::PubspecComponent;
 use crate::components::runners::RunnersComponent;
+use crate::components::sdk_version::SdkVersionComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
 use crate::components::select_launch_configuration_popup::SelectLaunchConfigurationPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
@@ -70,6 +72,8 @@ pub enum ComponentId {
     App,
     Performance,
     Inspector,
+    LaunchConfigurations,
+    SdkVersion,
 }
 
 pub struct App {
@@ -165,6 +169,14 @@ impl App {
                     ComponentId::FrameAnalysis,
                     Box::new(FrameAnalysisComponent::new()) as Box<dyn Component>,
                 ),
+                (
+                    ComponentId::LaunchConfigurations,
+                    Box::new(LaunchConfigurationsComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::SdkVersion,
+                    Box::new(SdkVersionComponent::new()) as Box<dyn Component>,
+                ),
             ]),
             should_quit: false,
             should_suspend: false,
@@ -186,6 +198,12 @@ impl App {
         redux_action_tx.send(ThunkAction::LoadEmulators.into())?;
         redux_action_tx.send(ThunkAction::LoadSupportedPlatforms.into())?;
         redux_action_tx.send(ThunkAction::LoadVSCodeLaunchSetting.into())?;
+        redux_action_tx.send(
+            ThunkAction::LoadSdkVersions {
+                use_fvm: self.use_fvm,
+            }
+            .into(),
+        )?;
 
         let mut tui = tui::Tui::new()?
             .tick_rate(self.tick_rate)
@@ -336,6 +354,18 @@ impl App {
                         self.component(&ComponentId::Logs)
                             .draw(f, horizontal_layout[2], state);
                     }
+                } else {
+                    let horizontal_layout = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints([Constraint::Fill(1), Constraint::Fill(1)])
+                        .split(layout[1]);
+                    self.component(&ComponentId::LaunchConfigurations).draw(
+                        f,
+                        horizontal_layout[0],
+                        state,
+                    );
+                    self.component(&ComponentId::SdkVersion)
+                        .draw(f, horizontal_layout[1], state);
                 }
             }
 
