@@ -42,6 +42,7 @@ brew install itome/tap/flx
 - Performance view
 - Debug console view
 - Network view
+- [fvm](https://fvm.app/) support
 
 # Sponcer
 If you feel that flx is good, consider donating through [GitHub Sponsors](https://github.com/sponsors/itome) for its continuous development.
