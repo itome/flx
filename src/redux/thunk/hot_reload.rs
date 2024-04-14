@@ -39,9 +39,15 @@ where
             return;
         };
         let session = session.read().await;
-        let run = &session.as_ref().unwrap().run;
+        let Some(session) = &session.as_ref() else {
+            return;
+        };
+        let run = &session.run;
 
-        run.hot_reload().await.unwrap();
+        if let Err(err) = run.hot_reload().await {
+            log::error!("Failed to hot reload: {}", err);
+            return;
+        }
 
         while let Ok(params) = run.receive_app_progress().await {
             if params.progress_id == Some("hot.reload".to_string()) && !params.finished {

@@ -38,8 +38,15 @@ where
             return;
         };
         let session = session.read().await;
-        let run = &session.as_ref().unwrap().run;
-        run.hot_restart().await.unwrap();
+        let Some(session) = &session.as_ref() else {
+            return;
+        };
+        let run = &session.run;
+
+        if let Err(err) = run.hot_restart().await {
+            log::error!("Failed to hot restart: {}", err);
+            return;
+        }
 
         while let Ok(params) = run.receive_app_progress().await {
             if params.progress_id == Some("hot.restart".to_string()) && !params.finished {
