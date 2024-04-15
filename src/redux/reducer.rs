@@ -173,8 +173,11 @@ pub fn reducer(state: State, action: Action) -> State {
                         .iter()
                         .position(|s| s.id == session_id)
                         .unwrap();
-                    let next_index = (index + 1) % state.sessions.len();
-                    Some(state.sessions[next_index].id.clone())
+                    if index + 1 < state.sessions.len() {
+                        Some(state.sessions[index + 1].id.clone())
+                    } else {
+                        None
+                    }
                 }
                 None => state.sessions.first().map(|s| s.id.clone()),
             },
@@ -188,10 +191,13 @@ pub fn reducer(state: State, action: Action) -> State {
                         .iter()
                         .position(|s| s.id == session_id)
                         .unwrap();
-                    let next_index = (index + state.sessions.len() - 1) % state.sessions.len();
-                    Some(state.sessions[next_index].id.clone())
+                    if index > 0 {
+                        Some(state.sessions[index - 1].id.clone())
+                    } else {
+                        None
+                    }
                 }
-                None => state.sessions.first().map(|s| s.id.clone()),
+                None => state.sessions.last().map(|s| s.id.clone()),
             },
             ..state
         },

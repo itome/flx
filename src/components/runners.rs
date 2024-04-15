@@ -108,11 +108,13 @@ impl Component for RunnersComponent {
         match key.code {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
-            KeyCode::Char('n') => self.show_select_device_popup()?,
             KeyCode::Char('d') => self.stop_app()?,
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
-            KeyCode::Enter => self.enter_devtools()?,
+            KeyCode::Enter => match state.session_id {
+                Some(_) => self.enter_devtools()?,
+                None => self.show_select_device_popup()?,
+            },
             _ => {}
         }
         Ok(())
@@ -162,9 +164,13 @@ impl Component for RunnersComponent {
             })
             .collect::<Vec<_>>();
 
-        if items.is_empty() {
-            items.push(ListItem::new(Text::raw(" Press 'n' to run new app ")));
+        let mut run_new_app_button = ListItem::new(Text::raw(" ▶ Run new app "));
+        if state.focus == Focus::Home(Home::Runners) && state.session_id == None {
+            run_new_app_button = run_new_app_button
+                .add_modifier(Modifier::REVERSED)
+                .add_modifier(Modifier::BOLD);
         }
+        items.push(run_new_app_button);
 
         let list = List::new(items).block(block);
 
