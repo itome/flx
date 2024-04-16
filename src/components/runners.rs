@@ -165,7 +165,7 @@ impl Component for RunnersComponent {
             .collect::<Vec<_>>();
 
         let mut run_new_app_button = ListItem::new(Text::raw(" ▶ Run new app "));
-        if state.focus == Focus::Home(Home::Runners) && state.session_id == None {
+        if state.focus == Focus::Home(Home::Runners) && state.session_id.is_none() {
             run_new_app_button = run_new_app_button
                 .add_modifier(Modifier::REVERSED)
                 .add_modifier(Modifier::BOLD);
