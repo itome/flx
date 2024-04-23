@@ -39,7 +39,7 @@ lazy_static = "1.4.0"
 libc = "0.2.148"
 log = "0.4.20"
 pretty_assertions = "1.4.0"
-ratatui = { version = "0.26.1", features = ["serde", "macros"] }
+ratatui = { version = "0.26.1", features = ["serde", "macros", "unstable-widget-ref"] }
 redux-rs = { git = "https://github.com/redux-rs/redux-rs", features = [
     "middleware_thunk",
 ] }
@@ -59,7 +59,7 @@ syntect-tui = "3.0.2"
 url = "2.5.0"
 textwrap = "0.16.1"
 serde_yaml = "0.9.34"
-tui-tree-widget = "0.19.0"
+indoc = "2.0.5"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = ["build", "git", "gitoxide", "cargo"] }
