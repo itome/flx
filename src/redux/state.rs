@@ -108,6 +108,7 @@ pub struct SessionState {
     pub selected_request_id: Option<String>,
     pub display_refresh_rate: f32,
     pub widget_summary_tree: Option<DiagnosticNode>,
+    pub selected_widget_value_id: Option<String>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

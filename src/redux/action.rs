@@ -152,6 +152,11 @@ pub enum Action {
         tree: DiagnosticNode,
     },
 
+    SelectWidgetValueId {
+        session_id: String,
+        id: String,
+    },
+
     NextLog,
     PreviousLog,
 
