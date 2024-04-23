@@ -10,6 +10,7 @@ pub mod redux;
 pub mod session;
 pub mod tui;
 pub mod utils;
+pub mod widgets;
 
 use clap::Parser;
 use cli::Cli;
