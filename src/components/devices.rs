@@ -20,19 +20,15 @@ use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 
+#[derive(Default)]
 pub struct DevicesComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
-}
-
-impl Default for DevicesComponent {
-    fn default() -> Self {
-        Self::new()
-    }
+    state: ListState,
 }
 
 impl DevicesComponent {
     pub fn new() -> Self {
-        Self { action_tx: None }
+        Self::default()
     }
 
     fn next(&self) -> Result<()> {
@@ -100,7 +96,7 @@ impl Component for DevicesComponent {
         } else {
             None
         };
-        let mut list_state = ListState::default().with_selected(selected_index);
+        self.state.select(selected_index);
 
         let block = Block::default()
             .title("Devices")
@@ -132,7 +128,7 @@ impl Component for DevicesComponent {
             .highlight_spacing(HighlightSpacing::Never)
             .block(block);
 
-        f.render_stateful_widget(list, area, &mut list_state);
+        f.render_stateful_widget(list, area, &mut self.state);
         f.render_stateful_widget(
             scrollbar,
             area.inner(&Margin {

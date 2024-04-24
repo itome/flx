@@ -19,6 +19,7 @@ use super::Component;
 #[derive(Default)]
 pub struct NetworkComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
+    state: TableState,
 }
 
 impl NetworkComponent {
@@ -109,7 +110,7 @@ impl Component for NetworkComponent {
         } else {
             None
         };
-        let mut table_state = TableState::default().with_selected(selected_index);
+        self.state.select(selected_index);
 
         let widths = [
             Constraint::Length(7),
@@ -192,7 +193,7 @@ impl Component for NetworkComponent {
             )
             .highlight_spacing(HighlightSpacing::Never);
 
-        f.render_stateful_widget(table, area, &mut table_state);
+        f.render_stateful_widget(table, area, &mut self.state);
         f.render_stateful_widget(
             scrollbar,
             area.inner(&Margin {

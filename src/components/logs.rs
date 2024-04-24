@@ -24,6 +24,7 @@ use super::Component;
 pub struct LogsComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
     wrapped_logs: HashMap<String, Vec<String>>,
+    state: ListState,
 }
 
 impl LogsComponent {
@@ -95,7 +96,7 @@ impl Component for LogsComponent {
             return;
         };
         let selected_index = session.selected_log_index.unwrap_or(0) as usize;
-        let mut list_state = ListState::default().with_selected(Some(selected_index));
+        self.state.select(Some(selected_index));
         let should_wrap_text = state.focus == Focus::DevTools(DevTools::App);
         let log_width = area.width as usize - 4;
 
@@ -173,7 +174,7 @@ impl Component for LogsComponent {
             })
             .highlight_spacing(HighlightSpacing::Never);
 
-        f.render_stateful_widget(list, area, &mut list_state);
+        f.render_stateful_widget(list, area, &mut self.state);
         f.render_stateful_widget(
             scrollbar,
             area.inner(&Margin {

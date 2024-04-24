@@ -6,6 +6,7 @@ use ratatui::widgets::{Block, List, ListItem, ListState, StatefulWidgetRef, Widg
 pub struct TreeState {
     pub selected: Option<String>,
     pub opened: HashSet<String>,
+    list_state: ListState,
 }
 
 impl Default for TreeState {
@@ -19,6 +20,7 @@ impl TreeState {
         TreeState {
             selected: None,
             opened: HashSet::new(),
+            list_state: ListState::default(),
         }
     }
 
@@ -178,12 +180,12 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
         if let Some(block) = &self.block {
             list = list.block(block.clone());
         }
-        let mut list_state = ListState::default().with_selected(
+        state.list_state.select(
             lines
                 .iter()
                 .position(|line| state.selected == Some(line.0.clone())),
         );
-        StatefulWidgetRef::render_ref(&list, area, buf, &mut list_state);
+        StatefulWidgetRef::render_ref(&list, area, buf, &mut state.list_state);
     }
 }
 

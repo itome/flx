@@ -23,6 +23,7 @@ use super::Component;
 pub struct PubspecComponent {
     pub project_root: PathBuf,
     pub lines: Vec<Vec<(String, Style)>>,
+    state: ListState,
     scroll_poition: usize,
 }
 
@@ -32,6 +33,7 @@ impl PubspecComponent {
             project_root,
             lines: vec![],
             scroll_poition: 0,
+            state: ListState::default(),
         }
     }
 }
@@ -100,7 +102,7 @@ impl Component for PubspecComponent {
             );
         });
 
-        let mut list_state = ListState::default().with_selected(Some(self.scroll_poition));
+        self.state.select(Some(self.scroll_poition));
         let mut scrollbar_state = ScrollbarState::new(lines.len()).position(self.scroll_poition);
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight);
         let block = Block::default()
@@ -114,7 +116,7 @@ impl Component for PubspecComponent {
             .highlight_style(Style::default().bg(Color::DarkGray))
             .highlight_spacing(HighlightSpacing::Never);
 
-        f.render_stateful_widget(text, area, &mut list_state);
+        f.render_stateful_widget(text, area, &mut self.state);
         f.render_stateful_widget(
             scrollbar,
             area.inner(&Margin {

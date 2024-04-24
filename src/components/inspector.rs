@@ -19,19 +19,15 @@ use daemon::flutter::FlutterDaemon;
 
 use super::Component;
 
+#[derive(Default)]
 pub struct InspectorComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
-}
-
-impl Default for InspectorComponent {
-    fn default() -> Self {
-        Self::new()
-    }
+    state: TreeState,
 }
 
 impl InspectorComponent {
     pub fn new() -> Self {
-        Self { action_tx: None }
+        Self::default()
     }
 
     fn item_builder(item: &DiagnosticNode) -> Node {
@@ -215,13 +211,12 @@ impl Component for InspectorComponent {
             },
         );
 
-        let mut state = TreeState::new()
-            .with_opened(session.opened_widget_value_ids.clone())
-            .with_selected(session.selected_widget_value_id.clone());
+        self.state.opened = session.opened_widget_value_ids.clone();
+        self.state.selected = session.selected_widget_value_id.clone();
         if let Some(selected_widget_value_id) = session.selected_widget_value_id.as_ref() {
-            *state.selected_mut() = Some(selected_widget_value_id.clone());
+            *self.state.selected_mut() = Some(selected_widget_value_id.clone());
         }
 
-        f.render_stateful_widget(tree, area, &mut state);
+        f.render_stateful_widget(tree, area, &mut self.state);
     }
 }

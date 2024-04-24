@@ -19,6 +19,7 @@ use super::Component;
 #[derive(Default)]
 pub struct PerformanceComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
+    state: ListState,
 }
 
 impl PerformanceComponent {
@@ -95,7 +96,7 @@ impl Component for PerformanceComponent {
             .frames
             .iter()
             .position(|f| Some(f.number) == session.selected_frame_number);
-        let mut list_state = ListState::default().with_selected(selected_index);
+        self.state.select(selected_index);
 
         let lines = session.frames.iter().map(|frame| {
             let target_ms_per_frame = 1000 / session.display_refresh_rate as u128;
@@ -122,7 +123,7 @@ impl Component for PerformanceComponent {
             })
             .highlight_spacing(HighlightSpacing::Never);
 
-        f.render_stateful_widget(text, area, &mut list_state);
+        f.render_stateful_widget(text, area, &mut self.state);
         f.render_stateful_widget(
             scrollbar,
             area.inner(&Margin {
