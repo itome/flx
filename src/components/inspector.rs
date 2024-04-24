@@ -23,12 +23,18 @@ pub struct InspectorComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
-impl<'a> InspectorComponent {
+impl Default for InspectorComponent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl InspectorComponent {
     pub fn new() -> Self {
         Self { action_tx: None }
     }
 
-    fn item_builder(item: &DiagnosticNode) -> Node<'a> {
+    fn item_builder(item: &DiagnosticNode) -> Node {
         if let Some(children) = item.children.as_ref() {
             let children = children.iter().map(Self::item_builder).collect();
             Node::new(

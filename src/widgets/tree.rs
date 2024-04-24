@@ -8,6 +8,12 @@ pub struct TreeState {
     pub opened: HashSet<String>,
 }
 
+impl Default for TreeState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TreeState {
     pub fn new() -> Self {
         TreeState {
@@ -111,10 +117,10 @@ impl<'a> Tree<'a> {
     pub fn make_lines(
         node: &Node<'a>,
         state: &TreeState,
-        prefix_for_root: &Vec<Span<'a>>,
-        prefix_for_children: &Vec<Span<'a>>,
+        prefix_for_root: &[Span<'a>],
+        prefix_for_children: &[Span<'a>],
     ) -> Vec<(String, Line<'a>)> {
-        let mut root_item: Vec<Span> = prefix_for_root.clone();
+        let mut root_item: Vec<Span> = prefix_for_root.to_vec();
 
         if node.children.is_empty() {
             root_item.push(Span::raw("─"));
@@ -133,13 +139,13 @@ impl<'a> Tree<'a> {
 
         if state.opened.contains(&node.id) {
             for (i, child) in node.children.iter().enumerate() {
-                let mut child_prefix_for_root = prefix_for_children.clone();
+                let mut child_prefix_for_root = prefix_for_children.to_vec();
                 if i == node.children.len().wrapping_sub(1) {
                     child_prefix_for_root.push(Span::raw("╰"));
                 } else {
                     child_prefix_for_root.push(Span::raw("├"));
                 }
-                let mut child_prefix_for_children = prefix_for_children.clone();
+                let mut child_prefix_for_children = prefix_for_children.to_vec();
                 if i != node.children.len().wrapping_sub(1) {
                     child_prefix_for_children.push(Span::raw("│"));
                 } else {
