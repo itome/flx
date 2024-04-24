@@ -1004,6 +1004,7 @@ pub fn reducer(state: State, action: Action) -> State {
                     if s.id == session_id {
                         SessionState {
                             widget_summary_tree: Some(tree.clone()),
+                            selected_widget_value_id: tree.value_id.clone(),
                             ..s
                         }
                     } else {
@@ -1021,6 +1022,46 @@ pub fn reducer(state: State, action: Action) -> State {
                     if s.id == session_id {
                         SessionState {
                             selected_widget_value_id: Some(id.clone()),
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetOpenWidgetValueId { session_id, ids } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            opened_widget_value_ids: ids.clone(),
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::ToggleOpenWidgetValueId { session_id, id } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        let mut opened_widget_value_ids = s.opened_widget_value_ids.clone();
+                        if opened_widget_value_ids.contains(&id) {
+                            opened_widget_value_ids.remove(&id);
+                        } else {
+                            opened_widget_value_ids.insert(id.clone());
+                        }
+                        SessionState {
+                            opened_widget_value_ids,
                             ..s
                         }
                     } else {

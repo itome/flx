@@ -21,18 +21,11 @@ use super::Component;
 
 pub struct InspectorComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
-    state: TreeState,
-
-    finished_first_render: bool,
 }
 
 impl<'a> InspectorComponent {
     pub fn new() -> Self {
-        Self {
-            action_tx: None,
-            state: TreeState::new(),
-            finished_first_render: false,
-        }
+        Self { action_tx: None }
     }
 
     fn item_builder(item: &DiagnosticNode) -> Node<'a> {
@@ -61,7 +54,10 @@ impl<'a> InspectorComponent {
             return;
         };
         let root = Self::item_builder(summary_tree);
-        let items = Tree::make_lines(&root, &self.state, &vec![], &vec![]);
+        let state = TreeState::new()
+            .with_opened(session.opened_widget_value_ids.clone())
+            .with_selected(session.selected_widget_value_id.clone());
+        let items = Tree::make_lines(&root, &state, &vec![], &vec![]);
 
         let current_index = items.iter().position(|(id, _)| {
             if let Some(selected) = session.selected_widget_value_id.as_ref() {
@@ -105,7 +101,10 @@ impl<'a> InspectorComponent {
             return;
         };
         let root = Self::item_builder(summary_tree);
-        let items = Tree::make_lines(&root, &self.state, &vec![], &vec![]);
+        let state = TreeState::new()
+            .with_opened(session.opened_widget_value_ids.clone())
+            .with_selected(session.selected_widget_value_id.clone());
+        let items = Tree::make_lines(&root, &state, &vec![], &vec![]);
 
         let current_index = items.iter().position(|(id, _)| {
             if let Some(selected) = session.selected_widget_value_id.as_ref() {
@@ -147,18 +146,17 @@ impl<'a> InspectorComponent {
         let Some(selected_widget_id) = session.selected_widget_value_id.as_ref() else {
             return;
         };
-        self.state.toggle(selected_widget_id);
-    }
-
-    fn all_ids(node: &DiagnosticNode) -> HashSet<String> {
-        let mut ids = HashSet::new();
-        ids.insert(node.value_id.clone().unwrap_or_default());
-        if let Some(children) = node.children.as_ref() {
-            for child in children {
-                ids.extend(Self::all_ids(child));
-            }
-        }
-        ids
+        self.action_tx
+            .as_ref()
+            .unwrap()
+            .send(
+                Action::ToggleOpenWidgetValueId {
+                    session_id: session.id.clone(),
+                    id: selected_widget_id.clone(),
+                }
+                .into(),
+            )
+            .unwrap();
     }
 }
 
@@ -202,12 +200,6 @@ impl Component for InspectorComponent {
             return;
         };
 
-        if !self.finished_first_render {
-            self.finished_first_render = true;
-            let ids = Self::all_ids(summary_tree);
-            self.state.open_all(ids);
-        }
-
         let root = Self::item_builder(summary_tree);
         let tree = Tree::new(root).block(block).highlight_style(
             if state.focus == Focus::DevTools(DevTools::Inspector) {
@@ -217,10 +209,13 @@ impl Component for InspectorComponent {
             },
         );
 
+        let mut state = TreeState::new()
+            .with_opened(session.opened_widget_value_ids.clone())
+            .with_selected(session.selected_widget_value_id.clone());
         if let Some(selected_widget_value_id) = session.selected_widget_value_id.as_ref() {
-            *self.state.selected_mut() = Some(selected_widget_value_id.clone());
+            *state.selected_mut() = Some(selected_widget_value_id.clone());
         }
 
-        f.render_stateful_widget(tree, area, &mut self.state);
+        f.render_stateful_widget(tree, area, &mut state);
     }
 }

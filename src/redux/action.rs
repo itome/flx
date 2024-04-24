@@ -4,7 +4,7 @@ use devtools::protocols::{
     flutter_extension::DiagnosticNode,
     io_extension::{HttpProfileRequest, HttpProfileRequestRef},
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -153,6 +153,16 @@ pub enum Action {
     },
 
     SelectWidgetValueId {
+        session_id: String,
+        id: String,
+    },
+
+    SetOpenWidgetValueId {
+        session_id: String,
+        ids: HashSet<String>,
+    },
+
+    ToggleOpenWidgetValueId {
         session_id: String,
         id: String,
     },

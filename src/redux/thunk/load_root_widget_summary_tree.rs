@@ -1,6 +1,10 @@
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+    time::Duration,
+};
 use tokio::time::sleep;
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
@@ -13,7 +17,7 @@ use crate::redux::{
 
 use devtools::{
     protocols::{
-        flutter_extension::FlutterExtensionProtocol,
+        flutter_extension::{DiagnosticNode, FlutterExtensionProtocol},
         io_extension::IoExtensionProtocol,
         vm_service::{EventKind, StreamId, VmServiceProtocol},
     },
@@ -35,6 +39,17 @@ impl LoadRootWidgetWithSummaryTreeThunk {
             context,
             session_id,
         }
+    }
+
+    fn all_ids(node: &DiagnosticNode) -> HashSet<String> {
+        let mut ids = HashSet::new();
+        ids.insert(node.value_id.clone().unwrap_or_default());
+        if let Some(children) = node.children.as_ref() {
+            for child in children {
+                ids.extend(Self::all_ids(child));
+            }
+        }
+        ids
     }
 }
 
@@ -76,6 +91,13 @@ where
                 return;
             }
         };
+
+        store
+            .dispatch(Action::SetOpenWidgetValueId {
+                session_id: self.session_id.clone(),
+                ids: Self::all_ids(&response.result),
+            })
+            .await;
 
         store
             .dispatch(Action::SetWidgetSummaryTree {

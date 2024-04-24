@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::time::Duration;
 use std::{collections::HashMap, time::SystemTime};
@@ -109,6 +110,7 @@ pub struct SessionState {
     pub display_refresh_rate: f32,
     pub widget_summary_tree: Option<DiagnosticNode>,
     pub selected_widget_value_id: Option<String>,
+    pub opened_widget_value_ids: HashSet<String>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
