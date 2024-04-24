@@ -63,7 +63,7 @@ impl InspectorComponent {
         let state = TreeState::new()
             .with_opened(session.opened_widget_value_ids.clone())
             .with_selected(session.selected_widget_value_id.clone());
-        let items = Tree::make_lines(&root, &state, &vec![], &vec![]);
+        let items = Tree::make_lines(&root, &state, &[], &[]);
 
         let current_index = items.iter().position(|(id, _)| {
             if let Some(selected) = session.selected_widget_value_id.as_ref() {
@@ -110,7 +110,7 @@ impl InspectorComponent {
         let state = TreeState::new()
             .with_opened(session.opened_widget_value_ids.clone())
             .with_selected(session.selected_widget_value_id.clone());
-        let items = Tree::make_lines(&root, &state, &vec![], &vec![]);
+        let items = Tree::make_lines(&root, &state, &[], &[]);
 
         let current_index = items.iter().position(|(id, _)| {
             if let Some(selected) = session.selected_widget_value_id.as_ref() {

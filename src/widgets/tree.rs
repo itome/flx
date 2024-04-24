@@ -170,7 +170,7 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
     type State = TreeState;
 
     fn render_ref(&self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let lines = Self::make_lines(&self.root, state, &vec![], &vec![]);
+        let lines = Self::make_lines(&self.root, state, &[], &[]);
         let items = lines.iter().map(|line| ListItem::new(line.1.clone()));
         let mut list = List::new(items)
             .style(self.style)
