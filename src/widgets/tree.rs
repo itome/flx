@@ -219,9 +219,12 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
         StatefulWidgetRef::render_ref(&list, area, buf, &mut state.list_state);
         WidgetRef::render_ref(&Clear, area, buf);
 
-        let mut indent = lines[state.list_state.offset()].path.len().wrapping_sub(1);
+        let mut indent = lines[state.list_state.offset()]
+            .path
+            .len()
+            .saturating_sub(1);
         if let Some(selected) = state.list_state.selected() {
-            let selected_indent = lines[selected].path.len().wrapping_sub(8);
+            let selected_indent = lines[selected].path.len().saturating_sub(5);
             indent = indent.min(selected_indent);
         };
 
@@ -512,9 +515,9 @@ mod tests {
         assert_buffer_eq!(
             buffer,
             Buffer::with_lines(vec![
-                "○ node6             ",
-                "╰─ node7            ",
-                "de8                 ",
+                "   ╰○ node6         ",
+                "    ╰─ node7        ",
+                "─ node8             ",
             ])
         );
 
@@ -527,9 +530,9 @@ mod tests {
         assert_buffer_eq!(
             buffer,
             Buffer::with_lines(vec![
-                "   ╰○ node6         ",
-                "    ╰─ node7        ",
-                "─ node8             ",
+                "│   ╰○ node6        ",
+                "│    ╰─ node7       ",
+                "╰─ node8            ",
             ])
         );
     }
