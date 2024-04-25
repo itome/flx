@@ -211,8 +211,8 @@ impl Component for InspectorComponent {
             },
         );
 
-        self.state.opened = session.opened_widget_value_ids.clone();
-        self.state.selected = session.selected_widget_value_id.clone();
+        self.state.opened.clone_from(&session.opened_widget_value_ids);
+        self.state.selected.clone_from(&session.selected_widget_value_id);
         if let Some(selected_widget_value_id) = session.selected_widget_value_id.as_ref() {
             *self.state.selected_mut() = Some(selected_widget_value_id.clone());
         }

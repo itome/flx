@@ -238,7 +238,7 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
                     continue;
                 }
                 if indent_rest > span.width() {
-                    indent_rest = indent_rest - span.width();
+                    indent_rest -= span.width();
                     continue;
                 }
 
