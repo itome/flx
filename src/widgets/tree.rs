@@ -1,7 +1,9 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
 
+use ratatui::layout::Offset;
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, List, ListItem, ListState, StatefulWidgetRef, WidgetRef};
+use ratatui::widgets::{Block, Clear, List, ListItem, ListState, StatefulWidgetRef, WidgetRef};
 
 pub struct TreeState {
     pub selected: Option<String>,
@@ -34,12 +36,25 @@ impl TreeState {
         self
     }
 
+    pub fn with_offset(mut self, offset: usize) -> Self {
+        self.list_state = self.list_state.with_offset(offset);
+        self
+    }
+
     pub fn selected(&self) -> Option<String> {
         self.selected.clone()
     }
 
     pub fn selected_mut(&mut self) -> &mut Option<String> {
         &mut self.selected
+    }
+
+    pub fn offset(&self) -> usize {
+        self.list_state.offset()
+    }
+
+    pub fn offset_mut(&mut self) -> &mut usize {
+        self.list_state.offset_mut()
     }
 
     pub fn open(&mut self, id: &str) {
@@ -84,6 +99,11 @@ impl<'a> Node<'a> {
     }
 }
 
+pub struct NodeData<'a> {
+    pub path: Vec<String>,
+    line: Line<'a>,
+}
+
 pub struct Tree<'a> {
     block: Option<Block<'a>>,
     root: Node<'a>,
@@ -121,7 +141,8 @@ impl<'a> Tree<'a> {
         state: &TreeState,
         prefix_for_root: &[Span<'a>],
         prefix_for_children: &[Span<'a>],
-    ) -> Vec<(String, Line<'a>)> {
+        path: &[String],
+    ) -> Vec<NodeData<'a>> {
         let mut root_item: Vec<Span> = prefix_for_root.to_vec();
 
         if node.children.is_empty() {
@@ -137,7 +158,13 @@ impl<'a> Tree<'a> {
             root_item.push(span.clone());
         }
 
-        let mut items: Vec<(String, Line<'a>)> = vec![(node.id.clone(), Line::from(root_item))];
+        let mut new_path = path.to_vec();
+        new_path.push(node.id.clone());
+
+        let mut items: Vec<NodeData> = vec![NodeData {
+            path: new_path.clone(),
+            line: Line::from(root_item),
+        }];
 
         if state.opened.contains(&node.id) {
             for (i, child) in node.children.iter().enumerate() {
@@ -158,6 +185,7 @@ impl<'a> Tree<'a> {
                     state,
                     &child_prefix_for_root,
                     &child_prefix_for_children,
+                    &new_path,
                 ) {
                     items.push(spans_list);
                 }
@@ -172,19 +200,64 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
     type State = TreeState;
 
     fn render_ref(&self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let lines = Self::make_lines(&self.root, state, &[], &[]);
-        let items = lines.iter().map(|line| ListItem::new(line.1.clone()));
+        let lines = Self::make_lines(&self.root, state, &[], &[], &[]);
+        state.list_state.select(
+            lines
+                .iter()
+                .position(|d| state.selected == Some(d.path.last().unwrap().clone())),
+        );
+
+        let items = lines.iter().map(|d| ListItem::new(d.line.clone()));
         let mut list = List::new(items)
             .style(self.style)
             .highlight_style(self.highlight_style);
         if let Some(block) = &self.block {
             list = list.block(block.clone());
         }
-        state.list_state.select(
-            lines
-                .iter()
-                .position(|line| state.selected == Some(line.0.clone())),
-        );
+
+        // FIXME(itome): For re-calculating list offset, we call render_ref before getting the actual offset.
+        StatefulWidgetRef::render_ref(&list, area, buf, &mut state.list_state);
+        WidgetRef::render_ref(&Clear, area, buf);
+
+        let mut indent = lines[state.list_state.offset()].path.len().wrapping_sub(1);
+        if let Some(selected) = state.list_state.selected() {
+            let selected_indent = lines[selected].path.len().wrapping_sub(8);
+            indent = indent.min(selected_indent);
+        };
+
+        let items = lines.iter().map(|d| {
+            let mut indent_rest = indent;
+
+            let mut spans = vec![];
+            for span in d.line.clone().spans {
+                if indent_rest == 0 {
+                    spans.push(span);
+                    continue;
+                }
+                if indent_rest > span.width() {
+                    indent_rest = indent_rest - span.width();
+                    continue;
+                }
+
+                let content = span
+                    .content
+                    .to_string()
+                    .chars()
+                    .skip(indent_rest)
+                    .collect::<String>();
+                spans.push(span.content(content));
+                indent_rest = 0;
+            }
+
+            ListItem::new(d.line.clone().spans(spans))
+        });
+        let mut list = List::new(items)
+            .style(self.style)
+            .highlight_style(self.highlight_style);
+        if let Some(block) = &self.block {
+            list = list.block(block.clone());
+        }
+
         StatefulWidgetRef::render_ref(&list, area, buf, &mut state.list_state);
     }
 }
@@ -377,6 +450,86 @@ mod tests {
                 "││╰─ node4         │",
                 "│╰─ node5          │",
                 "╰──────────────────╯"
+            ])
+        );
+    }
+
+    #[test]
+    fn test_tree_with_shifted() {
+        let mut hash_set = HashSet::new();
+        hash_set.insert("root".to_string());
+        hash_set.insert("node2".to_string());
+        hash_set.insert("node3".to_string());
+        hash_set.insert("node4".to_string());
+        hash_set.insert("node5".to_string());
+        hash_set.insert("node6".to_string());
+
+        let node = Node::new(
+            "root",
+            vec![Span::raw("root")],
+            vec![
+                Node::new(
+                    "node1",
+                    vec![Span::raw("node1")],
+                    vec![Node::new("hidden", vec![Span::raw("hidden")], vec![])],
+                ),
+                Node::new(
+                    "node2",
+                    vec![Span::raw("node2")],
+                    vec![Node::new(
+                        "node3",
+                        vec![Span::raw("node3")],
+                        vec![Node::new(
+                            "node4",
+                            vec![Span::raw("node4")],
+                            vec![Node::new(
+                                "node5",
+                                vec![Span::raw("node5")],
+                                vec![Node::new(
+                                    "node6",
+                                    vec![Span::raw("node6")],
+                                    vec![Node::new("node7", vec![Span::raw("node7")], vec![])],
+                                )],
+                            )],
+                        )],
+                    )],
+                ),
+                Node::new("node8", vec![Span::raw("node8")], vec![]),
+            ],
+        );
+
+        let mut buffer = Buffer::empty(Rect::new(0, 0, 20, 3));
+        let mut state = TreeState::new()
+            .with_opened(hash_set.clone())
+            .with_selected(Some("node6".to_string()))
+            .with_offset(6);
+        StatefulWidgetRef::render_ref(
+            &Tree::new(node.clone()),
+            buffer.area,
+            &mut buffer,
+            &mut state,
+        );
+        assert_buffer_eq!(
+            buffer,
+            Buffer::with_lines(vec![
+                "○ node6             ",
+                "╰─ node7            ",
+                "de8                 ",
+            ])
+        );
+
+        let mut buffer = Buffer::empty(Rect::new(0, 0, 20, 3));
+        let mut state = TreeState::new()
+            .with_opened(hash_set)
+            .with_selected(Some("node8".to_string()))
+            .with_offset(6);
+        StatefulWidgetRef::render_ref(&Tree::new(node), buffer.area, &mut buffer, &mut state);
+        assert_buffer_eq!(
+            buffer,
+            Buffer::with_lines(vec![
+                "   ╰○ node6         ",
+                "    ╰─ node7        ",
+                "─ node8             ",
             ])
         );
     }

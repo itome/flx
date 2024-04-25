@@ -59,11 +59,11 @@ impl InspectorComponent {
         let state = TreeState::new()
             .with_opened(session.opened_widget_value_ids.clone())
             .with_selected(session.selected_widget_value_id.clone());
-        let items = Tree::make_lines(&root, &state, &[], &[]);
+        let items = Tree::make_lines(&root, &state, &[], &[], &[]);
 
-        let current_index = items.iter().position(|(id, _)| {
+        let current_index = items.iter().position(|data| {
             if let Some(selected) = session.selected_widget_value_id.as_ref() {
-                id == selected
+                data.path.last().unwrap() == selected
             } else {
                 false
             }
@@ -71,12 +71,12 @@ impl InspectorComponent {
 
         let next_id = if let Some(current_index) = current_index {
             if current_index + 1 < items.len() {
-                Some(items[current_index + 1].0.clone())
+                Some(items[current_index + 1].path.last().unwrap().clone())
             } else {
                 session.selected_widget_value_id.clone()
             }
         } else {
-            items.first().map(|(id, _)| id.clone())
+            items.first().map(|data| data.path.last().unwrap().clone())
         };
 
         if let Some(next_id) = next_id {
@@ -106,11 +106,11 @@ impl InspectorComponent {
         let state = TreeState::new()
             .with_opened(session.opened_widget_value_ids.clone())
             .with_selected(session.selected_widget_value_id.clone());
-        let items = Tree::make_lines(&root, &state, &[], &[]);
+        let items = Tree::make_lines(&root, &state, &[], &[], &[]);
 
-        let current_index = items.iter().position(|(id, _)| {
+        let current_index = items.iter().position(|data| {
             if let Some(selected) = session.selected_widget_value_id.as_ref() {
-                id == selected
+                data.path.last().unwrap() == selected
             } else {
                 false
             }
@@ -118,12 +118,12 @@ impl InspectorComponent {
 
         let next_id = if let Some(current_index) = current_index {
             if current_index > 0 {
-                Some(items[current_index - 1].0.clone())
+                Some(items[current_index - 1].path.last().unwrap().clone())
             } else {
                 session.selected_widget_value_id.clone()
             }
         } else {
-            items.first().map(|(id, _)| id.clone())
+            items.first().map(|data| data.path.last().unwrap().clone())
         };
 
         if let Some(next_id) = next_id {
