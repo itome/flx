@@ -27,6 +27,7 @@ pub mod sdk_version;
 pub mod select_device_popup;
 pub mod select_launch_configuration_popup;
 pub mod select_tab_handler;
+pub mod widget_details;
 
 /// `Component` is a trait that represents a visual and interactive element of the user interface.
 /// Implementors of this trait can be registered with the main application loop and will be able to receive events,

@@ -1071,5 +1071,87 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::SetSelectedWidgetDetailsTree { session_id, tree } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            selected_widget_details_tree: tree.clone(),
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetSelectedWidgetObjectGroup { session_id, group } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            selected_widget_object_group: group.clone(),
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetOpenWidgetDetailsValueId { session_id, ids } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            opened_widget_details_value_ids: ids.clone(),
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::ToggleOpenWidgetDetailsValueId { session_id, id } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        let mut opened_widget_value_ids = s.opened_widget_details_value_ids.clone();
+                        if opened_widget_value_ids.contains(&id) {
+                            opened_widget_value_ids.remove(&id);
+                        } else {
+                            opened_widget_value_ids.insert(id.clone());
+                        }
+                        SessionState {
+                            opened_widget_details_value_ids: opened_widget_value_ids,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::EnterWidgetDetails => State {
+            focus: Focus::DevTools(DevTools::WidgetDetails),
+            ..state
+        },
+        Action::ExitWidgetDetails => State {
+            focus: Focus::DevTools(DevTools::Inspector),
+            ..state
+        },
     }
 }

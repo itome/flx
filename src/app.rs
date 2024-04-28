@@ -36,6 +36,7 @@ use crate::components::sdk_version::SdkVersionComponent;
 use crate::components::select_device_popup::SelectDevicePopupComponent;
 use crate::components::select_launch_configuration_popup::SelectLaunchConfigurationPopupComponent;
 use crate::components::select_tab_handler::SelectTabControllerComponent;
+use crate::components::widget_details::WidgetDetailsComponent;
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::current_session_selector;
 use crate::redux::state::{
@@ -72,6 +73,7 @@ pub enum ComponentId {
     App,
     Performance,
     Inspector,
+    WidgetDetails,
     LaunchConfigurations,
     SdkVersion,
 }
@@ -160,6 +162,10 @@ impl App {
                 (
                     ComponentId::Inspector,
                     Box::new(InspectorComponent::new()) as Box<dyn Component>,
+                ),
+                (
+                    ComponentId::WidgetDetails,
+                    Box::new(WidgetDetailsComponent::new()) as Box<dyn Component>,
                 ),
                 (
                     ComponentId::NetworkRequest,
@@ -399,7 +405,8 @@ impl App {
             let tab_layout = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints(match state.focus {
-                    Focus::DevTools(DevTools::Inspector) => vec![
+                    Focus::DevTools(DevTools::Inspector)
+                    | Focus::DevTools(DevTools::WidgetDetails) => vec![
                         Constraint::Length(3),
                         Constraint::Fill(1),
                         Constraint::Length(2),
@@ -436,22 +443,29 @@ impl App {
             self.component(&ComponentId::Network)
                 .draw(f, tab_layout[3], state);
 
-            if state.focus == Focus::DevTools(DevTools::Performance) {
-                let vertical_layout = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
-                    .split(layout[1]);
-                self.component(&ComponentId::Frames)
-                    .draw(f, vertical_layout[0], state);
-                self.component(&ComponentId::FrameAnalysis)
-                    .draw(f, vertical_layout[1], state)
-            } else if state.focus == Focus::DevTools(DevTools::App) {
-                self.component(&ComponentId::Logs).draw(f, layout[1], state);
-            } else if state.focus == Focus::DevTools(DevTools::Network)
-                || state.focus == Focus::DevTools(DevTools::NetworkRequest)
-            {
-                self.component(&ComponentId::NetworkRequest)
-                    .draw(f, layout[1], state);
+            match state.focus {
+                Focus::DevTools(DevTools::Performance) => {
+                    let vertical_layout = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                        .split(layout[1]);
+                    self.component(&ComponentId::Frames)
+                        .draw(f, vertical_layout[0], state);
+                    self.component(&ComponentId::FrameAnalysis)
+                        .draw(f, vertical_layout[1], state)
+                }
+                Focus::DevTools(DevTools::App) => {
+                    self.component(&ComponentId::Logs).draw(f, layout[1], state);
+                }
+                Focus::DevTools(DevTools::Network) | Focus::DevTools(DevTools::NetworkRequest) => {
+                    self.component(&ComponentId::NetworkRequest)
+                        .draw(f, layout[1], state);
+                }
+                Focus::DevTools(DevTools::Inspector) | Focus::DevTools(DevTools::WidgetDetails) => {
+                    self.component(&ComponentId::WidgetDetails)
+                        .draw(f, layout[1], state);
+                }
+                _ => {}
             }
         })?;
         Ok(())

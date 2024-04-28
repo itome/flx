@@ -29,6 +29,7 @@ pub enum DevTools {
     App,
     Performance,
     Inspector,
+    WidgetDetails,
     Network,
     NetworkRequest,
 }
@@ -111,6 +112,9 @@ pub struct SessionState {
     pub widget_summary_tree: Option<DiagnosticNode>,
     pub selected_widget_value_id: Option<String>,
     pub opened_widget_value_ids: HashSet<String>,
+    pub selected_widget_object_group: Option<String>,
+    pub selected_widget_details_tree: Option<DiagnosticNode>,
+    pub opened_widget_details_value_ids: HashSet<String>,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

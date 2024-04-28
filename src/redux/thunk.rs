@@ -10,6 +10,7 @@ pub mod context;
 pub mod hot_reload;
 pub mod hot_restart;
 pub mod launch_emulator;
+pub mod load_details_subtree;
 pub mod load_emulators;
 pub mod load_full_request;
 pub mod load_root_widget_summary_tree;
@@ -32,6 +33,7 @@ pub enum ThunkAction {
     LoadFullRequest,
     LoadVSCodeLaunchSetting,
     LoadRootWidgetSummaryTree { session_id: String },
+    LoadDetailsSubtree { value_id: String },
     RunNewApp { use_fvm: bool },
     LaunchEmulator,
     HotReload,
@@ -72,6 +74,9 @@ where
         ThunkAction::StopApp => Box::new(stop_app::StopAppThunk::new(context)),
         ThunkAction::LoadSupportedPlatforms => Box::new(
             load_supported_platforms::LoadSupportedPlatformsThunk::new(context),
+        ),
+        ThunkAction::LoadDetailsSubtree { value_id } => Box::new(
+            load_details_subtree::LoadDetailsSubtreeThunk::new(context, value_id),
         ),
     }
 }
