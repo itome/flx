@@ -10,7 +10,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::redux::action::Action;
 use crate::redux::selector::current_session::current_session_selector;
-use crate::redux::state::{DevTools, Focus, Home, State};
+use crate::redux::state::{DevTools, Focus, Home, SessionState, State};
 use crate::redux::thunk::ThunkAction;
 use crate::redux::ActionOrThunk;
 use crate::tui::Frame;
@@ -21,31 +21,42 @@ use daemon::flutter::FlutterDaemon;
 use super::Component;
 
 #[derive(Default)]
-pub struct InspectorComponent {
+pub struct WidgetDetailsComponent {
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
     state: TreeState,
 }
 
-impl InspectorComponent {
+impl WidgetDetailsComponent {
     pub fn new() -> Self {
         Self::default()
     }
 
     fn item_builder(item: &DiagnosticNode) -> Node {
-        if let Some(children) = item.children.as_ref() {
-            let children = children.iter().map(Self::item_builder).collect();
-            Node::new(
-                &item.value_id.clone().unwrap_or_default(),
-                vec![Span::raw(item.description.clone().unwrap_or_default())],
-                children,
-            )
+        let value_id = item.value_id.clone().unwrap_or_default();
+
+        let spans = if let Some(name) = item.name.clone() {
+            vec![
+                Span::styled(format!("{}: ", name), Style::default().fg(Color::Yellow)),
+                Span::raw(item.description.clone().unwrap_or_default()),
+            ]
         } else {
-            Node::new(
-                &item.value_id.clone().unwrap_or_default(),
-                vec![Span::raw(item.description.clone().unwrap_or_default())],
-                vec![],
-            )
+            vec![Span::styled(
+                item.description.clone().unwrap_or_default(),
+                Style::default().bold(),
+            )]
+        };
+
+        let mut child_nodes: Vec<Node> = vec![];
+
+        if let Some(properties) = item.properties.as_ref() {
+            child_nodes.extend(properties.iter().map(Self::item_builder));
         }
+
+        if let Some(children) = item.children.as_ref() {
+            child_nodes.extend(children.iter().map(Self::item_builder));
+        }
+
+        Node::new(&value_id, spans, child_nodes)
     }
 
     fn next(&mut self, state: &State) {
@@ -53,17 +64,17 @@ impl InspectorComponent {
             return;
         };
 
-        let Some(ref summary_tree) = session.widget_summary_tree else {
+        let Some(ref details_tree) = session.selected_widget_details_tree else {
             return;
         };
-        let root = Self::item_builder(summary_tree);
+        let root = Self::item_builder(details_tree);
         let state = TreeState::new()
-            .with_opened(session.opened_widget_value_ids.clone())
-            .with_selected(session.selected_widget_value_id.clone());
+            .with_opened(session.opened_widget_details_value_ids.clone())
+            .with_selected(self.state.selected());
         let items = Tree::make_lines(&root, &state, &[], &[], &[]);
 
         let current_index = items.iter().position(|data| {
-            if let Some(selected) = session.selected_widget_value_id.as_ref() {
+            if let Some(selected) = self.state.selected.as_ref() {
                 data.path.last().unwrap() == selected
             } else {
                 false
@@ -74,29 +85,14 @@ impl InspectorComponent {
             if current_index + 1 < items.len() {
                 Some(items[current_index + 1].path.last().unwrap().clone())
             } else {
-                session.selected_widget_value_id.clone()
+                self.state.selected.clone()
             }
         } else {
             items.first().map(|data| data.path.last().unwrap().clone())
         };
 
         if let Some(next_id) = next_id {
-            self.action_tx
-                .as_ref()
-                .unwrap()
-                .send(
-                    Action::SelectWidgetValueId {
-                        session_id: session.id.clone(),
-                        id: next_id.clone(),
-                    }
-                    .into(),
-                )
-                .unwrap();
-            self.action_tx
-                .as_ref()
-                .unwrap()
-                .send(ThunkAction::LoadDetailsSubtree { value_id: next_id }.into())
-                .unwrap();
+            self.state.selected.clone_from(&Some(next_id));
         }
     }
 
@@ -105,17 +101,17 @@ impl InspectorComponent {
             return;
         };
 
-        let Some(ref summary_tree) = session.widget_summary_tree else {
+        let Some(ref details_tree) = session.selected_widget_details_tree else {
             return;
         };
-        let root = Self::item_builder(summary_tree);
+        let root = Self::item_builder(details_tree);
         let state = TreeState::new()
-            .with_opened(session.opened_widget_value_ids.clone())
-            .with_selected(session.selected_widget_value_id.clone());
+            .with_opened(session.opened_widget_details_value_ids.clone())
+            .with_selected(self.state.selected());
         let items = Tree::make_lines(&root, &state, &[], &[], &[]);
 
         let current_index = items.iter().position(|data| {
-            if let Some(selected) = session.selected_widget_value_id.as_ref() {
+            if let Some(selected) = self.state.selected.as_ref() {
                 data.path.last().unwrap() == selected
             } else {
                 false
@@ -126,29 +122,14 @@ impl InspectorComponent {
             if current_index > 0 {
                 Some(items[current_index - 1].path.last().unwrap().clone())
             } else {
-                session.selected_widget_value_id.clone()
+                self.state.selected.clone()
             }
         } else {
             items.first().map(|data| data.path.last().unwrap().clone())
         };
 
         if let Some(next_id) = next_id {
-            self.action_tx
-                .as_ref()
-                .unwrap()
-                .send(
-                    Action::SelectWidgetValueId {
-                        session_id: session.id.clone(),
-                        id: next_id.clone(),
-                    }
-                    .into(),
-                )
-                .unwrap();
-            self.action_tx
-                .as_ref()
-                .unwrap()
-                .send(ThunkAction::LoadDetailsSubtree { value_id: next_id }.into())
-                .unwrap();
+            self.state.selected.clone_from(&Some(next_id));
         }
     }
 
@@ -156,14 +137,14 @@ impl InspectorComponent {
         let Some(session) = current_session_selector(state) else {
             return;
         };
-        let Some(selected_widget_id) = session.selected_widget_value_id.as_ref() else {
+        let Some(selected_widget_id) = self.state.selected.as_ref() else {
             return;
         };
         self.action_tx
             .as_ref()
             .unwrap()
             .send(
-                Action::ToggleOpenWidgetValueId {
+                Action::ToggleOpenWidgetDetailsValueId {
                     session_id: session.id.clone(),
                     id: selected_widget_id.clone(),
                 }
@@ -172,31 +153,32 @@ impl InspectorComponent {
             .unwrap();
     }
 
-    fn enter_widget_details(&self) -> Result<()> {
+    fn exit_widget_details(&mut self) -> Result<()> {
+        self.state.selected.clone_from(&None);
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::EnterWidgetDetails.into())?;
+            .send(Action::ExitWidgetDetails.into())?;
         Ok(())
     }
 }
 
-impl Component for InspectorComponent {
+impl Component for WidgetDetailsComponent {
     fn register_action_handler(&mut self, tx: UnboundedSender<ActionOrThunk>) -> Result<()> {
         self.action_tx = Some(tx);
         Ok(())
     }
 
     fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
-        if state.focus != Focus::DevTools(DevTools::Inspector) || state.popup.is_some() {
+        if state.focus != Focus::DevTools(DevTools::WidgetDetails) || state.popup.is_some() {
             return Ok(());
         }
 
         match key.code {
+            KeyCode::Esc => self.exit_widget_details()?,
             KeyCode::Char('j') | KeyCode::Down => self.next(state),
             KeyCode::Char('k') | KeyCode::Up => self.previous(state),
             KeyCode::Tab => self.toggle(state),
-            KeyCode::Enter => self.enter_widget_details()?,
             _ => {}
         }
         Ok(())
@@ -204,33 +186,31 @@ impl Component for InspectorComponent {
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect, state: &State) {
         let border_color =
-            if state.focus == Focus::DevTools(DevTools::Inspector) && state.popup.is_none() {
+            if state.focus == Focus::DevTools(DevTools::WidgetDetails) && state.popup.is_none() {
                 Color::Green
             } else {
                 Color::White
             };
         let block = Block::default()
-            .title("Flutter Inspector")
+            .title("Widget Details Tree")
             .padding(Padding::horizontal(1))
             .border_style(Style::default().fg(border_color))
             .border_type(BorderType::Rounded)
             .borders(Borders::ALL);
 
-        let Some(session) = current_session_selector(state) else {
+        let Some(SessionState {
+            selected_widget_details_tree: Some(ref details_tree),
+            opened_widget_details_value_ids,
+            ..
+        }) = current_session_selector(state)
+        else {
             f.render_widget(block.clone(), area);
             return;
         };
 
-        let Some(ref summary_tree) = session.widget_summary_tree else {
-            f.render_widget(block.clone(), area);
-            return;
-        };
-
-        let root = Self::item_builder(summary_tree);
+        let root = Self::item_builder(details_tree);
         let tree = Tree::new(root).block(block).highlight_style(
-            if state.focus == Focus::DevTools(DevTools::Inspector)
-                || state.focus == Focus::DevTools(DevTools::WidgetDetails)
-            {
+            if state.focus == Focus::DevTools(DevTools::WidgetDetails) {
                 Style::default().bg(Color::DarkGray)
             } else {
                 Style::default()
@@ -239,13 +219,7 @@ impl Component for InspectorComponent {
 
         self.state
             .opened
-            .clone_from(&session.opened_widget_value_ids);
-        self.state
-            .selected
-            .clone_from(&session.selected_widget_value_id);
-        if let Some(selected_widget_value_id) = session.selected_widget_value_id.as_ref() {
-            *self.state.selected_mut() = Some(selected_widget_value_id.clone());
-        }
+            .clone_from(&opened_widget_details_value_ids);
 
         f.render_stateful_widget(tree, area, &mut self.state);
     }
