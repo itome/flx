@@ -41,12 +41,15 @@ impl LoadRootWidgetWithSummaryTreeThunk {
         }
     }
 
-    fn all_ids(node: &DiagnosticNode) -> HashSet<String> {
+    fn all_ids(node: &DiagnosticNode, depth: usize) -> HashSet<String> {
         let mut ids = HashSet::new();
+        if depth == 0 {
+            return ids;
+        }
         ids.insert(node.value_id.clone().unwrap_or_default());
         if let Some(children) = node.children.as_ref() {
             for child in children {
-                ids.extend(Self::all_ids(child));
+                ids.extend(Self::all_ids(child, depth - 1));
             }
         }
         ids
@@ -95,7 +98,7 @@ where
         store
             .dispatch(Action::SetOpenWidgetValueId {
                 session_id: self.session_id.clone(),
-                ids: Self::all_ids(&response.result),
+                ids: Self::all_ids(&response.result, 30),
             })
             .await;
 
