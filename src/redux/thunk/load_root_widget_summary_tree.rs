@@ -26,7 +26,7 @@ use devtools::{
 
 use daemon::flutter::FlutterDaemon;
 
-use super::context::Context;
+use super::{context::Context, load_details_subtree::LoadDetailsSubtreeThunk};
 
 pub struct LoadRootWidgetWithSummaryTreeThunk {
     context: Arc<Context>,
@@ -94,6 +94,16 @@ where
                 return;
             }
         };
+
+        if let Some(value_id) = response.result.value_id.clone() {
+            let _store = store.clone();
+            let context = self.context.clone();
+            tokio::spawn(async move {
+                LoadDetailsSubtreeThunk::new(context, value_id.clone())
+                    .execute(_store)
+                    .await;
+            });
+        }
 
         store
             .dispatch(Action::SetOpenWidgetValueId {
