@@ -13,6 +13,7 @@ pub mod launch_emulator;
 pub mod load_details_subtree;
 pub mod load_emulators;
 pub mod load_full_request;
+pub mod load_layout_explorer_node;
 pub mod load_root_widget_summary_tree;
 pub mod load_sdk_versions;
 pub mod load_supported_platforms;
@@ -33,6 +34,7 @@ pub enum ThunkAction {
     LoadFullRequest,
     LoadVSCodeLaunchSetting,
     LoadRootWidgetSummaryTree { session_id: String },
+    LoadLayoutExplorerNode { value_id: String },
     LoadDetailsSubtree { value_id: String },
     RunNewApp { use_fvm: bool },
     LaunchEmulator,
@@ -74,6 +76,9 @@ where
         ThunkAction::StopApp => Box::new(stop_app::StopAppThunk::new(context)),
         ThunkAction::LoadSupportedPlatforms => Box::new(
             load_supported_platforms::LoadSupportedPlatformsThunk::new(context),
+        ),
+        ThunkAction::LoadLayoutExplorerNode { value_id } => Box::new(
+            load_layout_explorer_node::LoadLayoutExplorerNodeThunk::new(context, value_id),
         ),
         ThunkAction::LoadDetailsSubtree { value_id } => Box::new(
             load_details_subtree::LoadDetailsSubtreeThunk::new(context, value_id),

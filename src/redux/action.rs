@@ -167,6 +167,29 @@ pub enum Action {
         id: String,
     },
 
+    SetSelectedWidgetDetailsTree {
+        session_id: String,
+        tree: Option<DiagnosticNode>,
+    },
+
+    SetSelectedWidgetObjectGroup {
+        session_id: String,
+        group: Option<String>,
+    },
+
+    SetOpenWidgetDetailsValueId {
+        session_id: String,
+        ids: HashSet<String>,
+    },
+
+    ToggleOpenWidgetDetailsValueId {
+        session_id: String,
+        id: String,
+    },
+
+    EnterWidgetDetails,
+    ExitWidgetDetails,
+
     NextLog,
     PreviousLog,
 
