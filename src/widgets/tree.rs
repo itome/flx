@@ -9,6 +9,9 @@ pub struct TreeState {
     pub selected: Option<String>,
     pub opened: HashSet<String>,
     list_state: ListState,
+
+    flat_nodes_cache: Vec<NodeData>,
+    flat_nodes_cache_key: Option<Vec<Vec<String>>>,
 }
 
 impl Default for TreeState {
@@ -23,6 +26,9 @@ impl TreeState {
             selected: None,
             opened: HashSet::new(),
             list_state: ListState::default(),
+
+            flat_nodes_cache: vec![],
+            flat_nodes_cache_key: None,
         }
     }
 
@@ -97,11 +103,25 @@ impl<'a> Node<'a> {
             children,
         }
     }
+
+    pub fn flatten(&self, opened: &HashSet<String>, prefix: &[String]) -> Vec<Vec<String>> {
+        let mut path = prefix.to_vec();
+        path.push(self.id.clone());
+        let mut paths = vec![path.clone()];
+
+        if opened.contains(&self.id) {
+            for child in &self.children {
+                paths.extend(child.flatten(opened, &path));
+            }
+        }
+
+        paths
+    }
 }
 
-pub struct NodeData<'a> {
+pub struct NodeData {
     pub path: Vec<String>,
-    line: Line<'a>,
+    line: Vec<(String, Style)>,
 }
 
 pub struct Tree<'a> {
@@ -139,23 +159,23 @@ impl<'a> Tree<'a> {
     pub fn make_lines(
         node: &Node<'a>,
         state: &TreeState,
-        prefix_for_root: &[Span<'a>],
-        prefix_for_children: &[Span<'a>],
+        prefix_for_root: &[(String, Style)],
+        prefix_for_children: &[(String, Style)],
         path: &[String],
-    ) -> Vec<NodeData<'a>> {
-        let mut root_item: Vec<Span> = prefix_for_root.to_vec();
+    ) -> Vec<NodeData> {
+        let mut root_item: Vec<(String, Style)> = prefix_for_root.to_vec();
 
         if node.children.is_empty() {
-            root_item.push(Span::raw("─"));
+            root_item.push(("─".to_string(), Style::default()));
         } else if state.opened.contains(&node.id) {
-            root_item.push(Span::raw("○"));
+            root_item.push(("○".to_string(), Style::default()));
         } else {
-            root_item.push(Span::raw("●"));
+            root_item.push(("●".to_string(), Style::default()));
         }
 
-        root_item.push(Span::raw(" "));
+        root_item.push((" ".to_string(), Style::default()));
         for span in &node.spans {
-            root_item.push(span.clone());
+            root_item.push((span.content.to_string(), span.style));
         }
 
         let mut new_path = path.to_vec();
@@ -163,22 +183,22 @@ impl<'a> Tree<'a> {
 
         let mut items: Vec<NodeData> = vec![NodeData {
             path: new_path.clone(),
-            line: Line::from(root_item),
+            line: root_item,
         }];
 
         if state.opened.contains(&node.id) {
             for (i, child) in node.children.iter().enumerate() {
                 let mut child_prefix_for_root = prefix_for_children.to_vec();
                 if i == node.children.len().wrapping_sub(1) {
-                    child_prefix_for_root.push(Span::raw("╰"));
+                    child_prefix_for_root.push(("╰".to_string(), Style::default()));
                 } else {
-                    child_prefix_for_root.push(Span::raw("├"));
+                    child_prefix_for_root.push(("├".to_string(), Style::default()));
                 }
                 let mut child_prefix_for_children = prefix_for_children.to_vec();
                 if i != node.children.len().wrapping_sub(1) {
-                    child_prefix_for_children.push(Span::raw("│"));
+                    child_prefix_for_children.push(("│".to_string(), Style::default()));
                 } else {
-                    child_prefix_for_children.push(Span::raw(" "));
+                    child_prefix_for_children.push((" ".to_string(), Style::default()));
                 }
                 for spans_list in Self::make_lines(
                     child,
@@ -200,14 +220,27 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
     type State = TreeState;
 
     fn render_ref(&self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let lines = Self::make_lines(&self.root, state, &[], &[], &[]);
+        let paths = self.root.flatten(&state.opened, &[]);
+        if state.flat_nodes_cache_key.as_ref() != Some(&paths) {
+            state.flat_nodes_cache = Self::make_lines(&self.root, state, &[], &[], &[]);
+            state.flat_nodes_cache_key = Some(paths);
+        }
+
+        let lines = &state.flat_nodes_cache;
         state.list_state.select(
             lines
                 .iter()
                 .position(|d| state.selected == Some(d.path.last().unwrap().clone())),
         );
 
-        let items = lines.iter().map(|d| ListItem::new(d.line.clone()));
+        let items = lines.iter().map(|d| {
+            ListItem::new(Line::from(
+                d.line
+                    .iter()
+                    .map(|(content, style)| Span::styled(content, *style))
+                    .collect::<Vec<_>>(),
+            ))
+        });
         let mut list = List::new(items)
             .style(self.style)
             .highlight_style(self.highlight_style);
@@ -228,11 +261,23 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
             indent = indent.min(selected_indent);
         };
 
-        let items = lines.iter().map(|d| {
+        let items = lines.iter().enumerate().map(|(i, d)| {
+            if i < state.list_state.offset()
+                || i >= state.list_state.offset() + area.height as usize
+            {
+                return Line::from(
+                    d.line
+                        .iter()
+                        .map(|(content, style)| Span::styled(content, *style))
+                        .collect::<Vec<_>>(),
+                );
+            }
+
             let mut indent_rest = indent;
 
             let mut spans = vec![];
-            for span in d.line.clone().spans {
+            for (content, style) in d.line.clone() {
+                let span = Span::styled(content, style);
                 if indent_rest == 0 {
                     spans.push(span);
                     continue;
@@ -252,8 +297,9 @@ impl<'a> StatefulWidgetRef for Tree<'a> {
                 indent_rest = 0;
             }
 
-            ListItem::new(d.line.clone().spans(spans))
+            Line::from(spans)
         });
+
         let mut list = List::new(items)
             .style(self.style)
             .highlight_style(self.highlight_style);
@@ -296,6 +342,39 @@ mod tests {
         assert_buffer_eq,
         widgets::{BorderType, Borders},
     };
+
+    #[test]
+    fn test_flatten_node() {
+        let mut hash_set = HashSet::new();
+        hash_set.insert("root".to_string());
+        hash_set.insert("node2".to_string());
+        let node = Node::new(
+            "root",
+            vec![],
+            vec![
+                Node::new("node1", vec![], vec![]),
+                Node::new(
+                    "node2",
+                    vec![],
+                    vec![
+                        Node::new("node3", vec![], vec![]),
+                        Node::new("node4", vec![], vec![]),
+                    ],
+                ),
+            ],
+        );
+
+        assert_eq!(
+            node.flatten(&hash_set, &[]),
+            vec![
+                vec!["root"],
+                vec!["root", "node1"],
+                vec!["root", "node2"],
+                vec!["root", "node2", "node3"],
+                vec!["root", "node2", "node4"],
+            ]
+        );
+    }
 
     #[test]
     fn test_tree() {

@@ -71,24 +71,24 @@ impl WidgetDetailsComponent {
         let state = TreeState::new()
             .with_opened(session.opened_widget_details_value_ids.clone())
             .with_selected(self.state.selected());
-        let items = Tree::make_lines(&root, &state, &[], &[], &[]);
+        let paths = root.flatten(&state.opened, &[]);
 
-        let current_index = items.iter().position(|data| {
+        let current_index = paths.iter().position(|path| {
             if let Some(selected) = self.state.selected.as_ref() {
-                data.path.last().unwrap() == selected
+                path.last().unwrap() == selected
             } else {
                 false
             }
         });
 
         let next_id = if let Some(current_index) = current_index {
-            if current_index + 1 < items.len() {
-                Some(items[current_index + 1].path.last().unwrap().clone())
+            if current_index + 1 < paths.len() {
+                Some(paths[current_index + 1].last().unwrap().clone())
             } else {
                 self.state.selected.clone()
             }
         } else {
-            items.first().map(|data| data.path.last().unwrap().clone())
+            paths.first().map(|path| path.last().unwrap().clone())
         };
 
         if let Some(next_id) = next_id {
@@ -108,11 +108,11 @@ impl WidgetDetailsComponent {
         let state = TreeState::new()
             .with_opened(session.opened_widget_details_value_ids.clone())
             .with_selected(self.state.selected());
-        let items = Tree::make_lines(&root, &state, &[], &[], &[]);
+        let paths = root.flatten(&state.opened, &[]);
 
-        let current_index = items.iter().position(|data| {
+        let current_index = paths.iter().position(|path| {
             if let Some(selected) = self.state.selected.as_ref() {
-                data.path.last().unwrap() == selected
+                path.last().unwrap() == selected
             } else {
                 false
             }
@@ -120,12 +120,12 @@ impl WidgetDetailsComponent {
 
         let next_id = if let Some(current_index) = current_index {
             if current_index > 0 {
-                Some(items[current_index - 1].path.last().unwrap().clone())
+                Some(paths[current_index - 1].last().unwrap().clone())
             } else {
                 self.state.selected.clone()
             }
         } else {
-            items.first().map(|data| data.path.last().unwrap().clone())
+            paths.first().map(|path| path.last().unwrap().clone())
         };
 
         if let Some(next_id) = next_id {
