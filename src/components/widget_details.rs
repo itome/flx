@@ -219,7 +219,7 @@ impl Component for WidgetDetailsComponent {
 
         self.state
             .opened
-            .clone_from(&opened_widget_details_value_ids);
+            .clone_from(opened_widget_details_value_ids);
 
         f.render_stateful_widget(tree, area, &mut self.state);
     }
