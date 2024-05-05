@@ -334,12 +334,15 @@ pub enum StreamId {
     VM,
     Isolate,
     Debug,
+    // WARNING: App crashes when listening to this stream.
     Profiler,
     GC,
     Extension,
     Timeline,
     Logging,
     Service,
+    Stdout,
+    Stderr,
     HeapSnapshot,
 }
 

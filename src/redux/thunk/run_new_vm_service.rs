@@ -52,18 +52,7 @@ where
 
         vm_service.connect(self.uri.clone()).await;
 
-        let stream_ids = vec![
-            StreamId::VM,
-            StreamId::Isolate,
-            StreamId::Debug,
-            StreamId::Profiler,
-            StreamId::GC,
-            StreamId::Extension,
-            StreamId::Timeline,
-            StreamId::Logging,
-            StreamId::Service,
-            StreamId::HeapSnapshot,
-        ];
+        let stream_ids = vec![StreamId::Extension];
 
         for stream_id in stream_ids {
             if let Err(e) = vm_service.stream_listen(stream_id.clone()).await {
