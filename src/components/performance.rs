@@ -61,6 +61,19 @@ impl Component for PerformanceComponent {
     }
 
     fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
+        match key.code {
+            KeyCode::Right | KeyCode::Char('l')
+                if state.focus == Focus::DevTools(DevTools::Inspector) =>
+            {
+                *self.state.offset_mut() = 0;
+            }
+            KeyCode::Left | KeyCode::Char('h')
+                if state.focus == Focus::DevTools(DevTools::Network) =>
+            {
+                *self.state.offset_mut() = 0;
+            }
+            _ => {}
+        }
         if state.focus != Focus::DevTools(DevTools::Performance) || state.popup.is_some() {
             return Ok(());
         }

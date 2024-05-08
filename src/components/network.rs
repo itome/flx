@@ -70,6 +70,17 @@ impl Component for NetworkComponent {
     }
 
     fn handle_key_events(&mut self, key: &KeyEvent, state: &State) -> Result<()> {
+        match key.code {
+            KeyCode::Right | KeyCode::Char('l')
+                if state.focus == Focus::DevTools(DevTools::Performance) =>
+            {
+                *self.state.offset_mut() = 0;
+            }
+            KeyCode::Left | KeyCode::Char('h') if state.focus == Focus::DevTools(DevTools::App) => {
+                *self.state.offset_mut() = 0;
+            }
+            _ => {}
+        }
         if state.focus != Focus::DevTools(DevTools::Network) || state.popup.is_some() {
             return Ok(());
         }
