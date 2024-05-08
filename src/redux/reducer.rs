@@ -688,7 +688,7 @@ pub fn reducer(state: State, action: Action) -> State {
                                 }
                             },
                             frames: {
-                                [
+                                let frames = [
                                     s.frames,
                                     vec![FlutterFrame {
                                         build,
@@ -699,7 +699,12 @@ pub fn reducer(state: State, action: Action) -> State {
                                         vsync_overhead,
                                     }],
                                 ]
-                                .concat()
+                                .concat();
+                                if frames.len() > 1000 {
+                                    frames[(frames.len() - 1000)..].to_vec()
+                                } else {
+                                    frames
+                                }
                             },
                             ..s
                         }
