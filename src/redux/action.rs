@@ -32,10 +32,6 @@ pub enum Action {
         emulators: Vec<Emulator>,
     },
 
-    SetFlavors {
-        flavors: HashMap<String, Vec<String>>,
-    },
-
     SetLaunchConfigurations {
         configurations: Vec<LaunchConfiguration>,
     },

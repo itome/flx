@@ -51,47 +51,5 @@ where
                 platforms: supprted_platforms,
             })
             .await;
-
-        let mut flavors = HashMap::new();
-
-        let supported_platforms = store
-            .select(|state: &State| state.supported_platforms.clone())
-            .await;
-
-        for supported_platform in supported_platforms {
-            match supported_platform.as_str() {
-                "ios" => {
-                    if let Ok(Some(schemes)) = ios::get_schemes(project_root.clone()) {
-                        flavors.insert(
-                            "ios".to_string(),
-                            schemes.iter().map(|s| s.to_lowercase()).collect(),
-                        );
-                    }
-                }
-                "macos" => {
-                    if let Ok(Some(schemes)) = ios::get_schemes(project_root.clone()) {
-                        flavors.insert(
-                            "darwin".to_string(),
-                            schemes.iter().map(|s| s.to_lowercase()).collect(),
-                        );
-                    }
-                }
-                "android" => {
-                    if let Ok(Some(schemes)) = android::get_schemes(project_root.clone()) {
-                        flavors.insert(
-                            "android".to_string(),
-                            schemes.iter().map(|s| s.to_lowercase()).collect(),
-                        );
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        flavors.entry("ios".to_string()).or_insert(vec![]);
-        flavors.entry("darwin".to_string()).or_insert(vec![]);
-        flavors.entry("android".to_string()).or_insert(vec![]);
-
-        store.dispatch(Action::SetFlavors { flavors }).await;
     }
 }

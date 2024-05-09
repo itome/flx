@@ -73,7 +73,6 @@ pub fn reducer(state: State, action: Action) -> State {
             ..state
         },
         Action::SetEmultors { emulators } => State { emulators, ..state },
-        Action::SetFlavors { flavors } => State { flavors, ..state },
         Action::SetLaunchConfigurations { configurations } => State {
             launch_configurations: configurations,
             ..state
