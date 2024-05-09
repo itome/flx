@@ -1,5 +1,4 @@
 use color_eyre::Result;
-use json_comments::StripComments;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -29,9 +28,7 @@ pub struct VSCodeLaunchJson {
 }
 
 pub fn parse_launch_configuration(json: &str) -> Result<Vec<VSCodeLaunchConfiguration>> {
-    // launch.json can have comments, so we need to strip them out
-    let stripped = StripComments::new(json.as_bytes());
-    let json: VSCodeLaunchJson = serde_json::from_reader(stripped)?;
+    let json: VSCodeLaunchJson = json5::from_str(json)?;
     Ok(json.configurations)
 }
 
