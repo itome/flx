@@ -81,6 +81,17 @@ where
             return;
         };
 
+        loop {
+            if let Ok(is_widget_tree_ready) =
+                vm_service.is_widget_tree_ready(&main_isolate.id).await
+            {
+                if is_widget_tree_ready.result {
+                    break;
+                }
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+
         let response = match vm_service
             .get_root_widget_summary_tree_with_previews(
                 &main_isolate.id,
