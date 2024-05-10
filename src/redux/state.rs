@@ -139,7 +139,7 @@ pub struct State {
     pub emulators: Vec<Emulator>,
     pub selected_device_or_emulator_id: Option<String>,
     pub launch_configurations: Vec<LaunchConfiguration>,
-    pub supported_platforms: Vec<String>,
+    pub supported_platforms: HashMap<PathBuf, Vec<String>>,
 
     pub sessions: Vec<SessionState>,
     pub session_id: Option<String>,

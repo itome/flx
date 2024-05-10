@@ -69,14 +69,6 @@ impl SelectDevicePopupComponent {
             .send(Action::HideSelectDevicePopUp.into())?;
         Ok(())
     }
-
-    fn show_select_launch_configuration(&self) -> Result<()> {
-        self.action_tx
-            .as_ref()
-            .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(Action::ShowSelectLaunchConfigurationPopup.into())?;
-        Ok(())
-    }
 }
 
 impl Component for SelectDevicePopupComponent {
@@ -94,14 +86,8 @@ impl Component for SelectDevicePopupComponent {
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             KeyCode::Enter => {
-                if state.launch_configurations.is_empty() {
-                    self.hide_popup()?;
-                    self.run_new_app()?;
-                    return Ok(());
-                };
-
                 self.hide_popup()?;
-                self.show_select_launch_configuration()?
+                self.run_new_app()?;
             }
             KeyCode::Esc => self.hide_popup()?,
 

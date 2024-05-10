@@ -61,6 +61,14 @@ impl RunnersComponent {
         Ok(())
     }
 
+    fn show_select_launch_configuration(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(Action::ShowSelectLaunchConfigurationPopup.into())?;
+        Ok(())
+    }
+
     fn hot_reload(&self) -> Result<()> {
         self.action_tx
             .as_ref()
@@ -113,7 +121,13 @@ impl Component for RunnersComponent {
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             KeyCode::Enter => match state.session_id {
                 Some(_) => self.enter_devtools()?,
-                None => self.show_select_device_popup()?,
+                None => {
+                    if state.launch_configurations.is_empty() {
+                        self.show_select_device_popup()?
+                    } else {
+                        self.show_select_launch_configuration()?;
+                    };
+                }
             },
             _ => {}
         }

@@ -20,16 +20,12 @@ use super::Component;
 
 #[derive(Default)]
 pub struct SelectLaunchConfigurationPopupComponent {
-    use_fvm: bool,
     action_tx: Option<UnboundedSender<ActionOrThunk>>,
 }
 
 impl SelectLaunchConfigurationPopupComponent {
-    pub fn new(use_fvm: bool) -> Self {
-        Self {
-            use_fvm,
-            ..Self::default()
-        }
+    pub fn new() -> Self {
+        Self { ..Self::default() }
     }
 
     fn next(&self) -> Result<()> {
@@ -48,16 +44,11 @@ impl SelectLaunchConfigurationPopupComponent {
         Ok(())
     }
 
-    fn run_new_app(&self) -> Result<()> {
+    fn show_select_device_popup(&self) -> Result<()> {
         self.action_tx
             .as_ref()
             .ok_or_else(|| eyre!("action_tx is None"))?
-            .send(
-                ThunkAction::RunNewApp {
-                    use_fvm: self.use_fvm,
-                }
-                .into(),
-            )?;
+            .send(Action::ShowSelectDevicePopUp.into())?;
         Ok(())
     }
 
@@ -86,7 +77,7 @@ impl Component for SelectLaunchConfigurationPopupComponent {
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
             KeyCode::Enter => {
                 self.hide_popup()?;
-                self.run_new_app()?;
+                self.show_select_device_popup()?;
             }
             KeyCode::Esc => self.hide_popup()?,
             _ => {}

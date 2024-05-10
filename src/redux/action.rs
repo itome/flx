@@ -4,8 +4,11 @@ use devtools::protocols::{
     flutter_extension::DiagnosticNode,
     io_extension::{HttpProfileRequest, HttpProfileRequestRef},
 };
-use std::collections::{HashMap, HashSet};
 use std::time::Duration;
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 
 #[derive(Debug)]
 pub enum Action {
@@ -54,7 +57,7 @@ pub enum Action {
     },
 
     SetSupportedPlatforms {
-        platforms: Vec<String>,
+        supported_platforms: HashMap<PathBuf, Vec<String>>,
     },
 
     NextSession,

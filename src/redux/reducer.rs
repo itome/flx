@@ -499,8 +499,10 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
-        Action::SetSupportedPlatforms { platforms } => State {
-            supported_platforms: platforms,
+        Action::SetSupportedPlatforms {
+            supported_platforms,
+        } => State {
+            supported_platforms,
             ..state
         },
         Action::AppendProgressLog {

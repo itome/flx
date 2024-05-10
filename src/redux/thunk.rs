@@ -16,7 +16,6 @@ pub mod load_full_request;
 pub mod load_layout_explorer_node;
 pub mod load_root_widget_summary_tree;
 pub mod load_sdk_versions;
-pub mod load_supported_platforms;
 pub mod load_vscode_launch_setting;
 pub mod run_new_app;
 pub mod run_new_vm_service;
@@ -29,7 +28,6 @@ pub mod watch_requests;
 pub enum ThunkAction {
     WatchDevices,
     LoadSdkVersions { use_fvm: bool },
-    LoadSupportedPlatforms,
     LoadEmulators,
     LoadFullRequest,
     LoadVSCodeLaunchSetting,
@@ -74,9 +72,6 @@ where
         ThunkAction::HotReload => Box::new(hot_reload::HotReloadThunk::new(context)),
         ThunkAction::HotRestart => Box::new(hot_restart::HotRestartThunk::new(context)),
         ThunkAction::StopApp => Box::new(stop_app::StopAppThunk::new(context)),
-        ThunkAction::LoadSupportedPlatforms => Box::new(
-            load_supported_platforms::LoadSupportedPlatformsThunk::new(context),
-        ),
         ThunkAction::LoadLayoutExplorerNode { value_id } => Box::new(
             load_layout_explorer_node::LoadLayoutExplorerNodeThunk::new(context, value_id),
         ),

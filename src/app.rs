@@ -144,8 +144,7 @@ impl App {
                 ),
                 (
                     ComponentId::SelectFlavorPopup,
-                    Box::new(SelectLaunchConfigurationPopupComponent::new(use_fvm))
-                        as Box<dyn Component>,
+                    Box::new(SelectLaunchConfigurationPopupComponent::new()) as Box<dyn Component>,
                 ),
                 (
                     ComponentId::Pubspec,
@@ -202,7 +201,6 @@ impl App {
 
         redux_action_tx.send(ThunkAction::WatchDevices.into())?;
         redux_action_tx.send(ThunkAction::LoadEmulators.into())?;
-        redux_action_tx.send(ThunkAction::LoadSupportedPlatforms.into())?;
         redux_action_tx.send(ThunkAction::LoadVSCodeLaunchSetting.into())?;
         redux_action_tx.send(
             ThunkAction::LoadSdkVersions {
