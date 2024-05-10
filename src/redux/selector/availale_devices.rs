@@ -16,7 +16,7 @@ pub fn available_devices_selector(state: &State) -> impl Iterator<Item = &Device
     }
 
     state.devices.iter().filter(move |d| {
-        let Some(ref supported_platforms) = state.supported_platforms.get(&project_root) else {
+        let Some(supported_platforms) = state.supported_platforms.get(&project_root) else {
             return false;
         };
 
