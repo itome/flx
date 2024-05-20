@@ -1,0 +1,325 @@
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "type": "HttpProfile",
+    "timestamp": 1716182914879358,
+    "requests": [
+      {
+        "type": "@HttpProfileRequest",
+        "id": "3115601576355777739",
+        "isolateId": "isolates/2961233742099103",
+        "method": "GET",
+        "uri": "https://api-dev.woodstock.club/version/min",
+        "events": [
+          {
+            "timestamp": 1716182914049329,
+            "event": "Connection established"
+          },
+          {
+            "timestamp": 1716182914050833,
+            "event": "Request sent"
+          },
+          {
+            "timestamp": 1716182914102249,
+            "event": "Waiting (TTFB)"
+          },
+          {
+            "timestamp": 1716182914106803,
+            "event": "Content Download"
+          }
+        ],
+        "startTime": 1716182913800445,
+        "endTime": 1716182914055679,
+        "request": {
+          "headers": {
+            "user-agent": [
+              "Dart/3.4 (dart:io)"
+            ],
+            "accept-encoding": [
+              "gzip"
+            ],
+            "content-length": [
+              "0"
+            ],
+            "host": [
+              "api-dev.woodstock.club"
+            ]
+          },
+          "connectionInfo": {
+            "localPort": 61898,
+            "remoteAddress": "18.180.108.195",
+            "remotePort": 443
+          },
+          "contentLength": 0,
+          "cookies": [],
+          "followRedirects": true,
+          "maxRedirects": 5,
+          "method": "GET",
+          "persistentConnection": true,
+          "uri": "https://api-dev.woodstock.club/version/min",
+          "filterKey": "HTTP/client"
+        },
+        "response": {
+          "startTime": 1716182914102608,
+          "headers": {
+            "connection": [
+              "keep-alive"
+            ],
+            "cache-control": [
+              "no-store"
+            ],
+            "x-amzn-trace-id": [
+              "Root=1-664adf82-0f5bc18e36625e0048a8447c"
+            ],
+            "date": [
+              "Mon, 20 May 2024 05:28:34 GMT"
+            ],
+            "vary": [
+              "Origin"
+            ],
+            "strict-transport-security": [
+              "max-age=10886400"
+            ],
+            "content-length": [
+              "58"
+            ],
+            "x-frame-options": [
+              "DENY"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "pragma": [
+              "no-cache"
+            ],
+            "x-content-type-options": [
+              "nosniff"
+            ],
+            "content-security-policy": [
+              "frame-ancestors 'none'"
+            ]
+          },
+          "compressionState": "HttpClientResponseCompressionState.notCompressed",
+          "connectionInfo": {
+            "localPort": 61898,
+            "remoteAddress": "18.180.108.195",
+            "remotePort": 443
+          },
+          "contentLength": 58,
+          "cookies": [],
+          "isRedirect": false,
+          "persistentConnection": true,
+          "reasonPhrase": "OK",
+          "redirects": [],
+          "statusCode": 200,
+          "endTime": 1716182914106782
+        }
+      },
+      {
+        "type": "@HttpProfileRequest",
+        "id": "3115601576355777774",
+        "isolateId": "isolates/2961233742099103",
+        "method": "GET",
+        "uri": "https://api-dev.woodstock.club/user",
+        "events": [
+          {
+            "timestamp": 1716182914099422,
+            "event": "Connection established"
+          },
+          {
+            "timestamp": 1716182914099430,
+            "event": "Request sent"
+          },
+          {
+            "timestamp": 1716182914116481,
+            "event": "Waiting (TTFB)"
+          },
+          {
+            "timestamp": 1716182914117176,
+            "event": "Content Download"
+          }
+        ],
+        "startTime": 1716182914016550,
+        "endTime": 1716182914099513,
+        "request": {
+          "headers": {
+            "user-agent": [
+              "Dart/3.4 (dart:io)"
+            ],
+            "accept-encoding": [
+              "gzip"
+            ],
+            "content-length": [
+              "0"
+            ],
+            "host": [
+              "api-dev.woodstock.club"
+            ]
+          },
+          "connectionInfo": {
+            "localPort": 61905,
+            "remoteAddress": "18.180.108.195",
+            "remotePort": 443
+          },
+          "contentLength": 0,
+          "cookies": [],
+          "followRedirects": true,
+          "maxRedirects": 5,
+          "method": "GET",
+          "persistentConnection": true,
+          "uri": "https://api-dev.woodstock.club/user",
+          "filterKey": "HTTP/client"
+        },
+        "response": {
+          "startTime": 1716182914116518,
+          "headers": {
+            "connection": [
+              "keep-alive"
+            ],
+            "content-type": [
+              "application/json"
+            ],
+            "x-amzn-trace-id": [
+              "Root=1-664adf82-3dfa9b3e2237b2e50fb79d48"
+            ],
+            "date": [
+              "Mon, 20 May 2024 05:28:34 GMT"
+            ],
+            "vary": [
+              "Origin"
+            ],
+            "content-length": [
+              "84"
+            ]
+          },
+          "compressionState": "HttpClientResponseCompressionState.notCompressed",
+          "connectionInfo": {
+            "localPort": 61905,
+            "remoteAddress": "18.180.108.195",
+            "remotePort": 443
+          },
+          "contentLength": 84,
+          "cookies": [],
+          "isRedirect": false,
+          "persistentConnection": true,
+          "reasonPhrase": "Unauthorized",
+          "redirects": [],
+          "statusCode": 401,
+          "endTime": 1716182914117169
+        }
+      },
+      {
+        "type": "@HttpProfileRequest",
+        "id": "3115601576355777775",
+        "isolateId": "isolates/2961233742099103",
+        "method": "GET",
+        "uri": "https://api-dev.woodstock.club/alpaca/orders/count",
+        "events": [
+          {
+            "timestamp": 1716182914099112,
+            "event": "Connection established"
+          },
+          {
+            "timestamp": 1716182914099151,
+            "event": "Request sent"
+          },
+          {
+            "timestamp": 1716182914145945,
+            "event": "Waiting (TTFB)"
+          },
+          {
+            "timestamp": 1716182914146243,
+            "event": "Content Download"
+          }
+        ],
+        "startTime": 1716182914016718,
+        "endTime": 1716182914099301,
+        "request": {
+          "headers": {
+            "user-agent": [
+              "Dart/3.4 (dart:io)"
+            ],
+            "accept-encoding": [
+              "gzip"
+            ],
+            "content-length": [
+              "0"
+            ],
+            "host": [
+              "api-dev.woodstock.club"
+            ]
+          },
+          "connectionInfo": {
+            "localPort": 61906,
+            "remoteAddress": "18.180.108.195",
+            "remotePort": 443
+          },
+          "contentLength": 0,
+          "cookies": [],
+          "followRedirects": true,
+          "maxRedirects": 5,
+          "method": "GET",
+          "persistentConnection": true,
+          "uri": "https://api-dev.woodstock.club/alpaca/orders/count",
+          "filterKey": "HTTP/client"
+        },
+        "response": {
+          "startTime": 1716182914145984,
+          "headers": {
+            "connection": [
+              "keep-alive"
+            ],
+            "cache-control": [
+              "no-store"
+            ],
+            "x-amzn-trace-id": [
+              "Root=1-664adf82-4f25987b3a6a34f36c61e9d2"
+            ],
+            "date": [
+              "Mon, 20 May 2024 05:28:34 GMT"
+            ],
+            "vary": [
+              "Origin"
+            ],
+            "strict-transport-security": [
+              "max-age=10886400"
+            ],
+            "content-length": [
+              "4"
+            ],
+            "x-frame-options": [
+              "DENY"
+            ],
+            "content-type": [
+              "text/plain; charset=UTF-8"
+            ],
+            "pragma": [
+              "no-cache"
+            ],
+            "x-content-type-options": [
+              "nosniff"
+            ],
+            "content-security-policy": [
+              "frame-ancestors 'none'"
+            ]
+          },
+          "compressionState": "HttpClientResponseCompressionState.notCompressed",
+          "connectionInfo": {
+            "localPort": 61906,
+            "remoteAddress": "18.180.108.195",
+            "remotePort": 443
+          },
+          "contentLength": 4,
+          "cookies": [],
+          "isRedirect": false,
+          "persistentConnection": true,
+          "reasonPhrase": "OK",
+          "redirects": [],
+          "statusCode": 200,
+          "endTime": 1716182914146237
+        }
+      }
+    ]
+  },
+  "id": "494364b4-751a-4aec-b042-43ee03b47d5d"
+}
