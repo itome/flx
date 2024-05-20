@@ -128,7 +128,9 @@ pub fn initialize_logging() -> Result<()> {
         .with_writer(log_file)
         .with_target(false)
         .with_ansi(false)
-        .with_filter(tracing_subscriber::filter::EnvFilter::from_default_env());
+        .with_filter(tracing_subscriber::filter::EnvFilter::new(
+            "flx=info,daemon=info,devtools=info",
+        ));
     tracing_subscriber::registry()
         .with(file_subscriber)
         .with(ErrorLayer::default())
