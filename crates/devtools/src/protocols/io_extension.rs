@@ -152,6 +152,7 @@ pub struct HttpProfileRequestData {
     pub content_length: Option<i64>,
     pub cookies: Option<Vec<String>>,
     pub error: Option<String>,
+    #[serde(default)]
     pub events: Vec<HttpProfileRequestEvent>,
     pub follow_redirects: Option<bool>,
     pub headers: Option<serde_json::Map<String, serde_json::Value>>,
@@ -280,6 +281,14 @@ mod test {
     fn parse_http_profile() {
         let response = include_str!("../../test/get_http_profile_response.txt");
         let node = serde_json::from_str::<VmServiceResponse<HttpProfile>>(response);
+        assert!(node.is_ok());
+    }
+
+    #[test]
+    fn parse_http_profile_2() {
+        let response = include_str!("../../test/get_http_profile_response_2.txt");
+        let node = serde_json::from_str::<VmServiceResponse<HttpProfile>>(response);
+        println!("{:?}", node);
         assert!(node.is_ok());
     }
 }
