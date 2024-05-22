@@ -30,6 +30,12 @@ pub struct SessionManager {
     sessions: RwLock<HashMap<String, Arc<Session>>>,
 }
 
+impl Default for SessionManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SessionManager {
     pub fn new() -> Self {
         Self {
@@ -37,6 +43,7 @@ impl SessionManager {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn run_new_app(
         &self,
         project_root: PathBuf,
@@ -64,7 +71,7 @@ impl SessionManager {
             .write()
             .await
             .insert(session_id.clone(), Arc::new(session));
-        return Ok(session_id);
+        Ok(session_id)
     }
 
     pub async fn session(&self, id: String) -> Option<Arc<Session>> {
