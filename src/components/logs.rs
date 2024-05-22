@@ -144,9 +144,9 @@ impl Component for LogsComponent {
                                 .map(|line| Line::raw(line.to_string()))
                                 .collect::<Vec<_>>();
                             let text = Text::from(lines);
-                            ListItem::new(text)
+                            ListItem::new(text).style(Style::default().fg(Color::Red))
                         } else {
-                            ListItem::new(line.clone())
+                            ListItem::new(line.clone()).style(Style::default().fg(Color::Red))
                         }
                     }
                     SessionLog::Progress {
