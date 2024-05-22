@@ -338,10 +338,7 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
-    use ratatui::{
-        assert_buffer_eq,
-        widgets::{BorderType, Borders},
-    };
+    use ratatui::widgets::{BorderType, Borders};
 
     #[test]
     fn test_flatten_node() {
@@ -406,7 +403,7 @@ mod tests {
 
         let mut buffer = Buffer::empty(Rect::new(0, 0, 20, 6));
         StatefulWidgetRef::render_ref(&Tree::new(node), buffer.area, &mut buffer, &mut state);
-        assert_buffer_eq!(
+        assert_eq!(
             buffer,
             Buffer::with_lines(vec![
                 "○ root              ",
@@ -466,7 +463,7 @@ mod tests {
         let mut buffer = Buffer::empty(Rect::new(0, 0, 20, 9));
         let mut state = TreeState::new().with_opened(hash_set);
         StatefulWidgetRef::render_ref(&Tree::new(node), buffer.area, &mut buffer, &mut state);
-        assert_buffer_eq!(
+        assert_eq!(
             buffer,
             Buffer::with_lines(vec![
                 "○ root              ",
@@ -521,7 +518,7 @@ mod tests {
             &mut buffer,
             &mut state,
         );
-        assert_buffer_eq!(
+        assert_eq!(
             buffer,
             Buffer::with_lines(vec![
                 "╭──────────────────╮",
@@ -591,7 +588,7 @@ mod tests {
             &mut buffer,
             &mut state,
         );
-        assert_buffer_eq!(
+        assert_eq!(
             buffer,
             Buffer::with_lines(vec![
                 "   ╰○ node6         ",
@@ -606,7 +603,7 @@ mod tests {
             .with_selected(Some("node8".to_string()))
             .with_offset(6);
         StatefulWidgetRef::render_ref(&Tree::new(node), buffer.area, &mut buffer, &mut state);
-        assert_buffer_eq!(
+        assert_eq!(
             buffer,
             Buffer::with_lines(vec![
                 "│   ╰○ node6        ",
