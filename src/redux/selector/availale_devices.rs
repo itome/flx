@@ -23,7 +23,7 @@ pub fn available_devices_selector(state: &State) -> impl Iterator<Item = &Device
         supported_platforms.contains(&d.platform_type)
             && state.sessions.iter().all(|s| {
                 if let Some(device_id) = &s.device_id {
-                    device_id != &d.id
+                    device_id != &d.id || s.stopped
                 } else {
                     false
                 }

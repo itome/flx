@@ -111,6 +111,18 @@ impl SessionManager {
         Err(eyre!("Stdout is not available"))
     }
 
+    pub async fn remove_session(&self, id: String) -> Result<()> {
+        for s in self.sessions() {
+            if let Some(session) = s.read().await.as_ref() {
+                if session.id == id {
+                    *s.write().await = None;
+                    return Ok(());
+                }
+            }
+        }
+        Err(eyre!("Session not found"))
+    }
+
     fn sessions(&self) -> Vec<Arc<RwLock<Option<Session>>>> {
         vec![
             self.session0.clone(),

@@ -148,6 +148,27 @@ pub fn reducer(state: State, action: Action) -> State {
             .concat(),
             ..state
         },
+        Action::StopSession { session_id } => State {
+            focus: {
+                if Some(session_id.clone()) == state.session_id {
+                    Focus::Home(Home::Runners)
+                } else {
+                    state.focus
+                }
+            },
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState { stopped: true, ..s }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
         Action::UnregisterSession { session_id } => State {
             session_id: None,
             focus: {

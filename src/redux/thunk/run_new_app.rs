@@ -141,10 +141,18 @@ where
                 },
                 _ = run.receive_app_stop() => {
                     store
-                        .dispatch(Action::UnregisterSession {
+                        .dispatch(Action::StopSession {
                             session_id: id.clone(),
                         })
                         .await;
+                    if let Err(e) = self
+                        .context
+                        .session_manager
+                        .remove_session(id.clone())
+                        .await
+                    {
+                        log::error!("Failed to remove session: {:?}", e);
+                    }
                     break;
                 }
             }

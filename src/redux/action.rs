@@ -52,6 +52,9 @@ pub enum Action {
         device_id: Option<String>,
         configuration: Option<LaunchConfiguration>,
     },
+    StopSession {
+        session_id: String,
+    },
     UnregisterSession {
         session_id: String,
     },

@@ -98,6 +98,7 @@ pub struct SessionState {
     pub device_id: Option<String>,
     pub configuration: Option<LaunchConfiguration>,
     pub started: bool,
+    pub stopped: bool,
     pub mode: Option<AppMode>,
     pub hot_reloading: bool,
     pub hot_restarting: bool,

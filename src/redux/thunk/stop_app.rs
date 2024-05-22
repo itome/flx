@@ -30,17 +30,22 @@ where
             return;
         };
 
-        let Ok(session) = self
+        store
+            .dispatch(Action::UnregisterSession {
+                session_id: session_id.clone(),
+            })
+            .await;
+
+        if let Ok(session) = self
             .context
             .session_manager
             .session(session_id.clone())
             .await
-        else {
-            return;
-        };
-        let session = session.read().await;
-        let run = &session.as_ref().unwrap().run;
+        {
+            let session = session.read().await;
+            let run = &session.as_ref().unwrap().run;
 
-        run.stop().await.unwrap();
+            run.stop().await.unwrap();
+        };
     }
 }
