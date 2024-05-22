@@ -55,12 +55,15 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        let Ok(output) = Command::new("flutter")
-            .arg("--version")
-            .arg("--machine")
-            .output()
-            .await
-        else {
+        let mut command = if self.use_fvm {
+            Command::new("fvm")
+        } else {
+            Command::new("flutter")
+        };
+        if self.use_fvm {
+            command.arg("flutter");
+        }
+        let Ok(output) = command.arg("--version").arg("--machine").output().await else {
             return;
         };
 
