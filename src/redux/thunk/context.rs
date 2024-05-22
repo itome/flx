@@ -8,14 +8,14 @@ use daemon::flutter::FlutterDaemon;
 
 pub struct Context {
     pub daemon: Arc<FlutterDaemon>,
-    pub session_manager: Arc<SessionManager>,
+    pub manager: Arc<SessionManager>,
 }
 
 impl Context {
     pub fn new(daemon: Arc<FlutterDaemon>, session_manager: Arc<SessionManager>) -> Self {
         Self {
             daemon,
-            session_manager,
+            manager: session_manager,
         }
     }
 }

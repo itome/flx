@@ -57,17 +57,15 @@ where
             return;
         }
 
-        let Ok(session) = self
+        let Some(session) = self
             .context
-            .session_manager
+            .manager
             .session(current_session.id.clone())
             .await
         else {
             return;
         };
-
-        let session = session.read().await;
-        let vm_service = &session.as_ref().unwrap().vm_service;
+        let vm_service = &session.vm_service;
 
         let Ok(full_request) = vm_service
             .get_http_profile_request(request.isolate_id.clone(), request.id.clone())

@@ -30,16 +30,7 @@ where
             return;
         };
 
-        let Ok(session) = self
-            .context
-            .session_manager
-            .session(session_id.clone())
-            .await
-        else {
-            return;
-        };
-        let session = session.read().await;
-        let Some(session) = &session.as_ref() else {
+        let Some(session) = self.context.manager.session(session_id.clone()).await else {
             return;
         };
         let run = &session.run;

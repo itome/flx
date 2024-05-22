@@ -62,17 +62,10 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
-        let Ok(session) = self
-            .context
-            .session_manager
-            .session(self.session_id.clone())
-            .await
-        else {
+        let Some(session) = self.context.manager.session(self.session_id.clone()).await else {
             return;
         };
-
-        let session = session.read().await;
-        let vm_service = &session.as_ref().unwrap().vm_service;
+        let vm_service = &session.vm_service;
 
         let Ok(vm) = vm_service.get_vm().await else {
             return;

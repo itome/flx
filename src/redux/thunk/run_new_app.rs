@@ -34,9 +34,13 @@ where
     Api: StoreApi<State, Action> + Send + Sync + 'static,
 {
     async fn execute(&self, store: Arc<Api>) {
+        let project_root = store
+            .select(|state: &State| state.project_root.clone())
+            .await;
         let device_id = store
             .select(|state: &State| state.select_device_popup.selected_device_id.clone())
             .await;
+        log::info!("device_id: {:?}", device_id);
 
         let configuration = store
             .select(|state: &State| {
@@ -48,10 +52,13 @@ where
             })
             .await;
 
+        log::info!("configuration: {:?}", configuration);
+
         let Ok(id) = self
             .context
-            .session_manager
+            .manager
             .run_new_app(
+                project_root,
                 device_id.clone(),
                 configuration.clone().and_then(|c| c.program.clone()),
                 configuration.clone().and_then(|c| c.flutter_mode.clone()),
@@ -64,6 +71,8 @@ where
             return;
         };
 
+        log::info!("session_id: {:?}", id);
+
         store
             .dispatch(Action::RegisterSession {
                 session_id: id.clone(),
@@ -72,17 +81,10 @@ where
             })
             .await;
 
-        let Ok(session) = self
-            .context
-            .clone()
-            .session_manager
-            .session(id.clone())
-            .await
-        else {
+        let Some(session) = self.context.manager.session(id.clone()).await else {
             return;
         };
-        let session = session.read().await;
-        let run = &session.as_ref().unwrap().run;
+        let run = &session.as_ref().run;
 
         if let Ok(params) = run.receive_app_start().await {
             store
@@ -147,7 +149,7 @@ where
                         .await;
                     if let Err(e) = self
                         .context
-                        .session_manager
+                        .manager
                         .remove_session(id.clone())
                         .await
                     {

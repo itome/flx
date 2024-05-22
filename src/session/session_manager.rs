@@ -1,4 +1,8 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 use color_eyre::eyre::{eyre, Result};
 use daemon::run::FlutterRun;
@@ -13,26 +17,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(
-        project_root: PathBuf,
-        device_id: Option<String>,
-        program: Option<String>,
-        flutter_mode: Option<String>,
-        cwd: Option<String>,
-        args: Option<Vec<String>>,
-        use_fvm: bool,
-    ) -> Self {
-        let run = FlutterRun::new(
-            project_root,
-            device_id,
-            program,
-            flutter_mode,
-            cwd,
-            args,
-            use_fvm,
-        )
-        .unwrap();
-        let vm_service = VmService::new();
+    pub fn new(run: FlutterRun, vm_service: VmService) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
             run,
@@ -42,38 +27,19 @@ impl Session {
 }
 
 pub struct SessionManager {
-    project_root: PathBuf,
-    pub session0: Arc<RwLock<Option<Session>>>,
-    pub session1: Arc<RwLock<Option<Session>>>,
-    pub session2: Arc<RwLock<Option<Session>>>,
-    pub session3: Arc<RwLock<Option<Session>>>,
-    pub session4: Arc<RwLock<Option<Session>>>,
-    pub session5: Arc<RwLock<Option<Session>>>,
-    pub session6: Arc<RwLock<Option<Session>>>,
-    pub session7: Arc<RwLock<Option<Session>>>,
-    pub session8: Arc<RwLock<Option<Session>>>,
-    pub session9: Arc<RwLock<Option<Session>>>,
+    sessions: RwLock<HashMap<String, Arc<Session>>>,
 }
 
 impl SessionManager {
-    pub fn new(project_root: PathBuf) -> Self {
+    pub fn new() -> Self {
         Self {
-            project_root,
-            session0: Arc::new(RwLock::new(None)),
-            session1: Arc::new(RwLock::new(None)),
-            session2: Arc::new(RwLock::new(None)),
-            session3: Arc::new(RwLock::new(None)),
-            session4: Arc::new(RwLock::new(None)),
-            session5: Arc::new(RwLock::new(None)),
-            session6: Arc::new(RwLock::new(None)),
-            session7: Arc::new(RwLock::new(None)),
-            session8: Arc::new(RwLock::new(None)),
-            session9: Arc::new(RwLock::new(None)),
+            sessions: RwLock::new(HashMap::new()),
         }
     }
 
     pub async fn run_new_app(
         &self,
+        project_root: PathBuf,
         device_id: Option<String>,
         program: Option<String>,
         flutter_mode: Option<String>,
@@ -81,60 +47,34 @@ impl SessionManager {
         args: Option<Vec<String>>,
         use_fvm: bool,
     ) -> Result<String> {
-        let session = Session::new(
-            self.project_root.clone(),
-            device_id,
-            program,
-            flutter_mode,
-            cwd,
-            args,
+        log::info!("Running new app");
+        let run = FlutterRun::new(
+            project_root.clone(),
+            device_id.clone(),
+            program.clone(),
+            flutter_mode.clone(),
+            cwd.clone(),
+            args.clone(),
             use_fvm,
-        );
+        )?;
+        let vm_service = VmService::new();
+        let session = Session::new(run, vm_service);
         let session_id = session.id.clone();
-        for slot in self.sessions() {
-            if slot.read().await.is_none() {
-                *slot.write().await = Some(session);
-                return Ok(session_id);
-            }
-        }
-        Err(eyre!("No available session slots"))
+        self.sessions
+            .write()
+            .await
+            .insert(session_id.clone(), Arc::new(session));
+        return Ok(session_id);
     }
 
-    pub async fn session(&self, id: String) -> Result<Arc<RwLock<Option<Session>>>> {
-        for s in self.sessions() {
-            if let Some(session) = s.read().await.as_ref() {
-                if session.id == id {
-                    return Ok(s.clone());
-                }
-            }
-        }
-        Err(eyre!("Stdout is not available"))
+    pub async fn session(&self, id: String) -> Option<Arc<Session>> {
+        self.sessions.read().await.get(&id).cloned()
     }
 
     pub async fn remove_session(&self, id: String) -> Result<()> {
-        for s in self.sessions() {
-            if let Some(session) = s.read().await.as_ref() {
-                if session.id == id {
-                    *s.write().await = None;
-                    return Ok(());
-                }
-            }
+        if self.sessions.write().await.remove(&id).is_none() {
+            return Err(eyre!("Session not found"));
         }
-        Err(eyre!("Session not found"))
-    }
-
-    fn sessions(&self) -> Vec<Arc<RwLock<Option<Session>>>> {
-        vec![
-            self.session0.clone(),
-            self.session1.clone(),
-            self.session2.clone(),
-            self.session3.clone(),
-            self.session4.clone(),
-            self.session5.clone(),
-            self.session6.clone(),
-            self.session7.clone(),
-            self.session8.clone(),
-            self.session9.clone(),
-        ]
+        Ok(())
     }
 }

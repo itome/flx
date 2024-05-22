@@ -36,16 +36,10 @@ where
             })
             .await;
 
-        if let Ok(session) = self
-            .context
-            .session_manager
-            .session(session_id.clone())
-            .await
-        {
-            let session = session.read().await;
-            let run = &session.as_ref().unwrap().run;
-
-            run.stop().await.unwrap();
+        if let Some(session) = self.context.manager.session(session_id.clone()).await {
+            if let Err(e) = session.run.stop().await {
+                log::error!("Failed to stop session {}: {}", session_id, e);
+            }
         };
     }
 }
