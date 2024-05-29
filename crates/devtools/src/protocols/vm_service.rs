@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
+use color_eyre::eyre;
 use color_eyre::Result;
 use futures::Future;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::{Map, Value};
+use thiserror::Error;
 
 pub trait VmServiceProtocol {
     fn add_breakpoint(
@@ -13,7 +15,7 @@ pub trait VmServiceProtocol {
         script_id: &str,
         line: i32,
         column: Option<i32>,
-    ) -> impl Future<Output = Result<BreakpointOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Breakpoint>> + Send;
 
     fn add_breakpoint_with_script_uri(
         &self,
@@ -21,18 +23,15 @@ pub trait VmServiceProtocol {
         script_uri: &str,
         line: i32,
         column: Option<i32>,
-    ) -> impl Future<Output = Result<BreakpointOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Breakpoint>> + Send;
 
     fn add_breakpoint_at_entry(
         &self,
         isolate_id: &str,
         function_id: &str,
-    ) -> impl Future<Output = Result<BreakpointOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Breakpoint>> + Send;
 
-    fn clear_cpu_samples(
-        &self,
-        isolate_id: &str,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    fn clear_cpu_samples(&self, isolate_id: &str) -> impl Future<Output = Result<Success>> + Send;
 
     fn clear_vm_timeline(&self) -> impl Future<Output = Result<Success>> + Send;
 
@@ -43,7 +42,7 @@ pub trait VmServiceProtocol {
         selector: &str,
         argument_ids: Vec<String>,
         disable_breakpoints: Option<bool>,
-    ) -> impl Future<Output = Result<InstanceRefOrSentinelOrErrorRef>> + Send;
+    ) -> impl Future<Output = Result<InstanceRefOrErrorRef>> + Send;
 
     fn evaluate(
         &self,
@@ -52,7 +51,7 @@ pub trait VmServiceProtocol {
         expression: &str,
         scope: Option<HashMap<String, String>>,
         disable_breakpoints: Option<bool>,
-    ) -> impl Future<Output = Result<InstanceRefOrSentinelOrErrorRef>> + Send;
+    ) -> impl Future<Output = Result<InstanceRefOrErrorRef>> + Send;
 
     fn evaluate_in_frame(
         &self,
@@ -61,14 +60,14 @@ pub trait VmServiceProtocol {
         expression: &str,
         scope: Option<HashMap<String, String>>,
         disable_breakpoints: Option<bool>,
-    ) -> impl Future<Output = Result<InstanceRefOrSentinelOrErrorRef>> + Send;
+    ) -> impl Future<Output = Result<InstanceRefOrErrorRef>> + Send;
 
     fn get_allocation_profile(
         &self,
         isolate_id: &str,
         reset: Option<bool>,
         gc: Option<bool>,
-    ) -> impl Future<Output = Result<AllocationProfileOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<AllocationProfile>> + Send;
 
     fn get_allocation_traces(
         &self,
@@ -78,17 +77,14 @@ pub trait VmServiceProtocol {
         class_id: Option<&str>,
     ) -> impl Future<Output = Result<CpuSamples>> + Send;
 
-    fn get_class_list(
-        &self,
-        isolate_id: &str,
-    ) -> impl Future<Output = Result<ClassListOrSentinel>> + Send;
+    fn get_class_list(&self, isolate_id: &str) -> impl Future<Output = Result<ClassList>> + Send;
 
     fn get_cpu_samples(
         &self,
         isolate_id: &str,
         time_origin_micros: i32,
         time_extent_micros: i32,
-    ) -> impl Future<Output = Result<CpuSamplesOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<CpuSamples>> + Send;
 
     fn get_flag_list(&self) -> impl Future<Output = Result<FlagList>> + Send;
 
@@ -97,7 +93,7 @@ pub trait VmServiceProtocol {
         isolate_id: &str,
         target_id: &str,
         limit: i32,
-    ) -> impl Future<Output = Result<InboundReferencesOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<InboundReferences>> + Send;
 
     fn get_instances(
         &self,
@@ -106,7 +102,7 @@ pub trait VmServiceProtocol {
         limit: i32,
         include_subclasses: Option<bool>,
         include_implementers: Option<bool>,
-    ) -> impl Future<Output = Result<InstanceSetOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<InstanceSet>> + Send;
 
     fn get_instances_as_list(
         &self,
@@ -114,37 +110,31 @@ pub trait VmServiceProtocol {
         object_id: &str,
         include_subclasses: Option<bool>,
         include_implementers: Option<bool>,
-    ) -> impl Future<Output = Result<InstanceRefOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<InstanceRef>> + Send;
 
-    fn get_isolate(
-        &self,
-        isolate_id: &str,
-    ) -> impl Future<Output = Result<IsolateOrSentinel>> + Send;
+    fn get_isolate(&self, isolate_id: &str) -> impl Future<Output = Result<Isolate>> + Send;
 
     fn get_isolate_group(
         &self,
         isolate_group_id: &str,
-    ) -> impl Future<Output = Result<IsolateGroupOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<IsolateGroup>> + Send;
 
     fn get_isolate_pause_event(
         &self,
         isolate_id: &str,
-    ) -> impl Future<Output = Result<EventOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Event>> + Send;
 
     fn get_memory_usage(
         &self,
         isolate_id: &str,
-    ) -> impl Future<Output = Result<MemoryUsageOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<MemoryUsage>> + Send;
 
     fn get_isolate_group_memory_usage(
         &self,
         isolate_group_id: &str,
-    ) -> impl Future<Output = Result<MemoryUsageOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<MemoryUsage>> + Send;
 
-    fn get_scripts(
-        &self,
-        isolate_id: &str,
-    ) -> impl Future<Output = Result<ScriptListOrSentinel>> + Send;
+    fn get_scripts(&self, isolate_id: &str) -> impl Future<Output = Result<ScriptList>> + Send;
 
     fn get_object(
         &self,
@@ -152,14 +142,14 @@ pub trait VmServiceProtocol {
         object_id: &str,
         offset: Option<i32>,
         count: Option<i32>,
-    ) -> impl Future<Output = Result<ObjectOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Object>> + Send;
 
     fn get_perfetto_cpu_samples(
         &self,
         isolate_id: &str,
         time_origin_micros: Option<i32>,
         time_extent_micros: Option<i32>,
-    ) -> impl Future<Output = Result<PerfettoCpuSamplesOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<PerfettoCpuSamples>> + Send;
 
     fn get_perfecto_vm_timeline(
         &self,
@@ -174,7 +164,7 @@ pub trait VmServiceProtocol {
         isolate_id: &str,
         target_id: &str,
         limit: i32,
-    ) -> impl Future<Output = Result<RetainingPathOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<RetainingPath>> + Send;
 
     fn get_process_memory_usage(&self) -> impl Future<Output = Result<ProcessMemoryUsage>> + Send;
 
@@ -182,7 +172,7 @@ pub trait VmServiceProtocol {
         &self,
         isolate_id: &str,
         limit: Option<i32>,
-    ) -> impl Future<Output = Result<StackOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Stack>> + Send;
 
     fn get_supported_protocols(&self) -> impl Future<Output = Result<ProtocolList>> + Send;
 
@@ -198,7 +188,7 @@ pub trait VmServiceProtocol {
         report_lines: Option<bool>,
         library_filters: Option<Vec<String>>,
         libraries_already_compiled: Option<Vec<String>>,
-    ) -> impl Future<Output = Result<SourceReportOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<SourceReport>> + Send;
 
     fn get_version(&self) -> impl Future<Output = Result<Version>> + Send;
 
@@ -214,9 +204,9 @@ pub trait VmServiceProtocol {
 
     fn get_vm_timeline_micros(&self) -> impl Future<Output = Result<Timestamp>> + Send;
 
-    fn pause(&self, isolate_id: &str) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    fn pause(&self, isolate_id: &str) -> impl Future<Output = Result<Success>> + Send;
 
-    fn kill(&self, isolate_id: &str) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    fn kill(&self, isolate_id: &str) -> impl Future<Output = Result<Success>> + Send;
 
     fn lookup_resolved_package_uris(
         &self,
@@ -235,7 +225,7 @@ pub trait VmServiceProtocol {
         &self,
         service: &str,
         alias: &str,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn reload_sources(
         &self,
@@ -244,25 +234,25 @@ pub trait VmServiceProtocol {
         pause: Option<bool>,
         root_lib_uri: Option<&str>,
         packages_uri: Option<&str>,
-    ) -> impl Future<Output = Result<ReloadReportOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<ReloadReport>> + Send;
 
     fn remove_breakpoint(
         &self,
         isolate_id: &str,
         breakpoint_id: &str,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn request_heap_snapshot(
         &self,
         isolate_id: &str,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn resume(
         &self,
         isolate_id: &str,
         step: Option<StepOption>,
         frame_index: Option<i32>,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn set_breakpoint_state(
         &self,
@@ -276,14 +266,14 @@ pub trait VmServiceProtocol {
         &self,
         isolate_id: &str,
         mode: ExceptionPauseMode,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn set_isolate_pause_mode(
         &self,
         isolate_id: &str,
         exception_pause_mode: Option<ExceptionPauseMode>,
         should_pause_on_exit: Option<bool>,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn set_flag(
         &self,
@@ -296,20 +286,20 @@ pub trait VmServiceProtocol {
         isolate_id: &str,
         library_id: &str,
         is_debuggable: bool,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn set_name(
         &self,
         isolate_id: &str,
         name: &str,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn set_trace_class_allocation(
         &self,
         isolate_id: &str,
         class_id: &str,
         enable: bool,
-    ) -> impl Future<Output = Result<SuccessOrSentinel>> + Send;
+    ) -> impl Future<Output = Result<Success>> + Send;
 
     fn set_vm_name(&self, name: &str) -> impl Future<Output = Result<Success>> + Send;
 
@@ -325,9 +315,36 @@ pub trait VmServiceProtocol {
     fn stream_listen(&self, stream_id: StreamId) -> impl Future<Output = Result<Success>> + Send;
 }
 
+#[derive(Error, Debug)]
+pub enum VmServiceError {
+    #[error("({code:?}) {message:?}")]
+    RPCError {
+        code: String,
+        message: String,
+        data: HashMap<String, String>,
+    },
+    #[error("[Sentinel kind: {kind:?}] {value_as_string:?}]")]
+    SentinelError {
+        kind: SentinelKind,
+        value_as_string: String,
+    },
+    #[error(transparent)]
+    ParseError(#[from] serde_json::Error),
+    #[error(transparent)]
+    Other(#[from] eyre::Error),
+}
+
 // Public types from the Dart VM Service Protocol
 // https://github.com/dart-lang/sdk/blob/main/runtime/vm/service/service.md#public-types
 //
+//
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct RPCError {
+    pub code: String,
+    pub message: String,
+    pub data: HashMap<String, String>,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum StreamId {
@@ -360,13 +377,13 @@ pub struct AllocationProfile {
 pub struct BoundField {
     pub decl: FieldRef,
     pub name: StringOrInt,
-    pub value: InstanceRefOrSentinel,
+    pub value: InstanceRef,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct BoundVariable {
     pub name: String,
-    pub value: InstanceRefOrSentinel,
+    pub value: InstanceRef,
     #[serde(rename = "declarationTokenPos")]
     pub declaration_token_pos: u32,
     #[serde(rename = "scopeStartTokenPos")]
@@ -512,7 +529,7 @@ pub struct Context {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ContextElement {
-    pub value: InstanceRefOrSentinel,
+    pub value: InstanceRef,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -715,7 +732,7 @@ pub struct Field {
     pub r#static: bool,
     pub location: Option<SourceLocation>,
     #[serde(rename = "staticValue")]
-    pub static_value: Option<InstanceRefOrSentinel>,
+    pub static_value: Option<InstanceRef>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -864,7 +881,7 @@ pub struct Instance {
     #[serde(rename = "typeParameters")]
     pub type_parameters: Option<Vec<InstanceRef>>,
     pub fields: Vec<BoundField>,
-    pub elements: Option<Vec<InstanceRefOrSentinel>>,
+    pub elements: Option<Vec<InstanceRef>>,
     pub associations: Option<Vec<MapAssociation>>,
     pub bytes: Option<String>,
     #[serde(rename = "mirrorReferent")]
@@ -1101,8 +1118,8 @@ pub struct LogRecord {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct MapAssociation {
-    pub key: InstanceRefOrSentinel,
-    pub value: InstanceRefOrSentinel,
+    pub key: InstanceRef,
+    pub value: InstanceRef,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -1545,23 +1562,8 @@ pub struct VM {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
-pub enum BreakpointOrSentinel {
-    Breakpoint(Breakpoint),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum InstanceRefOrSentinel {
+pub enum InstanceRefOrErrorRef {
     InstanceRef(InstanceRef),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum InstanceRefOrSentinelOrErrorRef {
-    InstanceRef(InstanceRef),
-    Sentinel(Sentinel),
     ErrorRef(ErrorRef),
 }
 
@@ -1610,129 +1612,9 @@ pub enum ObjectRefOrNativeFunction {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]
-pub enum InstanceRefOrSentinelOrString {
+pub enum InstanceRefOrString {
     InstanceRef(InstanceRef),
-    Sentinel(Sentinel),
     String(String),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum SuccessOrSentinel {
-    Success(Success),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum AllocationProfileOrSentinel {
-    AllocationProfile(AllocationProfile),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum ClassListOrSentinel {
-    ClassList(ClassList),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum CpuSamplesOrSentinel {
-    CpuSamples(CpuSamplesEvent),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum InboundReferencesOrSentinel {
-    InboundReferences(InboundReferences),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum InstanceSetOrSentinel {
-    InstanceSet(InstanceSet),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum IsolateOrSentinel {
-    Isolate(Isolate),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum IsolateGroupOrSentinel {
-    IsolateGroup(IsolateGroup),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum EventOrSentinel {
-    Event(Event),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum MemoryUsageOrSentinel {
-    MemoryUsage(MemoryUsage),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum ScriptListOrSentinel {
-    ScriptList(ScriptList),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum ObjectOrSentinel {
-    Object(Object),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum PerfettoCpuSamplesOrSentinel {
-    PerfettoCpuSamples(PerfettoCpuSamples),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum RetainingPathOrSentinel {
-    RetainingPath(RetainingPath),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum StackOrSentinel {
-    Stack(Stack),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum SourceReportOrSentinel {
-    SourceReport(SourceReport),
-    Sentinel(Sentinel),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-#[serde(untagged)]
-pub enum ReloadReportOrSentinel {
-    ReloadReport(ReloadReport),
-    Sentinel(Sentinel),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

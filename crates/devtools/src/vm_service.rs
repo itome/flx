@@ -1,9 +1,12 @@
 use crate::params;
 use crate::protocols::vm_service::*;
-use color_eyre::{eyre::eyre, Result};
+use color_eyre::{
+    eyre::{bail, eyre},
+    Result,
+};
 use futures::{SinkExt, StreamExt};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use serde_json::Map;
+use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, Mutex};
@@ -110,12 +113,38 @@ impl VmService {
             let mut deserializer = serde_json::Deserializer::from_str(&line);
             deserializer.disable_recursion_limit();
             let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
-            let Ok(response) = VmServiceResponse::<T>::deserialize(deserializer) else {
+            let Ok(response) = Map::<String, Value>::deserialize(deserializer) else {
                 continue;
             };
-            if response.id == request_id {
-                return Ok(response);
+            if response.get("id") != Some(&Value::String(request_id.to_string())) {
+                continue;
             }
+
+            if let Some(err) = response.get("error") {
+                let err = RPCError::deserialize(err)?;
+                bail!(VmServiceError::RPCError {
+                    code: err.code,
+                    message: err.message,
+                    data: err.data,
+                })
+            }
+
+            if let Some(result) = response.get("result") {
+                if let Some(res) = result.as_object() {
+                    if res.get("type") == Some(&Value::String("Sentinel".to_string())) {
+                        let sentinel = Sentinel::deserialize(result)?;
+                        bail!(VmServiceError::SentinelError {
+                            kind: sentinel.kind,
+                            value_as_string: sentinel.value_as_string
+                        })
+                    }
+                }
+            }
+
+            let mut deserializer = serde_json::Deserializer::from_str(&line);
+            deserializer.disable_recursion_limit();
+            let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
+            return Ok(VmServiceResponse::<T>::deserialize(deserializer)?);
         }
         Err(eyre!("Could not receive vm service response"))
     }
@@ -157,7 +186,7 @@ impl VmServiceProtocol for VmService {
         script_id: &str,
         line: i32,
         column: Option<i32>,
-    ) -> Result<BreakpointOrSentinel> {
+    ) -> Result<Breakpoint> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "scriptId".to_owned() => script_id.into(),
@@ -173,7 +202,7 @@ impl VmServiceProtocol for VmService {
         script_uri: &str,
         line: i32,
         column: Option<i32>,
-    ) -> Result<BreakpointOrSentinel> {
+    ) -> Result<Breakpoint> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "scriptUri".to_owned() => script_uri.into(),
@@ -187,7 +216,7 @@ impl VmServiceProtocol for VmService {
         &self,
         isolate_id: &str,
         function_id: &str,
-    ) -> Result<BreakpointOrSentinel> {
+    ) -> Result<Breakpoint> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "functionId".to_owned() => function_id.into(),
@@ -195,7 +224,7 @@ impl VmServiceProtocol for VmService {
         self.call("addBreakpointAtEntry", params).await
     }
 
-    async fn clear_cpu_samples(&self, isolate_id: &str) -> Result<SuccessOrSentinel> {
+    async fn clear_cpu_samples(&self, isolate_id: &str) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
@@ -213,7 +242,7 @@ impl VmServiceProtocol for VmService {
         selector: &str,
         argument_ids: Vec<String>,
         disable_breakpoints: Option<bool>,
-    ) -> Result<InstanceRefOrSentinelOrErrorRef> {
+    ) -> Result<InstanceRefOrErrorRef> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "targetId".to_owned() => target_id.into(),
@@ -231,7 +260,7 @@ impl VmServiceProtocol for VmService {
         expression: &str,
         scope: Option<HashMap<String, String>>,
         disable_breakpoints: Option<bool>,
-    ) -> Result<InstanceRefOrSentinelOrErrorRef> {
+    ) -> Result<InstanceRefOrErrorRef> {
         let mut params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "frameIndex".to_owned() => frame_index.into(),
@@ -251,7 +280,7 @@ impl VmServiceProtocol for VmService {
         expression: &str,
         scope: Option<HashMap<String, String>>,
         disable_breakpoints: Option<bool>,
-    ) -> Result<InstanceRefOrSentinelOrErrorRef> {
+    ) -> Result<InstanceRefOrErrorRef> {
         let mut params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "frameIndex".to_owned() => frame_index.into(),
@@ -269,7 +298,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         reset: Option<bool>,
         gc: Option<bool>,
-    ) -> Result<AllocationProfileOrSentinel> {
+    ) -> Result<AllocationProfile> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "reset".to_owned() => reset.into(),
@@ -294,7 +323,7 @@ impl VmServiceProtocol for VmService {
         self.call("getAllocationTraces", params).await
     }
 
-    async fn get_class_list(&self, isolate_id: &str) -> Result<ClassListOrSentinel> {
+    async fn get_class_list(&self, isolate_id: &str) -> Result<ClassList> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
@@ -306,7 +335,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         time_origin_micros: i32,
         time_extent_micros: i32,
-    ) -> Result<CpuSamplesOrSentinel> {
+    ) -> Result<CpuSamples> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "timeOriginMicros".to_owned() => time_origin_micros.into(),
@@ -324,7 +353,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         target_id: &str,
         limit: i32,
-    ) -> Result<InboundReferencesOrSentinel> {
+    ) -> Result<InboundReferences> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "targetId".to_owned() => target_id.into(),
@@ -340,7 +369,7 @@ impl VmServiceProtocol for VmService {
         limit: i32,
         include_subclasses: Option<bool>,
         include_implementers: Option<bool>,
-    ) -> Result<InstanceSetOrSentinel> {
+    ) -> Result<InstanceSet> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "objectId".to_owned() => object_id.into(),
@@ -357,7 +386,7 @@ impl VmServiceProtocol for VmService {
         object_id: &str,
         include_subclasses: Option<bool>,
         include_implementers: Option<bool>,
-    ) -> Result<InstanceRefOrSentinel> {
+    ) -> Result<InstanceRef> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "objectId".to_owned() => object_id.into(),
@@ -367,45 +396,42 @@ impl VmServiceProtocol for VmService {
         self.call("getInstancesAsList", params).await
     }
 
-    async fn get_isolate(&self, isolate_id: &str) -> Result<IsolateOrSentinel> {
+    async fn get_isolate(&self, isolate_id: &str) -> Result<Isolate> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
         self.call("getIsolate", params).await
     }
 
-    async fn get_isolate_group(&self, isolate_group_id: &str) -> Result<IsolateGroupOrSentinel> {
+    async fn get_isolate_group(&self, isolate_group_id: &str) -> Result<IsolateGroup> {
         let params = params! {
             "isolateGroupId".to_owned() => isolate_group_id.into(),
         };
         self.call("getIsolateGroup", params).await
     }
 
-    async fn get_isolate_pause_event(&self, isolate_id: &str) -> Result<EventOrSentinel> {
+    async fn get_isolate_pause_event(&self, isolate_id: &str) -> Result<Event> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
         self.call("getIsolatePauseEvent", params).await
     }
 
-    async fn get_memory_usage(&self, isolate_id: &str) -> Result<MemoryUsageOrSentinel> {
+    async fn get_memory_usage(&self, isolate_id: &str) -> Result<MemoryUsage> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
         self.call("getMemoryUsage", params).await
     }
 
-    async fn get_isolate_group_memory_usage(
-        &self,
-        isolate_group_id: &str,
-    ) -> Result<MemoryUsageOrSentinel> {
+    async fn get_isolate_group_memory_usage(&self, isolate_group_id: &str) -> Result<MemoryUsage> {
         let params = params! {
             "isolateGroupId".to_owned() => isolate_group_id.into(),
         };
         self.call("getIsolateGroupMemoryUsage", params).await
     }
 
-    async fn get_scripts(&self, isolate_id: &str) -> Result<ScriptListOrSentinel> {
+    async fn get_scripts(&self, isolate_id: &str) -> Result<ScriptList> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
@@ -418,7 +444,7 @@ impl VmServiceProtocol for VmService {
         object_id: &str,
         offset: Option<i32>,
         count: Option<i32>,
-    ) -> Result<ObjectOrSentinel> {
+    ) -> Result<Object> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "objectId".to_owned() => object_id.into(),
@@ -433,7 +459,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         time_origin_micros: Option<i32>,
         time_extent_micros: Option<i32>,
-    ) -> Result<PerfettoCpuSamplesOrSentinel> {
+    ) -> Result<PerfettoCpuSamples> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "timeOriginMicros".to_owned() => time_origin_micros.into(),
@@ -466,7 +492,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         target_id: &str,
         limit: i32,
-    ) -> Result<RetainingPathOrSentinel> {
+    ) -> Result<RetainingPath> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "targetId".to_owned() => target_id.into(),
@@ -479,7 +505,7 @@ impl VmServiceProtocol for VmService {
         self.call("getProcessMemoryUsage", Map::new()).await
     }
 
-    async fn get_stack(&self, isolate_id: &str, limit: Option<i32>) -> Result<StackOrSentinel> {
+    async fn get_stack(&self, isolate_id: &str, limit: Option<i32>) -> Result<Stack> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "limit".to_owned() => limit.into(),
@@ -502,7 +528,7 @@ impl VmServiceProtocol for VmService {
         report_lines: Option<bool>,
         library_filters: Option<Vec<String>>,
         libraries_already_compiled: Option<Vec<String>>,
-    ) -> Result<SourceReportOrSentinel> {
+    ) -> Result<SourceReport> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "reports".to_owned() => serde_json::to_value(reports).unwrap(),
@@ -545,14 +571,14 @@ impl VmServiceProtocol for VmService {
         self.call("getVMTimelineMicros", Map::new()).await
     }
 
-    async fn pause(&self, isolate_id: &str) -> Result<SuccessOrSentinel> {
+    async fn pause(&self, isolate_id: &str) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
         self.call("pause", params).await
     }
 
-    async fn kill(&self, isolate_id: &str) -> Result<SuccessOrSentinel> {
+    async fn kill(&self, isolate_id: &str) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
@@ -581,7 +607,7 @@ impl VmServiceProtocol for VmService {
         self.call("lookupPackageUris", params).await
     }
 
-    async fn register_service(&self, service: &str, alias: &str) -> Result<SuccessOrSentinel> {
+    async fn register_service(&self, service: &str, alias: &str) -> Result<Success> {
         let params = params! {
             "service".to_owned() => service.into(),
             "alias".to_owned() => alias.into(),
@@ -596,7 +622,7 @@ impl VmServiceProtocol for VmService {
         pause: Option<bool>,
         root_lib_uri: Option<&str>,
         packages_uri: Option<&str>,
-    ) -> Result<ReloadReportOrSentinel> {
+    ) -> Result<ReloadReport> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "force".to_owned() => force.into(),
@@ -607,11 +633,7 @@ impl VmServiceProtocol for VmService {
         self.call("reloadSources", params).await
     }
 
-    async fn remove_breakpoint(
-        &self,
-        isolate_id: &str,
-        breakpoint_id: &str,
-    ) -> Result<SuccessOrSentinel> {
+    async fn remove_breakpoint(&self, isolate_id: &str, breakpoint_id: &str) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "breakpointId".to_owned() => breakpoint_id.into(),
@@ -619,7 +641,7 @@ impl VmServiceProtocol for VmService {
         self.call("removeBreakpoint", params).await
     }
 
-    async fn request_heap_snapshot(&self, isolate_id: &str) -> Result<SuccessOrSentinel> {
+    async fn request_heap_snapshot(&self, isolate_id: &str) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
         };
@@ -631,7 +653,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         step: Option<StepOption>,
         frame_index: Option<i32>,
-    ) -> Result<SuccessOrSentinel> {
+    ) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "step".to_owned() => serde_json::to_value(step).unwrap(),
@@ -658,7 +680,7 @@ impl VmServiceProtocol for VmService {
         &self,
         isolate_id: &str,
         mode: ExceptionPauseMode,
-    ) -> Result<SuccessOrSentinel> {
+    ) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "mode".to_owned() => serde_json::to_value(mode).unwrap(),
@@ -671,7 +693,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         exception_pause_mode: Option<ExceptionPauseMode>,
         should_pause_on_exit: Option<bool>,
-    ) -> Result<SuccessOrSentinel> {
+    ) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "exceptionPauseMode".to_owned() => serde_json::to_value(exception_pause_mode).unwrap(),
@@ -693,7 +715,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         library_id: &str,
         is_debuggable: bool,
-    ) -> Result<SuccessOrSentinel> {
+    ) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "libraryId".to_owned() => library_id.into(),
@@ -702,7 +724,7 @@ impl VmServiceProtocol for VmService {
         self.call("setLibraryDebuggable", params).await
     }
 
-    async fn set_name(&self, isolate_id: &str, name: &str) -> Result<SuccessOrSentinel> {
+    async fn set_name(&self, isolate_id: &str, name: &str) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "name".to_owned() => name.into(),
@@ -715,7 +737,7 @@ impl VmServiceProtocol for VmService {
         isolate_id: &str,
         class_id: &str,
         enable: bool,
-    ) -> Result<SuccessOrSentinel> {
+    ) -> Result<Success> {
         let params = params! {
             "isolateId".to_owned() => isolate_id.into(),
             "classId".to_owned() => class_id.into(),
