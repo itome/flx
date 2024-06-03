@@ -26,7 +26,7 @@ use devtools::{
 
 use daemon::flutter::FlutterDaemon;
 
-use super::{context::Context, load_details_subtree::LoadDetailsSubtreeThunk};
+use super::{context::Context, load_details_subtree::LoadDetailsSubtreeThunk, ThunkAction};
 
 pub struct LoadRootWidgetWithSummaryTreeThunk {
     context: Arc<Context>,
@@ -66,6 +66,7 @@ where
             return;
         };
         let vm_service = &session.vm_service;
+        let run = &session.run;
 
         let Ok(vm) = vm_service.get_vm().await else {
             return;
@@ -122,5 +123,18 @@ where
                 tree: response.result,
             })
             .await;
+
+        // Reload the root widget tree when hot restart is finished
+        while let Ok(params) = run.receive_app_progress().await {
+            if params.progress_id == Some("hot.restart".to_string()) && params.finished {
+                LoadRootWidgetWithSummaryTreeThunk::new(
+                    self.context.clone(),
+                    self.session_id.clone(),
+                )
+                .execute(store.clone())
+                .await;
+                break;
+            }
+        }
     }
 }
