@@ -228,4 +228,8 @@ pub enum Action {
         session_id: String,
         enabled: bool,
     },
+    SetShowWidgetInspectorEnabled {
+        session_id: String,
+        enabled: bool,
+    },
 }

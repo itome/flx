@@ -89,6 +89,14 @@ impl AppComponent {
             .send(ThunkAction::ToggleSlowAnimations.into())?;
         Ok(())
     }
+
+    fn toggle_widget_inspector(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleWidgetInspector.into())?;
+        Ok(())
+    }
 }
 
 impl Component for AppComponent {
@@ -105,6 +113,7 @@ impl Component for AppComponent {
         match key.code {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
+            KeyCode::Char('i') => self.toggle_widget_inspector()?,
             KeyCode::Char('p') => self.toggle_debug_paint()?,
             KeyCode::Char('P') => self.toggle_show_performance_overlay()?,
             KeyCode::Char('b') => self.toggle_debug_paint_baselines()?,

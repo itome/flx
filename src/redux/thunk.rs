@@ -26,6 +26,7 @@ pub mod toggle_invert_oversized_images;
 pub mod toggle_repaint_rainbow;
 pub mod toggle_show_performance_overlay;
 pub mod toggle_slow_animations;
+pub mod toggle_widget_inspector;
 pub mod watch_devices;
 pub mod watch_frames;
 pub mod watch_requests;
@@ -51,6 +52,7 @@ pub enum ThunkAction {
     ToggleRepaintRainbow,
     ToggleShowPerformanceOverlay,
     ToggleSlowAnimations,
+    ToggleWidgetInspector,
 }
 
 pub fn thunk_impl<Api>(
@@ -107,6 +109,9 @@ where
         ),
         ThunkAction::ToggleSlowAnimations => Box::new(
             toggle_slow_animations::ToggleSlowAnimationsThunk::new(context),
+        ),
+        ThunkAction::ToggleWidgetInspector => Box::new(
+            toggle_widget_inspector::ToggleWidgetInspectorThunk::new(context),
         ),
     }
 }

@@ -123,6 +123,7 @@ pub struct SessionState {
     pub repaint_rainbow_enabled: bool,
     pub invert_oversized_images_enabled: bool,
     pub show_performance_overlay_enabled: bool,
+    pub show_widget_inspector_enabled: bool,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

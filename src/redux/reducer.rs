@@ -1300,5 +1300,25 @@ pub fn reducer(state: State, action: Action) -> State {
                 .collect(),
             ..state
         },
+        Action::SetShowWidgetInspectorEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            show_widget_inspector_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
     }
 }
