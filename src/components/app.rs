@@ -49,6 +49,46 @@ impl AppComponent {
             .send(ThunkAction::ToggleDebugPaint.into())?;
         Ok(())
     }
+
+    fn toggle_debug_paint_baselines(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleDebugPaintBaselines.into())?;
+        Ok(())
+    }
+
+    fn toggle_invert_overized_images(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleInvertOversizedImages.into())?;
+        Ok(())
+    }
+
+    fn toggle_repaint_rainbow(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleRepaintRainbow.into())?;
+        Ok(())
+    }
+
+    fn toggle_show_performance_overlay(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleShowPerformanceOverlay.into())?;
+        Ok(())
+    }
+
+    fn toggle_slow_animations(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleSlowAnimations.into())?;
+        Ok(())
+    }
 }
 
 impl Component for AppComponent {
@@ -66,6 +106,11 @@ impl Component for AppComponent {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
             KeyCode::Char('p') => self.toggle_debug_paint()?,
+            KeyCode::Char('P') => self.toggle_show_performance_overlay()?,
+            KeyCode::Char('b') => self.toggle_debug_paint_baselines()?,
+            KeyCode::Char('I') => self.toggle_invert_overized_images()?,
+            KeyCode::Char('o') => self.toggle_repaint_rainbow()?,
+            KeyCode::Char('s') => self.toggle_slow_animations()?,
             _ => {}
         }
         Ok(())

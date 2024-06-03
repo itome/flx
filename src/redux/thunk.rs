@@ -21,6 +21,11 @@ pub mod run_new_app;
 pub mod run_new_vm_service;
 pub mod stop_app;
 pub mod toggle_debug_paint;
+pub mod toggle_debug_paint_baselines;
+pub mod toggle_invert_oversized_images;
+pub mod toggle_repaint_rainbow;
+pub mod toggle_show_performance_overlay;
+pub mod toggle_slow_animations;
 pub mod watch_devices;
 pub mod watch_frames;
 pub mod watch_requests;
@@ -41,6 +46,11 @@ pub enum ThunkAction {
     HotRestart,
     StopApp,
     ToggleDebugPaint,
+    ToggleDebugPaintBaselines,
+    ToggleInvertOversizedImages,
+    ToggleRepaintRainbow,
+    ToggleShowPerformanceOverlay,
+    ToggleSlowAnimations,
 }
 
 pub fn thunk_impl<Api>(
@@ -83,5 +93,20 @@ where
         ThunkAction::ToggleDebugPaint => {
             Box::new(toggle_debug_paint::ToggleDebugPaintThunk::new(context))
         }
+        ThunkAction::ToggleDebugPaintBaselines => {
+            Box::new(toggle_debug_paint_baselines::ToggleDebugPaintBaselinesThunk::new(context))
+        }
+        ThunkAction::ToggleInvertOversizedImages => {
+            Box::new(toggle_invert_oversized_images::ToggleInvertOversizedImagesThunk::new(context))
+        }
+        ThunkAction::ToggleRepaintRainbow => Box::new(
+            toggle_repaint_rainbow::ToggleRepaintRainbowThunk::new(context),
+        ),
+        ThunkAction::ToggleShowPerformanceOverlay => Box::new(
+            toggle_show_performance_overlay::ToggleShowPerformanceOverlayThunk::new(context),
+        ),
+        ThunkAction::ToggleSlowAnimations => Box::new(
+            toggle_slow_animations::ToggleSlowAnimationsThunk::new(context),
+        ),
     }
 }

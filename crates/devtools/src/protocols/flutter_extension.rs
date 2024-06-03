@@ -452,7 +452,7 @@ pub struct Response {
 pub struct TimeDilation {
     pub r#type: String,
     #[serde(rename = "timeDilation")]
-    pub time_dilation: f32,
+    pub time_dilation: String,
     pub method: String,
 }
 
