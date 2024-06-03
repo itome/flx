@@ -70,6 +70,12 @@ impl Component for LaunchConfigurationsComponent {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
+        if state.launch_configurations.len() == 0 {
+            let text = Paragraph::new(" No configurtions found. ").block(block);
+            f.render_widget(text, area);
+            return;
+        }
+
         let list = List::new(items).block(block);
 
         f.render_widget(list, area);
