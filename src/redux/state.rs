@@ -116,6 +116,13 @@ pub struct SessionState {
     pub selected_widget_object_group: Option<String>,
     pub selected_widget_details_tree: Option<DiagnosticNode>,
     pub opened_widget_details_value_ids: HashSet<String>,
+
+    pub debug_paint_enabled: bool,
+    pub slow_animations_enabled: bool,
+    pub debug_paint_baselines_enabled: bool,
+    pub repaint_rainbow_enabled: bool,
+    pub invert_oversized_images_enabled: bool,
+    pub show_performance_overlay_enabled: bool,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]

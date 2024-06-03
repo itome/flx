@@ -20,6 +20,7 @@ pub mod load_vscode_launch_setting;
 pub mod run_new_app;
 pub mod run_new_vm_service;
 pub mod stop_app;
+pub mod toggle_debug_paint;
 pub mod watch_devices;
 pub mod watch_frames;
 pub mod watch_requests;
@@ -39,6 +40,7 @@ pub enum ThunkAction {
     HotReload,
     HotRestart,
     StopApp,
+    ToggleDebugPaint,
 }
 
 pub fn thunk_impl<Api>(
@@ -78,5 +80,8 @@ where
         ThunkAction::LoadDetailsSubtree { value_id } => Box::new(
             load_details_subtree::LoadDetailsSubtreeThunk::new(context, value_id),
         ),
+        ThunkAction::ToggleDebugPaint => {
+            Box::new(toggle_debug_paint::ToggleDebugPaintThunk::new(context))
+        }
     }
 }

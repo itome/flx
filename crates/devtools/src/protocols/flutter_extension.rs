@@ -2,6 +2,8 @@ use color_eyre::Result;
 use futures::Future;
 use serde::{Deserialize, Serialize};
 
+use crate::util::{deserialize_bool_from_string, serialize_bool_to_string};
+
 pub trait FlutterExtensionProtocol {
     fn list_views(&self) -> impl Future<Output = Result<FlutterViewList>> + Send;
 
@@ -417,6 +419,11 @@ pub struct IsolateRefInFlutterExtension {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Togglable {
     pub r#type: String,
+    // This is a bool but it is represented as a string in the response
+    #[serde(
+        deserialize_with = "deserialize_bool_from_string",
+        serialize_with = "serialize_bool_to_string"
+    )]
     pub enabled: bool,
     pub method: String,
 }

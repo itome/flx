@@ -41,6 +41,14 @@ impl AppComponent {
             .send(ThunkAction::HotRestart.into())?;
         Ok(())
     }
+
+    fn toggle_debug_paint(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleDebugPaint.into())?;
+        Ok(())
+    }
 }
 
 impl Component for AppComponent {
@@ -57,6 +65,7 @@ impl Component for AppComponent {
         match key.code {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
+            KeyCode::Char('p') => self.toggle_debug_paint()?,
             _ => {}
         }
         Ok(())

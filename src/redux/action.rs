@@ -203,4 +203,29 @@ pub enum Action {
 
     EnterNetworkRequest,
     ExitNetworkRequest,
+
+    SetDebugPaintEnabled {
+        session_id: String,
+        enabled: bool,
+    },
+    SetSlowAnimationsEnabled {
+        session_id: String,
+        enabled: bool,
+    },
+    SetDebugPaintBaselinesEnabled {
+        session_id: String,
+        enabled: bool,
+    },
+    SetRepaintRainbowEnabled {
+        session_id: String,
+        enabled: bool,
+    },
+    SetInvertOversizedImagesEnabled {
+        session_id: String,
+        enabled: bool,
+    },
+    SetShowPerformanceOverlayEnabled {
+        session_id: String,
+        enabled: bool,
+    },
 }

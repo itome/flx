@@ -1180,5 +1180,125 @@ pub fn reducer(state: State, action: Action) -> State {
             focus: Focus::DevTools(DevTools::Inspector),
             ..state
         },
+        Action::SetDebugPaintEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            debug_paint_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetSlowAnimationsEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            slow_animations_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetDebugPaintBaselinesEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            debug_paint_baselines_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetRepaintRainbowEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            repaint_rainbow_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetInvertOversizedImagesEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            invert_oversized_images_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
+        Action::SetShowPerformanceOverlayEnabled {
+            session_id,
+            enabled,
+        } => State {
+            sessions: state
+                .sessions
+                .into_iter()
+                .map(|s| {
+                    if s.id == session_id {
+                        SessionState {
+                            show_performance_overlay_enabled: enabled,
+                            ..s
+                        }
+                    } else {
+                        s
+                    }
+                })
+                .collect(),
+            ..state
+        },
     }
 }
