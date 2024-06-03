@@ -102,7 +102,7 @@ impl App {
 
         Ok(Self {
             tick_rate: 4.0,
-            frame_rate: 60.0,
+            frame_rate: 24.0,
             project_root: project_root.clone(),
             use_fvm,
             components: HashMap::from([
