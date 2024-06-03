@@ -39,27 +39,5 @@ where
             log::error!("Failed to hot reload: {}", err);
             return;
         }
-
-        while let Ok(params) = run.receive_app_progress().await {
-            if params.progress_id == Some("hot.reload".to_string()) && !params.finished {
-                store
-                    .dispatch(Action::StartHotReload {
-                        session_id: session_id.clone(),
-                    })
-                    .await;
-                break;
-            }
-        }
-
-        while let Ok(params) = run.receive_app_progress().await {
-            if params.progress_id == Some("hot.reload".to_string()) && params.finished {
-                store
-                    .dispatch(Action::CompleteHotReload {
-                        session_id: session_id.clone(),
-                    })
-                    .await;
-                break;
-            }
-        }
     }
 }

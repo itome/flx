@@ -38,27 +38,5 @@ where
             log::error!("Failed to hot restart: {}", err);
             return;
         }
-
-        while let Ok(params) = run.receive_app_progress().await {
-            if params.progress_id == Some("hot.restart".to_string()) && !params.finished {
-                store
-                    .dispatch(Action::StartHotRestart {
-                        session_id: session_id.clone(),
-                    })
-                    .await;
-                break;
-            }
-        }
-
-        while let Ok(params) = run.receive_app_progress().await {
-            if params.progress_id == Some("hot.restart".to_string()) && params.finished {
-                store
-                    .dispatch(Action::CompleteHotRestart {
-                        session_id: session_id.clone(),
-                    })
-                    .await;
-                break;
-            }
-        }
     }
 }

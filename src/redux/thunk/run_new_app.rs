@@ -115,6 +115,27 @@ where
                             message: progress.message,
                         })
                         .await;
+                    if progress.progress_id == Some("hot.restart".to_string()) {
+                        if !progress.finished {
+                            store.dispatch(Action::StartHotRestart{
+                                session_id: id.clone(),
+                            }).await;
+                        } else {
+                            store.dispatch(Action::CompleteHotRestart {
+                                session_id: id.clone(),
+                            }).await;
+                        }
+                    } else if progress.progress_id == Some("hot.reload".to_string()) {
+                        if !progress.finished {
+                            store.dispatch(Action::StartHotReload{
+                                session_id: id.clone(),
+                            }).await;
+                        } else {
+                            store.dispatch(Action::CompleteHotReload {
+                                session_id: id.clone(),
+                            }).await;
+                        }
+                    }
                 },
                 Ok(params) = run.receive_app_debug_port() => {
                     let store = store.clone();
