@@ -80,6 +80,10 @@ where
             }
         }
 
+        store
+            .dispatch(Action::SetLaunchConfigurations { configurations })
+            .await;
+
         let mut supported_platforms = HashMap::new();
         for dir in dirs {
             let Ok(dir_string) = dir.clone().into_os_string().into_string() else {
@@ -95,10 +99,6 @@ where
                 supported_platforms.insert(dir, supprted_platforms);
             };
         }
-
-        store
-            .dispatch(Action::SetLaunchConfigurations { configurations })
-            .await;
 
         store
             .dispatch(Action::SetSupportedPlatforms {
