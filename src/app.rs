@@ -225,8 +225,8 @@ impl App {
 
         loop {
             let state = store.state_cloned().await;
-            if let Some(e) = tui.next().await {
-                match e {
+            for event in tui.next().await {
+                match event {
                     tui::Event::Quit => tui_action_tx.send(TuiAction::Quit)?,
                     tui::Event::Tick => tui_action_tx.send(TuiAction::Tick)?,
                     tui::Event::Render => tui_action_tx.send(TuiAction::Render)?,
@@ -239,10 +239,11 @@ impl App {
                     _ => {}
                 }
                 for (_, component) in self.components.iter_mut() {
-                    component.handle_events(&e, &state)?;
+                    component.handle_events(&event, &state)?;
                 }
             }
 
+            let mut rendered = false;
             while let Ok(action) = tui_action_rx.try_recv() {
                 match action {
                     TuiAction::Quit => self.should_quit = true,
@@ -253,7 +254,10 @@ impl App {
                         self.draw(&mut tui, &state)?;
                     }
                     TuiAction::Render => {
-                        self.draw(&mut tui, &state)?;
+                        if !rendered {
+                            rendered = true;
+                            self.draw(&mut tui, &state)?;
+                        }
                     }
                     _ => {}
                 }

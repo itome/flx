@@ -223,8 +223,10 @@ impl Tui {
         Ok(())
     }
 
-    pub async fn next(&mut self) -> Option<Event> {
-        self.event_rx.recv().await
+    pub async fn next(&mut self) -> Vec<Event> {
+        let mut buffer: Vec<Event> = Vec::with_capacity(10000);
+        self.event_rx.recv_many(&mut buffer, 10000).await;
+        return buffer;
     }
 }
 
