@@ -68,7 +68,7 @@ where
             store
                 .dispatch(Action::SetSlowAnimationsEnabled {
                     session_id,
-                    enabled: diration.time_dilation != "1.0".to_string(),
+                    enabled: diration.time_dilation != *"1.0",
                 })
                 .await;
         }
