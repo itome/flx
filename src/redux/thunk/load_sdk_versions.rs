@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
 use serde::Deserialize;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, process::Stdio, sync::Arc};
 use tokio::process::Command;
 
 use redux_rs::{middlewares::thunk::Thunk, StoreApi};
@@ -63,7 +63,19 @@ where
         if self.use_fvm {
             command.arg("flutter");
         }
-        let Ok(output) = command.arg("--version").arg("--machine").output().await else {
+        let Ok(child) = command
+            .arg("--version")
+            .arg("--machine")
+            .kill_on_drop(true)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+        else {
+            return;
+        };
+
+        let Ok(output) = child.wait_with_output().await else {
             return;
         };
 
