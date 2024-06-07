@@ -668,7 +668,7 @@ dependencies = [
 
 [[package]]
 name = "flx"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "android",
  "async-trait",
