@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
+use serde_json::Value;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::time::sleep;
 
@@ -67,12 +68,23 @@ where
         };
         let vm_service = &session.vm_service;
 
-        let Ok(full_request) = vm_service
+        let Ok(mut full_request) = vm_service
             .get_http_profile_request(request.isolate_id.clone(), request.id.clone())
             .await
         else {
             return;
         };
+
+        if let Some(response_body) = full_request.response_body.clone() {
+            if let Ok(body_string) = String::from_utf8(response_body) {
+                let json: serde_json::Result<Value> = serde_json::from_str(&body_string);
+                if let Ok(json) = json {
+                    if let Ok(json) = serde_json::to_string_pretty(&json) {
+                        full_request.response_body = Some(json.as_bytes().to_vec());
+                    }
+                }
+            }
+        }
 
         store
             .dispatch(Action::AppendHttpProfileFullRequest {
