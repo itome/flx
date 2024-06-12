@@ -26,9 +26,6 @@
   <img src="./.github/assets/screenshot_home.png"/>
 </p>
 
-> [!WARNING]
-> This project is in the early phases of development. Please use it at your own risk.
-
 # Installation
 
 ### Homebrew(macOS)
@@ -38,11 +35,15 @@ brew install itome/tap/flx
 ```
 
 # Features
+
+[flx demo](./.github/assets/flx_demo.png)
+
 - Flutter inspector
 - Performance view
 - Debug console view
 - Network view
 - [fvm](https://fvm.app/) support
+- Flavor and environment variables from `.vscode/launch.json` support
 
 # Sponcer
 If you feel that flx is good, consider donating through [GitHub Sponsors](https://github.com/sponsors/itome) for its continuous development.
