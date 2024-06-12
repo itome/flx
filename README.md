@@ -36,7 +36,7 @@ brew install itome/tap/flx
 
 # Features
 
-[flx demo](./.github/assets/flx_demo.png)
+![flx demo](./.github/assets/flx_demo.gif)
 
 - Flutter inspector
 - Performance view
