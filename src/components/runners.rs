@@ -85,6 +85,62 @@ impl RunnersComponent {
         Ok(())
     }
 
+    fn toggle_debug_paint(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleDebugPaint.into())?;
+        Ok(())
+    }
+
+    fn toggle_debug_paint_baselines(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleDebugPaintBaselines.into())?;
+        Ok(())
+    }
+
+    fn toggle_invert_overized_images(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleInvertOversizedImages.into())?;
+        Ok(())
+    }
+
+    fn toggle_repaint_rainbow(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleRepaintRainbow.into())?;
+        Ok(())
+    }
+
+    fn toggle_show_performance_overlay(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleShowPerformanceOverlay.into())?;
+        Ok(())
+    }
+
+    fn toggle_slow_animations(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleSlowAnimations.into())?;
+        Ok(())
+    }
+
+    fn toggle_widget_inspector(&self) -> Result<()> {
+        self.action_tx
+            .as_ref()
+            .ok_or_else(|| eyre!("action_tx is None"))?
+            .send(ThunkAction::ToggleWidgetInspector.into())?;
+        Ok(())
+    }
+
     fn stop_app(&self) -> Result<()> {
         self.action_tx
             .as_ref()
@@ -116,6 +172,13 @@ impl Component for RunnersComponent {
         match key.code {
             KeyCode::Char('r') => self.hot_reload()?,
             KeyCode::Char('R') => self.hot_restart()?,
+            KeyCode::Char('i') => self.toggle_widget_inspector()?,
+            KeyCode::Char('p') => self.toggle_debug_paint()?,
+            KeyCode::Char('P') => self.toggle_show_performance_overlay()?,
+            KeyCode::Char('b') => self.toggle_debug_paint_baselines()?,
+            KeyCode::Char('I') => self.toggle_invert_overized_images()?,
+            KeyCode::Char('o') => self.toggle_repaint_rainbow()?,
+            KeyCode::Char('s') => self.toggle_slow_animations()?,
             KeyCode::Char('d') => self.stop_app()?,
             KeyCode::Up | KeyCode::Char('k') => self.previous()?,
             KeyCode::Down | KeyCode::Char('j') => self.next()?,
